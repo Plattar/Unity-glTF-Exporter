@@ -68,15 +68,15 @@ public class SceneToGlTFWiz : ScriptableWizard
 			Transform[] trs = Selection.GetTransforms (SelectionMode.Deep);
 			foreach (Transform tr in trs)
 			{
-				if (tr.camera != null)
+				if (tr.GetComponent<Camera>() != null)
 				{
-					if (tr.camera.isOrthoGraphic)
+					if (tr.GetComponent<Camera>().orthographic)
 					{
 						GlTF_Orthographic cam;
 						cam = new GlTF_Orthographic();
 						cam.type = "orthographic";
-						cam.zfar = tr.camera.farClipPlane;
-						cam.znear = tr.camera.nearClipPlane;
+						cam.zfar = tr.GetComponent<Camera>().farClipPlane;
+						cam.znear = tr.GetComponent<Camera>().nearClipPlane;
 						cam.name = tr.name;
 						//cam.orthographic.xmag = tr.camera.
 						GlTF_Writer.cameras.Add(cam);
@@ -86,43 +86,43 @@ public class SceneToGlTFWiz : ScriptableWizard
 						GlTF_Perspective cam;
 						cam = new GlTF_Perspective();
 						cam.type = "perspective";
-						cam.zfar = tr.camera.farClipPlane;
-						cam.znear = tr.camera.nearClipPlane;
-						cam.aspect_ratio = tr.camera.aspect;
-						cam.yfov = tr.camera.fieldOfView;
+						cam.zfar = tr.GetComponent<Camera>().farClipPlane;
+						cam.znear = tr.GetComponent<Camera>().nearClipPlane;
+						cam.aspect_ratio = tr.GetComponent<Camera>().aspect;
+						cam.yfov = tr.GetComponent<Camera>().fieldOfView;
 						cam.name = tr.name;
 						GlTF_Writer.cameras.Add(cam);
 					}
 				}
 				
-				if (tr.light != null)
+				if (tr.GetComponent<Light>() != null)
 				{
-					switch (tr.light.type)
+					switch (tr.GetComponent<Light>().type)
 					{
 					case LightType.Point:
 						GlTF_PointLight pl = new GlTF_PointLight();
-						pl.color = new GlTF_ColorRGB (tr.light.color);
+						pl.color = new GlTF_ColorRGB (tr.GetComponent<Light>().color);
 						pl.name = tr.name;
 						GlTF_Writer.lights.Add (pl);
 						break;
 
 					case LightType.Spot:
 						GlTF_SpotLight sl = new GlTF_SpotLight();
-						sl.color = new GlTF_ColorRGB (tr.light.color);
+						sl.color = new GlTF_ColorRGB (tr.GetComponent<Light>().color);
 						sl.name = tr.name;
 						GlTF_Writer.lights.Add (sl);
 						break;
 						
 					case LightType.Directional:
 						GlTF_DirectionalLight dl = new GlTF_DirectionalLight();
-						dl.color = new GlTF_ColorRGB (tr.light.color);
+						dl.color = new GlTF_ColorRGB (tr.GetComponent<Light>().color);
 						dl.name = tr.name;
 						GlTF_Writer.lights.Add (dl);
 						break;
 						
 					case LightType.Area:
 						GlTF_AmbientLight al = new GlTF_AmbientLight();
-						al.color = new GlTF_ColorRGB (tr.light.color);
+						al.color = new GlTF_ColorRGB (tr.GetComponent<Light>().color);
 						al.name = tr.name;
 						GlTF_Writer.lights.Add (al);
 						break;
@@ -200,7 +200,7 @@ public class SceneToGlTFWiz : ScriptableWizard
 					
 				}
 
-				Animation a = tr.animation;
+				Animation a = tr.GetComponent<Animation>();
 				
 //				Animator a = tr.GetComponent<Animator>();				
 				if (a != null)
@@ -228,11 +228,11 @@ public class SceneToGlTFWiz : ScriptableWizard
 				if (tr.localRotation != Quaternion.identity)
 					node.rotation = new GlTF_Rotation (tr.localRotation);
 				node.name = tr.name;
-				if (tr.camera != null)
+				if (tr.GetComponent<Camera>() != null)
 				{
 					node.cameraName = tr.name;
 				}
-				else if (tr.light != null)
+				else if (tr.GetComponent<Light>() != null)
 					node.lightName = tr.name;
 				else if (mr != null)
 				{
