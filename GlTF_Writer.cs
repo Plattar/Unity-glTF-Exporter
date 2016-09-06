@@ -78,7 +78,8 @@ public class GlTF_Writer {
 	public void OpenFiles (string filepath) {
 		jsonWriter = new StreamWriter (filepath);
 		binFileName = Path.GetFileNameWithoutExtension (filepath) + ".bin";
-		binFile = File.Open(binFileName, FileMode.Create);
+		var binPath = Path.Combine(Path.GetDirectoryName(filepath), binFileName);
+		binFile = File.Open(binPath, FileMode.Create);
 		//		binWriter = new BinaryWriter (File.Open(binFileName, FileMode.Create));
 		//		binWriter = new BinaryWriter (File.Open(binFileName, FileMode.Create));
 	}
