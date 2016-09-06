@@ -22,16 +22,19 @@ public class SceneToGlTFWiz : ScriptableWizard
 //	static public List<GlTF_BufferView> BufferViews;
 	static public GlTF_Writer writer;
 
+	const string KEY_PATH = "GlTFPath";
+	const string KEY_FILE = "GlTFFile";
+
     static public string path = "?";
 	static XmlDocument xdoc;
-	static string savedPath = EditorPrefs.GetString ("GlTFPath", "/");
-	static string savedFile = EditorPrefs.GetString ("GlTFFile", "test.gltf");
+	static string savedPath = EditorPrefs.GetString (KEY_PATH, "/");
+	static string savedFile = EditorPrefs.GetString (KEY_FILE, "test.gltf");
 
 	[MenuItem ("File/Export/glTF")]
 	static void CreateWizard()
 	{
-		savedPath = EditorPrefs.GetString ("glTFPath", "/");
-		savedFile = EditorPrefs.GetString ("glTFFile", "test.gltf");
+		savedPath = EditorPrefs.GetString (KEY_PATH, "/");
+		savedFile = EditorPrefs.GetString (KEY_FILE, "test.gltf");
 		Debug.Log ("remembered "+savedPath+"   "+savedFile);
 		path = savedPath + "/"+ savedFile;
 		ScriptableWizard.DisplayWizard("Export Selected Stuff to glTF", typeof(SceneToGlTFWiz), "Export");
@@ -57,7 +60,13 @@ public class SceneToGlTFWiz : ScriptableWizard
 		
 		path = EditorUtility.SaveFilePanel("Save glTF file as", savedPath, savedFile, "gltf");
 		if (path.Length != 0)
-		{
+		{			
+			savedPath = Path.GetDirectoryName(path);
+			savedFile = Path.GetFileName(path);
+
+			EditorPrefs.SetString(KEY_PATH, savedPath);
+			EditorPrefs.SetString(KEY_FILE, savedFile);
+
 			Debug.Log ("attempting to save to "+path);
 			writer.OpenFiles (path);
 
