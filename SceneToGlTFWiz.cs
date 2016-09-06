@@ -153,69 +153,183 @@ public class SceneToGlTFWiz : ScriptableWizard
 						SkinnedMeshRenderer smr = mr as SkinnedMeshRenderer;
 						m = smr.sharedMesh;
 					}
-					GlTF_Accessor normalAccessor = new GlTF_Accessor("normalAccessor-" + tr.name + "_FIXTHIS", "VEC3", "FLOAT");
-					GlTF_Accessor positionAccessor = new GlTF_Accessor("positionAccessor-" + tr.name + "_FIXTHIS", "VEC3", "FLOAT");
-					GlTF_Accessor texCoord0Accessor = new GlTF_Accessor("texCoord0Accessor-" + tr.name + "_FIXTHIS", "VEC2", "FLOAT");
-					GlTF_Accessor indexAccessor = new GlTF_Accessor("indicesAccessor-" + tr.name + "_FIXTHIS", "SCALAR", "USHORT");
-					indexAccessor.bufferView = GlTF_Writer.ushortBufferView;
-					normalAccessor.bufferView = GlTF_Writer.vec3BufferView;
-					positionAccessor.bufferView = GlTF_Writer.vec3BufferView;
-					texCoord0Accessor.bufferView = GlTF_Writer.vec2BufferView;
+
 					GlTF_Mesh mesh = new GlTF_Mesh();
-					mesh.name = "mesh-" + tr.name;
-					GlTF_Primitive primitive = new GlTF_Primitive();
-					primitive.name = "primitive-"+tr.name+"_FIXTHIS";
-					GlTF_Attributes attributes = new GlTF_Attributes();
-					attributes.normalAccessor = normalAccessor;
-					attributes.positionAccessor = positionAccessor;
-					attributes.texCoord0Accessor = texCoord0Accessor;
-					primitive.attributes = attributes;
-					primitive.indices = indexAccessor;
-					mesh.primitives.Add (primitive);
-					mesh.Populate (m);
-					GlTF_Writer.accessors.Add (normalAccessor);
+					var baseName = m.name + "_" + m.GetInstanceID();
+					mesh.name = "mesh_" + baseName;
+
+					GlTF_Accessor positionAccessor = new GlTF_Accessor("accessor_position_" + baseName, "VEC3", "FLOAT");
+					positionAccessor.bufferView = GlTF_Writer.vec3BufferView;
 					GlTF_Writer.accessors.Add (positionAccessor);
-					GlTF_Writer.accessors.Add (texCoord0Accessor);
-					GlTF_Writer.accessors.Add (indexAccessor);
-					GlTF_Writer.meshes.Add (mesh);
 
-					// next, add material(s) to dictionary (when unique)
-					string matName = mr.sharedMaterial.name;
-					if (matName == "")
-						matName = "material-diffault-diffuse";
-					else
-						matName = "material-" + matName;
-					primitive.materialName = matName;
-					if (!GlTF_Writer.materials.ContainsKey (matName))
+					GlTF_Accessor normalAccessor = null;
+					if (m.normals.Length > 0) 
 					{
-						GlTF_Material material = new GlTF_Material();
-						material.name = matName;
-						if (mr.sharedMaterial.HasProperty ("shininess"))
-							material.shininess = mr.sharedMaterial.GetFloat("shininess");
-						material.diffuse = new GlTF_MaterialColor ("diffuse", mr.sharedMaterial.color);
-						//material.ambient = new GlTF_Color ("ambient", mr.material.color);
-						
-						if (mr.sharedMaterial.HasProperty ("specular"))
-						{
-							Color sc = mr.sharedMaterial.GetColor ("specular");
-							material.specular = new GlTF_MaterialColor ("specular", sc);
-						}
-						GlTF_Writer.materials.Add (material.name, material);
+						normalAccessor = new GlTF_Accessor("accessor_normal_" + baseName, "VEC3", "FLOAT");
+						normalAccessor.bufferView = GlTF_Writer.vec3BufferView;
+						GlTF_Writer.accessors.Add (normalAccessor);
+					}
 
-						// if there are textures, add them too
-						if (mr.sharedMaterial.mainTexture != null)
-						{
-							if (!GlTF_Writer.textures.ContainsKey (mr.sharedMaterial.mainTexture.name))
+					GlTF_Accessor uv0Accessor = null;
+					if (m.uv.Length > 0) {
+						uv0Accessor =  new GlTF_Accessor("accessor_uv0_" + baseName, "VEC2", "FLOAT");
+						uv0Accessor.bufferView = GlTF_Writer.vec2BufferView;
+						GlTF_Writer.accessors.Add (uv0Accessor);
+					}
+
+					GlTF_Accessor uv1Accessor = null;
+					if (m.uv2.Length > 0) {
+						uv1Accessor =  new GlTF_Accessor("accessor_uv1_" + baseName, "VEC2", "FLOAT");
+						uv1Accessor.bufferView = GlTF_Writer.vec2BufferView;
+						GlTF_Writer.accessors.Add (uv1Accessor);
+					}
+
+					GlTF_Accessor uv2Accessor = null;
+					if (m.uv3.Length > 0) {
+						uv2Accessor =  new GlTF_Accessor("accessor_uv2_" + baseName, "VEC2", "FLOAT");
+						uv2Accessor.bufferView = GlTF_Writer.vec2BufferView;
+						GlTF_Writer.accessors.Add (uv2Accessor);
+					}
+
+					GlTF_Accessor uv3Accessor = null;
+					if (m.uv4.Length > 0) {
+						uv3Accessor =  new GlTF_Accessor("accessor_uv3_" + baseName, "VEC2", "FLOAT");
+						uv3Accessor.bufferView = GlTF_Writer.vec2BufferView;
+						GlTF_Writer.accessors.Add (uv3Accessor);
+					}
+
+					var smCount = m.subMeshCount;
+					for (var i = 0; i < smCount; ++i) 
+					{						
+						GlTF_Primitive primitive = new GlTF_Primitive();
+						primitive.name = "primitive_" + i + "_" + baseName;
+						primitive.index = i;
+						GlTF_Attributes attributes = new GlTF_Attributes();
+						attributes.positionAccessor = positionAccessor;
+						attributes.normalAccessor = normalAccessor;
+						attributes.texCoord0Accessor = uv0Accessor;
+						attributes.texCoord1Accessor = uv1Accessor;
+						attributes.texCoord2Accessor = uv2Accessor;
+						attributes.texCoord3Accessor = uv3Accessor;
+						primitive.attributes = attributes;
+						GlTF_Accessor indexAccessor = new GlTF_Accessor("accessor_indices_" + i + "_" + baseName, "SCALAR", "USHORT");
+						indexAccessor.bufferView = GlTF_Writer.ushortBufferView;
+						GlTF_Writer.accessors.Add (indexAccessor);
+						primitive.indices = indexAccessor;
+
+						var sm = mr.sharedMaterials;
+						if (i < sm.Length) {
+							var mat = sm[i];
+							var matName = "material_" + mat.name + "_" + mat.GetInstanceID();
+							primitive.materialName = matName;
+							if (!GlTF_Writer.materials.ContainsKey (matName))
 							{
-								GlTF_Texture texture = new GlTF_Texture ();
-								texture.name = mr.sharedMaterial.mainTexture.name;
-								texture.source = AssetDatabase.GetAssetPath(mr.sharedMaterial.mainTexture);
-								texture.samplerName = sampler.name; // FIX! For now!
-								GlTF_Writer.textures.Add (mr.sharedMaterial.mainTexture.name, texture);
-								material.diffuse = new GlTF_MaterialTexture ("diffuse", texture);
+								GlTF_Material material = new GlTF_Material();	
+								material.name = matName;
+								material.diffuse = new GlTF_MaterialColor ("diffuse", mat.color);
+								GlTF_Writer.materials.Add (material.name, material);
+
+								// if there are textures, add them too
+								if (mat.mainTexture != null)
+								{
+									var tex = mat.mainTexture;
+									var texName = "texture_" + tex.name + "_" + tex.GetInstanceID();
+									if (!GlTF_Writer.textures.ContainsKey (texName))
+									{
+										GlTF_Texture texture = new GlTF_Texture ();
+										texture.name = texName;
+										texture.source = AssetDatabase.GetAssetPath(tex);
+										texture.samplerName = sampler.name; // FIX! For now!
+										GlTF_Writer.textures.Add (texName, texture);
+										material.diffuse = new GlTF_MaterialTexture ("diffuse", texture);
+									}
+								}
 							}
 						}
+
+						mesh.primitives.Add (primitive);
 					}
+
+					mesh.Populate (m);
+					GlTF_Writer.meshes.Add (mesh);
+
+
+
+//					GlTF_Accessor normalAccessor = new GlTF_Accessor("normalAccessor-" + tr.name + "_FIXTHIS", "VEC3", "FLOAT");
+//					GlTF_Accessor positionAccessor = new GlTF_Accessor("positionAccessor-" + tr.name + "_FIXTHIS", "VEC3", "FLOAT");
+//					GlTF_Accessor texCoord0Accessor = new GlTF_Accessor("texCoord0Accessor-" + tr.name + "_FIXTHIS", "VEC2", "FLOAT");
+//					GlTF_Accessor indexAccessor = new GlTF_Accessor("indicesAccessor-" + tr.name + "_FIXTHIS", "SCALAR", "USHORT");
+//					indexAccessor.bufferView = GlTF_Writer.ushortBufferView;
+//					normalAccessor.bufferView = GlTF_Writer.vec3BufferView;
+//					positionAccessor.bufferView = GlTF_Writer.vec3BufferView;
+//					texCoord0Accessor.bufferView = GlTF_Writer.vec2BufferView;
+//					GlTF_Mesh mesh = new GlTF_Mesh();
+//					mesh.name = "mesh-" + tr.name;
+//					GlTF_Primitive primitive = new GlTF_Primitive();
+//					primitive.name = "primitive-"+tr.name+"_FIXTHIS";
+//					GlTF_Attributes attributes = new GlTF_Attributes();
+//					attributes.normalAccessor = normalAccessor;
+//					attributes.positionAccessor = positionAccessor;
+//					attributes.texCoord0Accessor = texCoord0Accessor;
+//					primitive.attributes = attributes;
+//					primitive.indices = indexAccessor;
+//					mesh.primitives.Add (primitive);
+//					mesh.Populate (m);
+//					GlTF_Writer.accessors.Add (normalAccessor);
+//					GlTF_Writer.accessors.Add (positionAccessor);
+//					GlTF_Writer.accessors.Add (texCoord0Accessor);
+//					GlTF_Writer.accessors.Add (indexAccessor);
+//					GlTF_Writer.meshes.Add (mesh);
+//
+//					foreach (var mat in mr.sharedMaterials) 
+//					{
+//						var id = mat.GetInstanceID();
+//						if (!usedMaterials.ContainsKey(id)) 
+//						{	
+//							GlTF_Material material = new GlTF_Material();
+//							material.name = "material_" +  mat.name + "_" + id;
+//							usedMaterials[id] = material;
+//							GlTF_Writer.materials.Add (material.name, material);
+//						}
+//					}
+//
+//					// next, add material(s) to dictionary (when unique)
+//					string matName = mr.sharedMaterial.name;
+//					if (matName == "")
+//						matName = "material-diffault-diffuse";
+//					else
+//						matName = "material-" + matName;
+//					primitive.materialName = matName;
+//					if (!GlTF_Writer.materials.ContainsKey (matName))
+//					{
+//						GlTF_Material material = new GlTF_Material();
+//						material.name = matName;
+//						if (mr.sharedMaterial.HasProperty ("shininess"))
+//							material.shininess = mr.sharedMaterial.GetFloat("shininess");
+//						material.diffuse = new GlTF_MaterialColor ("diffuse", mr.sharedMaterial.color);
+//						//material.ambient = new GlTF_Color ("ambient", mr.material.color);
+//						
+//						if (mr.sharedMaterial.HasProperty ("specular"))
+//						{
+//							Color sc = mr.sharedMaterial.GetColor ("specular");
+//							material.specular = new GlTF_MaterialColor ("specular", sc);
+//						}
+//						GlTF_Writer.materials.Add (material.name, material);
+//
+//						// if there are textures, add them too
+//						if (mr.sharedMaterial.mainTexture != null)
+//						{
+//							if (!GlTF_Writer.textures.ContainsKey (mr.sharedMaterial.mainTexture.name))
+//							{
+//								GlTF_Texture texture = new GlTF_Texture ();
+//								texture.name = mr.sharedMaterial.mainTexture.name;
+//								texture.source = AssetDatabase.GetAssetPath(mr.sharedMaterial.mainTexture);
+//								texture.samplerName = sampler.name; // FIX! For now!
+//								GlTF_Writer.textures.Add (mr.sharedMaterial.mainTexture.name, texture);
+//								material.diffuse = new GlTF_MaterialTexture ("diffuse", texture);
+//							}
+//						}
+//					}
 					
 				}
 
@@ -262,7 +376,7 @@ public class SceneToGlTFWiz : ScriptableWizard
 					node.childrenNames.Add ("node-" + t.name);
 				
 				GlTF_Writer.nodes.Add (node);
-			}
+			}				
 
 			// third, add meshes etc to byte stream, keeping track of buffer offsets
 			writer.Write ();

@@ -7,11 +7,12 @@ public class GlTF_Primitive : GlTF_Writer {
 	public string materialName;
 	public int primitive =  4;
 	public int semantics = 4;
+	public int index = 0;
 
 	public void Populate (Mesh m)
 	{
 		attributes.Populate (m);
-		indices.Populate (m.triangles, true);
+		indices.Populate (m.GetTriangles(index), true);
 	}
 
 	public override void Write ()

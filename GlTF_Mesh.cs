@@ -9,7 +9,10 @@ public class GlTF_Mesh : GlTF_Writer {
 
 	public void Populate (Mesh m)
 	{
-		primitives[0].Populate (m);
+		foreach (GlTF_Primitive p in primitives) 
+		{
+			p.Populate (m);
+		}
 	}
 
 	public override void Write ()
