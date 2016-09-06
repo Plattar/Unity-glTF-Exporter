@@ -13,8 +13,6 @@ public class GlTF_Material : GlTF_Writer {
 	{
 		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
 		IndentIn();
-		Indent();		jsonWriter.Write ("\"instanceTechnique\": {\n");
-		IndentIn();
 		CommaNL();
 		Indent();		jsonWriter.Write ("\"technique\": \"" + instanceTechniqueName + "\",\n");
 		Indent();		jsonWriter.Write ("\"values\": {\n");
@@ -39,12 +37,11 @@ public class GlTF_Material : GlTF_Writer {
 		jsonWriter.WriteLine();
 		IndentOut();
 		Indent();		jsonWriter.Write ("}");
-		jsonWriter.WriteLine();
-		IndentOut();
-		Indent();		jsonWriter.Write ("},\n");
+		CommaNL();
 		Indent();		jsonWriter.Write ("\"name\": \"" + name + "\"\n");
 		IndentOut();
 		Indent();		jsonWriter.Write ("}");
+
 	}
 
 }
