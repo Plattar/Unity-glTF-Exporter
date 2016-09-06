@@ -7,7 +7,7 @@ public class GlTF_BufferView : GlTF_Writer  {
 	public string buffer;// ": "duck",
 	public long byteLength;//": 25272,
 	public long byteOffset;//": 0,
-	public int target = 34963;
+	public int target = 34962;
 	//	public string target = "ARRAY_BUFFER";
 	public int currentOffset = 0;
 	public MemoryStream memoryStream = new MemoryStream();

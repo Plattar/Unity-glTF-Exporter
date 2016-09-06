@@ -9,7 +9,7 @@ public class GlTF_Writer {
 	public static int indent = 0;
 	public static string binFileName;
 	static bool[] firsts = new bool[100];
-	public static GlTF_BufferView ushortBufferView = new GlTF_BufferView("ushortBufferView");
+	public static GlTF_BufferView ushortBufferView = new GlTF_BufferView("ushortBufferView", 34963);
 	public static GlTF_BufferView floatBufferView = new GlTF_BufferView("floatBufferView");
 	public static GlTF_BufferView vec2BufferView = new GlTF_BufferView("vec2BufferView");
 	public static GlTF_BufferView vec3BufferView = new GlTF_BufferView("vec3BufferView");
@@ -29,7 +29,7 @@ public class GlTF_Writer {
 	public void Init()
 	{
 		firsts = new bool[100];
-		ushortBufferView = new GlTF_BufferView("ushortBufferView");
+		ushortBufferView = new GlTF_BufferView("ushortBufferView", 34963);
 		floatBufferView = new GlTF_BufferView("floatBufferView");
 		vec2BufferView = new GlTF_BufferView("vec2BufferView");
 		vec3BufferView = new GlTF_BufferView("vec3BufferView");
