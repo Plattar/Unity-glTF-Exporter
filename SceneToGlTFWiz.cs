@@ -138,11 +138,21 @@ public class SceneToGlTFWiz : ScriptableWizard
 					}
 				}
 
-				MeshRenderer mr = tr.GetComponent<MeshRenderer>();
+				Renderer mr = tr.GetComponent<MeshRenderer>();
+				if (mr == null) {
+					mr = tr.GetComponent<SkinnedMeshRenderer>();
+				}
+
 				if (mr != null)
 				{
-					MeshFilter mf = tr.GetComponent<MeshFilter>();
-					Mesh m = mf.sharedMesh;
+					Mesh m;
+					if (mr is MeshRenderer) {
+						MeshFilter mf = tr.GetComponent<MeshFilter>();
+						m = mf.sharedMesh;
+					} else {
+						SkinnedMeshRenderer smr = mr as SkinnedMeshRenderer;
+						m = smr.sharedMesh;
+					}
 					GlTF_Accessor normalAccessor = new GlTF_Accessor("normalAccessor-" + tr.name + "_FIXTHIS", "VEC3", "FLOAT");
 					GlTF_Accessor positionAccessor = new GlTF_Accessor("positionAccessor-" + tr.name + "_FIXTHIS", "VEC3", "FLOAT");
 					GlTF_Accessor texCoord0Accessor = new GlTF_Accessor("texCoord0Accessor-" + tr.name + "_FIXTHIS", "VEC2", "FLOAT");
