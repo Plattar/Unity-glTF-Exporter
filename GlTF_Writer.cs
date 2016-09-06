@@ -113,6 +113,14 @@ public class GlTF_Writer {
 		jsonWriter.Write ("{\n");
 		IndentIn();
 
+		// asset
+		CommaNL();
+		Indent();	jsonWriter.Write ("\"asset\": {\n");
+		IndentIn();
+		Indent();	jsonWriter.Write ("\"version\": \"1\"\n");
+		IndentOut();
+		Indent();	jsonWriter.Write ("}");
+
 		// FIX: Should support multiple buffers
 		CommaNL();
 		Indent();	jsonWriter.Write ("\"buffers\": {\n");
