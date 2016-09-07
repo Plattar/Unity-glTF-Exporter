@@ -24,7 +24,7 @@ public class GlTF_Writer {
 	public static Dictionary<string, GlTF_Texture> textures = new Dictionary<string, GlTF_Texture>();
 	public static List<GlTF_Sampler> samplers = new List<GlTF_Sampler>();
 	public static List<GlTF_Animation> animations = new List<GlTF_Animation>();
-	public static List<GlTF_Technique> techniques = new List<GlTF_Technique>();
+	public static Dictionary<string, GlTF_Technique> techniques = new Dictionary<string, GlTF_Technique>();
 
 	public void Init()
 	{
@@ -44,7 +44,7 @@ public class GlTF_Writer {
 		textures = new Dictionary<string, GlTF_Texture>();
 		samplers = new List<GlTF_Sampler>();
 		animations = new List<GlTF_Animation>();
-		techniques = new List<GlTF_Technique>();
+		techniques = new Dictionary<string, GlTF_Technique>();
 	}
 
 	public void Indent() {
@@ -205,10 +205,10 @@ public class GlTF_Writer {
 			Indent();
 			jsonWriter.Write ("\"techniques\": {\n");
 			IndentIn();
-			foreach (GlTF_Technique t in techniques) 
+			foreach (KeyValuePair<string, GlTF_Technique> k in techniques) 
 			{
 				CommaNL();
-				t.Write();
+				k.Value.Write();
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
