@@ -28,6 +28,19 @@ public class GlTF_Writer {
 	public static List<GlTF_Program> programs = new List<GlTF_Program>();
 	public static List<GlTF_Shader> shaders = new List<GlTF_Shader>();
 
+	static public string GetNameFromObject(Object o, bool useId = false) 
+	{
+		var ret = o.name;
+		ret = ret.Replace(" ", "_");
+		ret = ret.Replace("/", "_");
+		ret = ret.Replace("\\", "_");
+
+		if (useId) 
+		{
+			ret += "_" + o.GetInstanceID();
+		}
+		return ret;
+	}
 
 	public void Init()
 	{
