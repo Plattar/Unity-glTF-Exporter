@@ -9,6 +9,11 @@ public class GlTF_Primitive : GlTF_Writer {
 	public int semantics = 4;
 	public int index = 0;
 
+	public static string GetNameFromObject(Object o, int index) 
+	{		 		
+		return "primitive_" + index + "_" + GlTF_Writer.GetNameFromObject(o, true);
+	}
+
 	public void Populate (Mesh m)
 	{
 		attributes.Populate (m);

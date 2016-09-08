@@ -7,6 +7,11 @@ public class GlTF_Mesh : GlTF_Writer {
 
 	public GlTF_Mesh() { primitives = new List<GlTF_Primitive>(); }
 
+	public static string GetNameFromObject(Object o) 
+	{		 		
+		return "mesh_" + GlTF_Writer.GetNameFromObject(o, true);
+	}
+
 	public void Populate (Mesh m)
 	{
 		foreach (GlTF_Primitive p in primitives) 

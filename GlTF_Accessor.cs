@@ -41,6 +41,11 @@ public class GlTF_Accessor : GlTF_Writer {
 		}
 	}
 
+	public static string GetNameFromObject(Object o, string name) 
+	{		 		
+		return "accessor_" + name + "_"+ GlTF_Writer.GetNameFromObject(o, true);
+	}
+
 	public void Populate (int[] vs, bool flippedTriangle)
 	{
 		if (aType != "SCALAR")
