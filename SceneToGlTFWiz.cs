@@ -136,64 +136,50 @@ public class SceneToGlTFWiz : ScriptableWizard
 						GlTF_Writer.lights.Add (al);
 						break;
 					}
-				}
+				}					
 
-				Renderer mr = tr.GetComponent<MeshRenderer>();
-				if (mr == null) {
-					mr = tr.GetComponent<SkinnedMeshRenderer>();
-				}
-
-				if (mr != null)
+				Mesh m = GetMesh(tr);
+				if (m != null)
 				{
-					Mesh m;
-					if (mr is MeshRenderer) {
-						MeshFilter mf = tr.GetComponent<MeshFilter>();
-						m = mf.sharedMesh;
-					} else {
-						SkinnedMeshRenderer smr = mr as SkinnedMeshRenderer;
-						m = smr.sharedMesh;
-					}
-
 					GlTF_Mesh mesh = new GlTF_Mesh();
-					var baseName = m.name + "_" + m.GetInstanceID();
-					mesh.name = "mesh_" + baseName;
+					mesh.name = GlTF_Mesh.GetNameFromObject(m);
 
-					GlTF_Accessor positionAccessor = new GlTF_Accessor("accessor_position_" + baseName, "VEC3", "FLOAT");
+					GlTF_Accessor positionAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "position"), "VEC3", "FLOAT");
 					positionAccessor.bufferView = GlTF_Writer.vec3BufferView;
 					GlTF_Writer.accessors.Add (positionAccessor);
 
 					GlTF_Accessor normalAccessor = null;
 					if (m.normals.Length > 0) 
 					{
-						normalAccessor = new GlTF_Accessor("accessor_normal_" + baseName, "VEC3", "FLOAT");
+						normalAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "normal"), "VEC3", "FLOAT");
 						normalAccessor.bufferView = GlTF_Writer.vec3BufferView;
 						GlTF_Writer.accessors.Add (normalAccessor);
 					}
 
 					GlTF_Accessor uv0Accessor = null;
 					if (m.uv.Length > 0) {
-						uv0Accessor =  new GlTF_Accessor("accessor_uv0_" + baseName, "VEC2", "FLOAT");
+						uv0Accessor =  new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "uv0"), "VEC2", "FLOAT");
 						uv0Accessor.bufferView = GlTF_Writer.vec2BufferView;
 						GlTF_Writer.accessors.Add (uv0Accessor);
 					}
 
 					GlTF_Accessor uv1Accessor = null;
 					if (m.uv2.Length > 0) {
-						uv1Accessor =  new GlTF_Accessor("accessor_uv1_" + baseName, "VEC2", "FLOAT");
+						uv1Accessor =  new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "uv1"), "VEC2", "FLOAT");
 						uv1Accessor.bufferView = GlTF_Writer.vec2BufferView;
 						GlTF_Writer.accessors.Add (uv1Accessor);
 					}
 
 					GlTF_Accessor uv2Accessor = null;
 					if (m.uv3.Length > 0) {
-						uv2Accessor =  new GlTF_Accessor("accessor_uv2_" + baseName, "VEC2", "FLOAT");
+						uv2Accessor =  new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "uv2"), "VEC2", "FLOAT");
 						uv2Accessor.bufferView = GlTF_Writer.vec2BufferView;
 						GlTF_Writer.accessors.Add (uv2Accessor);
 					}
 
 					GlTF_Accessor uv3Accessor = null;
 					if (m.uv4.Length > 0) {
-						uv3Accessor =  new GlTF_Accessor("accessor_uv3_" + baseName, "VEC2", "FLOAT");
+						uv3Accessor =  new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "uv3"), "VEC2", "FLOAT");
 						uv3Accessor.bufferView = GlTF_Writer.vec2BufferView;
 						GlTF_Writer.accessors.Add (uv3Accessor);
 					}
@@ -202,7 +188,7 @@ public class SceneToGlTFWiz : ScriptableWizard
 					for (var i = 0; i < smCount; ++i) 
 					{						
 						GlTF_Primitive primitive = new GlTF_Primitive();
-						primitive.name = "primitive_" + i + "_" + baseName;
+						primitive.name = GlTF_Primitive.GetNameFromObject(m, i);
 						primitive.index = i;
 						GlTF_Attributes attributes = new GlTF_Attributes();
 						attributes.positionAccessor = positionAccessor;
@@ -212,15 +198,16 @@ public class SceneToGlTFWiz : ScriptableWizard
 						attributes.texCoord2Accessor = uv2Accessor;
 						attributes.texCoord3Accessor = uv3Accessor;
 						primitive.attributes = attributes;
-						GlTF_Accessor indexAccessor = new GlTF_Accessor("accessor_indices_" + i + "_" + baseName, "SCALAR", "USHORT");
+						GlTF_Accessor indexAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "indices"), "SCALAR", "USHORT");
 						indexAccessor.bufferView = GlTF_Writer.ushortBufferView;
 						GlTF_Writer.accessors.Add (indexAccessor);
 						primitive.indices = indexAccessor;
 
+						var mr = GetRenderer(tr);
 						var sm = mr.sharedMaterials;
 						if (i < sm.Length) {
 							var mat = sm[i];
-							var matName = "material_" + mat.name + "_" + mat.GetInstanceID();
+							var matName = GlTF_Material.GetNameFromObject(mat);
 							primitive.materialName = matName;
 							if (!GlTF_Writer.materials.ContainsKey (matName))
 							{
@@ -408,9 +395,9 @@ public class SceneToGlTFWiz : ScriptableWizard
 				}
 				else if (tr.GetComponent<Light>() != null)
 					node.lightName = tr.name;
-				else if (mr != null)
+				else if (m != null)
 				{
-					node.meshNames.Add ("mesh-" + tr.name);
+					node.meshNames.Add (GlTF_Mesh.GetNameFromObject(m));
 				}
 
 				foreach (Transform t in tr.transform)
@@ -445,5 +432,34 @@ public class SceneToGlTFWiz : ScriptableWizard
 			t = t.BaseType;
 		}
 		return false;
+	}
+
+	static Renderer GetRenderer(Transform tr) 
+	{
+		Renderer mr = tr.GetComponent<MeshRenderer>();
+		if (mr == null) {
+			mr = tr.GetComponent<SkinnedMeshRenderer>();
+		}
+		return mr;
+	}
+
+	static Mesh GetMesh(Transform tr)
+	{
+		var mr = GetRenderer(tr);
+		Mesh m = null;
+		if (mr != null)
+		{
+			var t = mr.GetType();
+			if (t == typeof(MeshRenderer)) 
+			{
+				MeshFilter mf = tr.GetComponent<MeshFilter>();
+				m = mf.sharedMesh;
+			} else if (t == typeof(SkinnedMeshRenderer)) 
+			{
+				SkinnedMeshRenderer smr = mr as SkinnedMeshRenderer;
+				m = smr.sharedMesh;
+			}
+		}
+		return m;
 	}
 }
