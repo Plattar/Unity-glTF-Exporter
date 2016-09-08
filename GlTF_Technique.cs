@@ -2,17 +2,19 @@
 using System.Collections;
 
 public class GlTF_Technique : GlTF_Writer {
+	public string program;
 
-	static public string GetNameFromShader(Shader s) 
-	{		 
-		var ret = "technique_" + s.name + "_" + s.GetInstanceID();
-		ret = ret.Replace(" ", "_");
-		return ret;
+	public static string GetNameFromObject(Object o) 
+	{		 		
+		return "technique_" + GlTF_Writer.GetNameFromObject(o);
 	}
 
 	public override void Write()
 	{
 		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
+		IndentIn();		
+		Indent();		jsonWriter.Write ("\"program\": \"" + program +"\"\n");
+		IndentOut();
 		Indent();		jsonWriter.Write ("}");
 	}
 }
