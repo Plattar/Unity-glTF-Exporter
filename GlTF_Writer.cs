@@ -25,6 +25,9 @@ public class GlTF_Writer {
 	public static List<GlTF_Sampler> samplers = new List<GlTF_Sampler>();
 	public static List<GlTF_Animation> animations = new List<GlTF_Animation>();
 	public static Dictionary<string, GlTF_Technique> techniques = new Dictionary<string, GlTF_Technique>();
+	public static List<GlTF_Program> programs = new List<GlTF_Program>();
+	public static List<GlTF_Shader> shaders = new List<GlTF_Shader>();
+
 
 	public void Init()
 	{
@@ -45,6 +48,8 @@ public class GlTF_Writer {
 		samplers = new List<GlTF_Sampler>();
 		animations = new List<GlTF_Animation>();
 		techniques = new Dictionary<string, GlTF_Technique>();
+		programs = new List<GlTF_Program>();
+		shaders = new List<GlTF_Shader>();
 	}
 
 	public void Indent() {
@@ -192,6 +197,40 @@ public class GlTF_Writer {
 			{
 				CommaNL();
 				m.Write ();
+			}
+			jsonWriter.WriteLine();
+			IndentOut();
+			Indent();
+			jsonWriter.Write ("}");
+		}
+
+		if (shaders != null && shaders.Count > 0) 
+		{
+			CommaNL();
+			Indent();
+			jsonWriter.Write ("\"shaders\": {\n");
+			IndentIn();
+			foreach (var s in shaders)
+			{
+				CommaNL();
+				s.Write();
+			}
+			jsonWriter.WriteLine();
+			IndentOut();
+			Indent();
+			jsonWriter.Write ("}");
+		}
+
+		if (programs != null && programs.Count > 0) 
+		{
+			CommaNL();
+			Indent();
+			jsonWriter.Write ("\"programs\": {\n");
+			IndentIn();
+			foreach (var p in programs)
+			{
+				CommaNL();
+				p.Write();
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
