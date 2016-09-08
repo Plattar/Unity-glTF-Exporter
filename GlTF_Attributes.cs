@@ -38,12 +38,7 @@ public class GlTF_Attributes : GlTF_Writer {
 	{
 		Indent();	jsonWriter.Write ("\"attributes\": {\n");
 		IndentIn();
-		if (normalAccessor != null)
-		{
-			CommaNL();
-			Indent();	jsonWriter.Write ("\"NORMAL\": \"" + normalAccessor.name + "\"");
-		}
-		if (normalAccessor != null)
+		if (positionAccessor != null)
 		{
 			CommaNL();
 			Indent();	jsonWriter.Write ("\"POSITION\": \"" + positionAccessor.name + "\"");
@@ -51,7 +46,27 @@ public class GlTF_Attributes : GlTF_Writer {
 		if (normalAccessor != null)
 		{
 			CommaNL();
+			Indent();	jsonWriter.Write ("\"NORMAL\": \"" + normalAccessor.name + "\"");
+		}
+		if (texCoord0Accessor != null)
+		{
+			CommaNL();
 			Indent();	jsonWriter.Write ("\"TEXCOORD_0\": \"" + texCoord0Accessor.name + "\"");
+		}
+		if (texCoord1Accessor != null)
+		{
+			CommaNL();
+			Indent();	jsonWriter.Write ("\"TEXCOORD_1\": \"" + texCoord1Accessor.name + "\"");
+		}
+		if (texCoord2Accessor != null)
+		{
+			CommaNL();
+			Indent();	jsonWriter.Write ("\"TEXCOORD_2\": \"" + texCoord2Accessor.name + "\"");
+		}
+		if (texCoord3Accessor != null)
+		{
+			CommaNL();
+			Indent();	jsonWriter.Write ("\"TEXCOORD_3\": \"" + texCoord3Accessor.name + "\"");
 		}
 		//CommaNL();
 		jsonWriter.WriteLine();
