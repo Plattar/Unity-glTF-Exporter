@@ -9,6 +9,11 @@ public class GlTF_Material : GlTF_Writer {
 	public float shininess;
 	public GlTF_ColorOrTexture specular;// = new GlTF_ColorRGBA ("specular");
 
+	public static string GetNameFromObject(Object o) 
+	{		 		
+		return "material_" + GlTF_Writer.GetNameFromObject(o, true);
+	}
+
 	public override void Write()
 	{
 		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
