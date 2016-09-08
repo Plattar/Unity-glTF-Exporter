@@ -24,7 +24,7 @@ public class GlTF_Primitive : GlTF_Writer {
 		CommaNL();
 		Indent();	jsonWriter.Write ("\"indices\": \"" + indices.name + "\",\n");
 		Indent();	jsonWriter.Write ("\"material\": \"" + materialName + "\",\n");
-		Indent();	jsonWriter.Write ("\"primitive\": " + primitive + "\n");
+		Indent();	jsonWriter.Write ("\"mode\": " + primitive + "\n");
 		// semantics
 		IndentOut();
 	}
