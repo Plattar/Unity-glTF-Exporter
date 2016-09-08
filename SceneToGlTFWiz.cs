@@ -244,6 +244,47 @@ public class SceneToGlTFWiz : ScriptableWizard
 										material.diffuse = new GlTF_MaterialTexture ("diffuse", texture);
 									}
 								}
+
+								//technique
+								var s = mat.shader;
+								var techName = GlTF_Technique.GetNameFromObject(s);
+								material.instanceTechniqueName = techName;
+								if (!GlTF_Writer.techniques.ContainsKey(techName)) 
+								{
+									GlTF_Technique tech = new GlTF_Technique();
+									tech.name = techName;
+									GlTF_Writer.techniques.Add (techName, tech);
+
+									int spCount = ShaderUtil.GetPropertyCount(s);
+									for (var j = 0; j < spCount; ++j) 
+									{
+										var pName = ShaderUtil.GetPropertyName(s, j);
+										var pType = ShaderUtil.GetPropertyType(s, j);
+										Debug.Log(pName + " " +  pType);
+
+									}
+
+									// create program
+									GlTF_Program program = new GlTF_Program();
+									program.name = GlTF_Program.GetNameFromObject(s);
+									tech.program = program.name;
+									GlTF_Writer.programs.Add(program);
+
+									// shader
+									GlTF_Shader vs = new GlTF_Shader();
+									vs.name = GlTF_Shader.GetNameFromObject(s, GlTF_Shader.Type.Vertex);
+									program.vertexShader = vs.name;
+									vs.type = GlTF_Shader.Type.Vertex;
+									vs.uri = "DefaultVS.glsl";
+									GlTF_Writer.shaders.Add(vs);
+
+									GlTF_Shader fs = new GlTF_Shader();
+									fs.name = GlTF_Shader.GetNameFromObject(s, GlTF_Shader.Type.Fragment);
+									program.fragmentShader = fs.name;
+									fs.type = GlTF_Shader.Type.Fragment;
+									fs.uri = "DefaultFS.glsl";
+									GlTF_Writer.shaders.Add(fs);
+								}
 							}
 						}
 
