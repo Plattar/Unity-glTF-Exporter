@@ -5,7 +5,8 @@ using System.Collections.Generic;
 public class GlTF_Technique : GlTF_Writer {
 	public enum Type {
 		FLOAT_VEC2 = 35664,
-		FLOAT_VEC3 = 35665
+		FLOAT_VEC3 = 35665,
+		FLOAT_VEC4 = 35666
 	}
 
 	public enum Semantic {
