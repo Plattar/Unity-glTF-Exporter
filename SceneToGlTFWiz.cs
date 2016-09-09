@@ -331,6 +331,10 @@ public class SceneToGlTFWiz : ScriptableWizard
 									GlTF_Program program = new GlTF_Program();
 									program.name = GlTF_Program.GetNameFromObject(s);
 									tech.program = program.name;
+									foreach (var attr in tech.attributes)
+									{
+										program.attributes.Add(attr.name);
+									}
 									GlTF_Writer.programs.Add(program);
 
 									// shader

@@ -17,6 +17,14 @@ public class GlTF_Program : GlTF_Writer {
 		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
 		IndentIn();
 		Indent();		jsonWriter.Write ("\"attributes\": [\n");
+		IndentIn();
+		foreach (var a in attributes)
+		{
+			CommaNL();
+			Indent();	jsonWriter.Write ("\"" + a + "\"");
+		}
+		Indent();		jsonWriter.Write ("\n");
+		IndentOut();
 		Indent();		jsonWriter.Write ("],\n");
 		Indent();		jsonWriter.Write ("\"vertexShader\": \"" + vertexShader + "\",\n");
 		Indent();		jsonWriter.Write ("\"fragmentShader\": \"" + fragmentShader + "\"\n");
