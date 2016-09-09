@@ -30,10 +30,15 @@ public class GlTF_Technique : GlTF_Writer {
 		public string param;
 	}
 
+	public class Uniform {
+		public string name;
+		public string param;
+	}
+
 	public string program;
 	public List<Attribute> attributes = new List<Attribute>();
 	public List<Parameter> parameters = new List<Parameter>();
-	public List<Attribute> uniforms = new List<Attribute>();
+	public List<Uniform> uniforms = new List<Uniform>();
 
 	public static string GetNameFromObject(Object o) 
 	{		 		
@@ -79,6 +84,14 @@ public class GlTF_Technique : GlTF_Writer {
 		Indent();		jsonWriter.Write ("},\n");
 
 		Indent();		jsonWriter.Write ("\"uniforms\": {\n");
+		IndentIn();
+		foreach (var u in uniforms)
+		{
+			CommaNL();
+			Indent();	jsonWriter.Write ("\"" + u.name + "\": \"" + u.param + "\"");
+		}
+		Indent();		jsonWriter.Write ("\n");
+		IndentOut();
 		Indent();		jsonWriter.Write ("}\n");
 		IndentOut();
 		Indent();		jsonWriter.Write ("}");
