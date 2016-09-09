@@ -240,6 +240,82 @@ public class SceneToGlTFWiz : ScriptableWizard
 								{
 									GlTF_Technique tech = new GlTF_Technique();
 									tech.name = techName;
+
+									GlTF_Technique.Parameter posParam = new GlTF_Technique.Parameter();
+									posParam.name = "position";
+									posParam.type = GlTF_Technique.Type.FLOAT_VEC3;
+									posParam.semantic = GlTF_Technique.Semantic.POSITION;
+									tech.parameters.Add(posParam);
+									GlTF_Technique.Attribute posAttr = new GlTF_Technique.Attribute();
+									posAttr.name = "a_position";
+									posAttr.param = posParam.name;
+									tech.attributes.Add(posAttr);
+
+									if (normalAccessor != null)
+									{
+										posParam = new GlTF_Technique.Parameter();
+										posParam.name = "normal";
+										posParam.type = GlTF_Technique.Type.FLOAT_VEC3;
+										posParam.semantic = GlTF_Technique.Semantic.NORMAL;
+										tech.parameters.Add(posParam);
+										posAttr = new GlTF_Technique.Attribute();
+										posAttr.name = "a_normal";
+										posAttr.param = posParam.name;
+										tech.attributes.Add(posAttr);
+									}
+
+									if (uv0Accessor != null)
+									{
+										posParam = new GlTF_Technique.Parameter();
+										posParam.name = "texcoord0";
+										posParam.type = GlTF_Technique.Type.FLOAT_VEC2;
+										posParam.semantic = GlTF_Technique.Semantic.TEXCOORD_0;
+										tech.parameters.Add(posParam);
+										posAttr = new GlTF_Technique.Attribute();
+										posAttr.name = "a_texcoord0";
+										posAttr.param = posParam.name;
+										tech.attributes.Add(posAttr);
+									}
+
+									if (uv1Accessor != null)
+									{
+										posParam = new GlTF_Technique.Parameter();
+										posParam.name = "texcoord1";
+										posParam.type = GlTF_Technique.Type.FLOAT_VEC2;
+										posParam.semantic = GlTF_Technique.Semantic.TEXCOORD_1;
+										tech.parameters.Add(posParam);
+										posAttr = new GlTF_Technique.Attribute();
+										posAttr.name = "a_texcoord1";
+										posAttr.param = posParam.name;
+										tech.attributes.Add(posAttr);
+									}
+
+									if (uv2Accessor != null)
+									{
+										posParam = new GlTF_Technique.Parameter();
+										posParam.name = "texcoord2";
+										posParam.type = GlTF_Technique.Type.FLOAT_VEC2;
+										posParam.semantic = GlTF_Technique.Semantic.TEXCOORD_2;
+										tech.parameters.Add(posParam);
+										posAttr = new GlTF_Technique.Attribute();
+										posAttr.name = "a_texcoord2";
+										posAttr.param = posParam.name;
+										tech.attributes.Add(posAttr);
+									}
+
+									if (uv3Accessor != null)
+									{
+										posParam = new GlTF_Technique.Parameter();
+										posParam.name = "texcoord3";
+										posParam.type = GlTF_Technique.Type.FLOAT_VEC2;
+										posParam.semantic = GlTF_Technique.Semantic.TEXCOORD_3;
+										tech.parameters.Add(posParam);
+										posAttr = new GlTF_Technique.Attribute();
+										posAttr.name = "a_texcoord3";
+										posAttr.param = posParam.name;
+										tech.attributes.Add(posAttr);
+									}
+
 									GlTF_Writer.techniques.Add (techName, tech);
 
 									int spCount = ShaderUtil.GetPropertyCount(s);

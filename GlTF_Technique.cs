@@ -1,8 +1,38 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class GlTF_Technique : GlTF_Writer {
+	public enum Type {
+		FLOAT_VEC2 = 35664,
+		FLOAT_VEC3 = 35665
+	}
+
+	public enum Semantic {
+		UNKNOWN,
+		POSITION,
+		NORMAL,
+		TEXCOORD_0,
+		TEXCOORD_1,
+		TEXCOORD_2,
+		TEXCOORD_3
+	}
+
+	public class Parameter {	
+		public string name;	
+		public Type type;
+		public Semantic semantic = Semantic.UNKNOWN;
+	}
+
+	public class Attribute {
+		public string name;
+		public string param;
+	}
+
 	public string program;
+	public List<Attribute> attributes = new List<Attribute>();
+	public List<Parameter> parameters = new List<Parameter>();
+	public List<Attribute> uniforms = new List<Attribute>();
 
 	public static string GetNameFromObject(Object o) 
 	{		 		
@@ -14,6 +44,38 @@ public class GlTF_Technique : GlTF_Writer {
 		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
 		IndentIn();		
 		Indent();		jsonWriter.Write ("\"program\": \"" + program +"\"\n");
+		Indent();		jsonWriter.Write ("\"parameters\": {\n");
+		IndentIn();
+		foreach (var p in parameters)
+		{
+			CommaNL();
+			Indent();	jsonWriter.Write ("\"" + p.name + "\": {\n");
+			IndentIn();
+			Indent();	jsonWriter.Write ("\"type\": " + (int)p.type + "\n");
+			if (p.semantic != Semantic.UNKNOWN)
+			{
+				Indent();	jsonWriter.Write ("\"semantic\": \"" + p.semantic + "\"\n");
+			}
+			IndentOut();
+			Indent();	jsonWriter.Write ("}");
+		}
+		Indent();		jsonWriter.Write ("\n");
+		IndentOut();
+		Indent();		jsonWriter.Write ("},\n");
+
+		Indent();		jsonWriter.Write ("\"attributes\": {\n");
+		IndentIn();
+		foreach (var a in attributes)
+		{
+			CommaNL();
+			Indent();	jsonWriter.Write ("\"" + a.name + "\": \"" + a.param + "\"");
+		}
+		Indent();		jsonWriter.Write ("\n");
+		IndentOut();
+		Indent();		jsonWriter.Write ("},\n");
+
+		Indent();		jsonWriter.Write ("\"uniforms\": {\n");
+		Indent();		jsonWriter.Write ("}\n");
 		IndentOut();
 		Indent();		jsonWriter.Write ("}");
 	}
