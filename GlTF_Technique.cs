@@ -43,7 +43,7 @@ public class GlTF_Technique : GlTF_Writer {
 	{
 		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
 		IndentIn();		
-		Indent();		jsonWriter.Write ("\"program\": \"" + program +"\"\n");
+		Indent();		jsonWriter.Write ("\"program\": \"" + program +"\",\n");
 		Indent();		jsonWriter.Write ("\"parameters\": {\n");
 		IndentIn();
 		foreach (var p in parameters)
@@ -51,10 +51,13 @@ public class GlTF_Technique : GlTF_Writer {
 			CommaNL();
 			Indent();	jsonWriter.Write ("\"" + p.name + "\": {\n");
 			IndentIn();
-			Indent();	jsonWriter.Write ("\"type\": " + (int)p.type + "\n");
+			Indent();	jsonWriter.Write ("\"type\": " + (int)p.type);
 			if (p.semantic != Semantic.UNKNOWN)
 			{
+				jsonWriter.Write (",\n");
 				Indent();	jsonWriter.Write ("\"semantic\": \"" + p.semantic + "\"\n");
+			} else {
+				jsonWriter.Write ("\n");
 			}
 			IndentOut();
 			Indent();	jsonWriter.Write ("}");
