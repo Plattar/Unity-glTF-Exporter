@@ -316,6 +316,8 @@ public class SceneToGlTFWiz : ScriptableWizard
 										tech.attributes.Add(tAttr);
 									}
 
+									tech.AddDefaultUniforms();
+
 									GlTF_Writer.techniques.Add (techName, tech);
 
 									int spCount = ShaderUtil.GetPropertyCount(s);
