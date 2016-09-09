@@ -325,6 +325,24 @@ public class SceneToGlTFWiz : ScriptableWizard
 										var pType = ShaderUtil.GetPropertyType(s, j);
 										Debug.Log(pName + " " +  pType);
 
+										GlTF_Technique.Uniform tUni;
+										if (pType == ShaderUtil.ShaderPropertyType.Color)
+										{
+											tParam = new GlTF_Technique.Parameter();
+											tParam.name = pName;
+											tParam.type = GlTF_Technique.Type.FLOAT_VEC4;
+											tech.parameters.Add(tParam);
+											tUni = new GlTF_Technique.Uniform();
+											tUni.name = pName;
+											tUni.param = tParam.name;
+											tech.uniforms.Add(tUni);
+
+											var matCol = new GlTF_Material.ColorValue();
+											matCol.name = pName;
+											matCol.color = mat.GetColor(pName);
+											material.values.Add(matCol);
+										}
+
 									}
 
 									// create program
