@@ -198,7 +198,7 @@ public class SceneToGlTFWiz : ScriptableWizard
 						attributes.texCoord2Accessor = uv2Accessor;
 						attributes.texCoord3Accessor = uv3Accessor;
 						primitive.attributes = attributes;
-						GlTF_Accessor indexAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "indices"), "SCALAR", "USHORT");
+						GlTF_Accessor indexAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "indices_" + i), "SCALAR", "USHORT");
 						indexAccessor.bufferView = GlTF_Writer.ushortBufferView;
 						GlTF_Writer.accessors.Add (indexAccessor);
 						primitive.indices = indexAccessor;
