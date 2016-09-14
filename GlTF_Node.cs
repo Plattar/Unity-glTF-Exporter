@@ -26,20 +26,22 @@ public class GlTF_Node : GlTF_Writer {
 		IndentIn();
 		Indent();
 		jsonWriter.Write ("\"name\": \""+name+"\",\n");
-		Indent();
 		if (cameraName != null)
 		{
-			CommaStart();
+			CommaNL();
+			Indent();
 			jsonWriter.Write ("\"camera\": \""+cameraName+"\"");
 		}
 		else if (lightName != null)
 		{
-			CommaStart();
+			CommaNL();
+			Indent();
 			jsonWriter.Write ("\"light\": \""+lightName+"\"");
 		}
 		else if (meshNames.Count > 0)
 		{
-			CommaStart();
+			CommaNL();
+			Indent();
 			jsonWriter.Write ("\"meshes\": [\n");
 			IndentIn();
 			foreach (string m in meshNames)

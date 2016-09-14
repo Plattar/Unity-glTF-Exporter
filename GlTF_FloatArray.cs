@@ -18,7 +18,7 @@ public class GlTF_FloatArray : GlTF_Writer {
 		WriteVals();
 		if (name.Length > 0)
 		{
-			Indent();	jsonWriter.Write ("]");
+			jsonWriter.Write ("]");
 		}
 	}
 
