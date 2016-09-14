@@ -19,10 +19,15 @@ public class GlTF_Node : GlTF_Writer {
 	public GlTF_Translation translation;
 	public bool additionalProperties = false;
 
+	public static string GetNameFromObject(Object o) 
+	{		 		
+		return "node_" + GlTF_Writer.GetNameFromObject(o, true);
+	}
+
 	public override void Write ()
 	{
 		Indent();
-		jsonWriter.Write ("\"node-"+name+"\": {\n");
+		jsonWriter.Write ("\""+name+"\": {\n");
 		IndentIn();
 		Indent();
 		jsonWriter.Write ("\"name\": \""+name+"\",\n");

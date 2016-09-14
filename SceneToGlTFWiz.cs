@@ -501,7 +501,7 @@ public class SceneToGlTFWiz : ScriptableWizard
 				}
 
 				foreach (Transform t in tr.transform)
-					node.childrenNames.Add ("node-" + t.name);
+					node.childrenNames.Add (GlTF_Node.GetNameFromObject(t));
 				
 				GlTF_Writer.nodes.Add (node);
 			}				

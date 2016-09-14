@@ -486,7 +486,7 @@ public class GlTF_Writer {
 			if (!n.hasParent)
 			{
 				CommaNL();
-				Indent();		jsonWriter.Write ("\"node-" + n.name + "\"");
+				Indent();		jsonWriter.Write ("\"" + n.name + "\"");
 			}
 		}
 		jsonWriter.WriteLine();
