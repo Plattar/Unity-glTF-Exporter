@@ -223,10 +223,12 @@ public class SceneToGlTFWiz : ScriptableWizard
 									var texName = "texture_" + tex.name + "_" + tex.GetInstanceID();
 									if (!GlTF_Writer.textures.ContainsKey (texName))
 									{
+										var texPath = ExportTexture(tex, savedPath);
 										GlTF_Texture texture = new GlTF_Texture ();
 										texture.name = texName;
-										texture.source = AssetDatabase.GetAssetPath(tex);
+										texture.source = texPath;
 										texture.samplerName = sampler.name; // FIX! For now!
+
 										GlTF_Writer.textures.Add (texName, texture);
 										material.diffuse = new GlTF_MaterialTexture ("diffuse", texture);
 									}
@@ -572,5 +574,31 @@ public class SceneToGlTFWiz : ScriptableWizard
 			}
 		}
 		return m;
+	}
+
+	static string ExportTexture(Texture texture, string path)
+	{			
+		var assetPath = AssetDatabase.GetAssetPath(texture);
+		var fn = Path.GetFileName(assetPath);
+		var t = texture as Texture2D;
+		if (t != null)
+		{
+			if (t.format != TextureFormat.RGBA32)
+			{								
+				fn = Path.GetFileNameWithoutExtension(assetPath) + ".png";
+				var dstPath = Path.Combine(path, fn);
+				Texture2D t2 = new Texture2D(t.width, t.height, TextureFormat.RGBA32, false);
+				t2.SetPixels(t.GetPixels());
+				t2.Apply();
+				var b = t2.EncodeToPNG();
+				File.WriteAllBytes(dstPath, b);
+			}
+			else
+			{
+				var dstPath = Path.Combine(path, fn);
+				File.Copy(assetPath, dstPath);
+			}
+		}
+		return fn;
 	}
 }
