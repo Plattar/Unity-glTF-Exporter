@@ -75,8 +75,8 @@ public class GlTF_Accessor : GlTF_Writer {
 			bufferView.Populate (v2s[i].x);
 			bufferView.Populate (v2s[i].y);
 			b.Encapsulate (v2s[i]);
-			bufferView.Populate (v2s[i].x);
-			bufferView.Populate (v2s[i].y);
+//			bufferView.Populate (v2s[i].x);
+//			bufferView.Populate (v2s[i].y);
 		}
 		count = v2s.Length;
 		min.items[0] = b.min.x;
