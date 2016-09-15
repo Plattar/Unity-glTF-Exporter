@@ -8,7 +8,8 @@ public class GlTF_Technique : GlTF_Writer {
 		FLOAT_VEC3 = 35665,
 		FLOAT_VEC4 = 35666,
 		FLOAT_MAT3 = 35675,
-		FLOAT_MAT4 = 35676
+		FLOAT_MAT4 = 35676,
+		SAMPLER_2D = 35678
 	}
 
 	public enum Semantic {

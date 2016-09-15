@@ -18,6 +18,15 @@ public class GlTF_Material : GlTF_Writer {
 		}
 	}
 
+	public class StringValue : Value {
+		public string value;
+
+		public override void Write()
+		{
+			jsonWriter.Write ("\"" + name + "\": \"" + value + "\"");
+		}
+	}
+
 	public string instanceTechniqueName = "technique1";
 	public GlTF_ColorOrTexture ambient;// = new GlTF_ColorRGBA ("ambient");
 	public GlTF_ColorOrTexture diffuse;

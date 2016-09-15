@@ -220,7 +220,7 @@ public class SceneToGlTFWiz : ScriptableWizard
 								if (mat.mainTexture != null)
 								{
 									var tex = mat.mainTexture;
-									var texName = "texture_" + tex.name + "_" + tex.GetInstanceID();
+									var texName = GlTF_Texture.GetNameFromObject(tex);
 									if (!GlTF_Writer.textures.ContainsKey (texName))
 									{
 										var texPath = ExportTexture(tex, savedPath);
@@ -350,6 +350,30 @@ public class SceneToGlTFWiz : ScriptableWizard
 											matCol.name = pName;
 											matCol.color = mat.GetColor(pName);
 											material.values.Add(matCol);
+										} 
+										else if (pType == ShaderUtil.ShaderPropertyType.TexEnv)
+										{
+											var td = ShaderUtil.GetTexDim(s, j);
+											if (td == ShaderUtil.ShaderPropertyTexDim.TexDim2D)
+											{
+												tParam = new GlTF_Technique.Parameter();
+												tParam.name = pName;
+												tParam.type = GlTF_Technique.Type.SAMPLER_2D;
+												tech.parameters.Add(tParam);
+												tUni = new GlTF_Technique.Uniform();
+												tUni.name = pName;
+												tUni.param = tParam.name;
+												tech.uniforms.Add(tUni);
+
+												var t = mat.GetTexture(pName);
+												if (t != null) 
+												{
+													var val = new GlTF_Material.StringValue();
+													val.name = pName;
+													val.value = GlTF_Texture.GetNameFromObject(t);
+													material.values.Add(val);
+												}
+											}
 										}
 
 									}

@@ -19,6 +19,11 @@ public class GlTF_Texture : GlTF_Writer {
 	public int target = 3553;
 	public int tType = 5121;
 
+	public static string GetNameFromObject(Object o) 
+	{		 		
+		return "texture_" + GlTF_Writer.GetNameFromObject(o, true);
+	}
+
 	public override void Write()
 	{
 		Indent();	jsonWriter.Write ("\"" + name + "\": {\n");
