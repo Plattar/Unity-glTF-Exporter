@@ -64,19 +64,27 @@ public class GlTF_Accessor : GlTF_Writer {
 		count = vs.Length;
 	}
 
-	public void Populate (Vector2[] v2s)
+	public void Populate (Vector2[] v2s, bool flip = false)
 	{
 		if (aType != "VEC2")
 			throw (new System.Exception());
 		byteOffset = bufferView.currentOffset;	
 		Bounds b = new Bounds();
-		for (int i = 0; i < v2s.Length; i++)
+		if (flip)
 		{
-			bufferView.Populate (v2s[i].x);
-			bufferView.Populate (v2s[i].y);
-			b.Encapsulate (v2s[i]);
-//			bufferView.Populate (v2s[i].x);
-//			bufferView.Populate (v2s[i].y);
+			for (int i = 0; i < v2s.Length; i++)
+			{
+				bufferView.Populate (v2s[i].x);
+				bufferView.Populate (1.0f - v2s[i].y);
+				b.Encapsulate (v2s[i]);
+			}
+		} else {
+			for (int i = 0; i < v2s.Length; i++)
+			{
+				bufferView.Populate (v2s[i].x);
+				bufferView.Populate (v2s[i].y);
+				b.Encapsulate (v2s[i]);
+			}
 		}
 		count = v2s.Length;
 		min.items[0] = b.min.x;

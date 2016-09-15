@@ -18,19 +18,19 @@ public class GlTF_Attributes : GlTF_Writer {
 		}
 		if (texCoord0Accessor != null) 
 		{
-			texCoord0Accessor.Populate (m.uv);
+			texCoord0Accessor.Populate (m.uv, true);
 		}
 		if (texCoord1Accessor != null)
 		{
-			texCoord1Accessor.Populate (m.uv2);
+			texCoord1Accessor.Populate (m.uv2, true);
 		}
 		if (texCoord2Accessor != null) 
 		{
-			texCoord2Accessor.Populate (m.uv3);
+			texCoord2Accessor.Populate (m.uv3, true);
 		}
 		if (texCoord3Accessor != null) 
 		{
-			texCoord3Accessor.Populate (m.uv4);
+			texCoord3Accessor.Populate (m.uv4, true);
 		}
 	}
 
