@@ -486,8 +486,18 @@ public class SceneToGlTFWiz : ScriptableWizard
 					node.translation = new GlTF_Translation (tr.localPosition);
 				if (tr.localScale != Vector3.one)
 					node.scale = new GlTF_Scale (tr.localScale);
-				if (tr.localRotation != Quaternion.identity)
+//				if (tr.localRotation != Quaternion.identity)
+//					node.rotation = new GlTF_Rotation (tr.localRotation);
+
+				if (tr.parent == null)
+				{
+					Quaternion q = Quaternion.AngleAxis(180, Vector3.right);
+					node.rotation = new GlTF_Rotation(q * tr.localRotation);
+				} 
+				else if (tr.localRotation != Quaternion.identity)
+				{
 					node.rotation = new GlTF_Rotation (tr.localRotation);
+				}
 				
 				node.name = GlTF_Node.GetNameFromObject(tr);
 				if (tr.GetComponent<Camera>() != null)
