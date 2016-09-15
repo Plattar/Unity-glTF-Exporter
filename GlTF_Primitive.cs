@@ -16,7 +16,7 @@ public class GlTF_Primitive : GlTF_Writer {
 
 	public void Populate (Mesh m)
 	{
-		attributes.Populate (m);
+//		attributes.Populate (m);
 		indices.Populate (m.GetTriangles(index), true);
 	}
 

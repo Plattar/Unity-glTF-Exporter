@@ -14,6 +14,12 @@ public class GlTF_Mesh : GlTF_Writer {
 
 	public void Populate (Mesh m)
 	{
+		if (primitives.Count > 0) 
+		{
+			// only populate first attributes because the data are shared between primitives
+			primitives[0].attributes.Populate(m);
+		}
+
 		foreach (GlTF_Primitive p in primitives) 
 		{
 			p.Populate (m);
