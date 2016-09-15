@@ -224,9 +224,14 @@ public class SceneToGlTFWiz : ScriptableWizard
 									if (!GlTF_Writer.textures.ContainsKey (texName))
 									{
 										var texPath = ExportTexture(tex, savedPath);
+										GlTF_Image img = new GlTF_Image();
+										img.name = GlTF_Image.GetNameFromObject(tex);
+										img.uri = texPath;
+										GlTF_Writer.images.Add(img);
+
 										GlTF_Texture texture = new GlTF_Texture ();
 										texture.name = texName;
-										texture.source = texPath;
+										texture.source = img.name;
 										texture.samplerName = sampler.name; // FIX! For now!
 
 										GlTF_Writer.textures.Add (texName, texture);

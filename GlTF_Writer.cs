@@ -22,6 +22,7 @@ public class GlTF_Writer {
 	public static List<GlTF_Node> nodes = new List<GlTF_Node>();
 	public static Dictionary<string, GlTF_Material> materials = new Dictionary<string, GlTF_Material>();
 	public static Dictionary<string, GlTF_Texture> textures = new Dictionary<string, GlTF_Texture>();
+	public static List<GlTF_Image> images = new List<GlTF_Image>();
 	public static List<GlTF_Sampler> samplers = new List<GlTF_Sampler>();
 	public static List<GlTF_Animation> animations = new List<GlTF_Animation>();
 	public static Dictionary<string, GlTF_Technique> techniques = new Dictionary<string, GlTF_Technique>();
@@ -58,6 +59,7 @@ public class GlTF_Writer {
 		nodes = new List<GlTF_Node>();
 		materials = new Dictionary<string, GlTF_Material>();
 		textures = new Dictionary<string, GlTF_Texture>();
+		images = new List<GlTF_Image>();
 		samplers = new List<GlTF_Sampler>();
 		animations = new List<GlTF_Animation>();
 		techniques = new Dictionary<string, GlTF_Technique>();
@@ -410,6 +412,21 @@ public class GlTF_Writer {
 			{
 				CommaNL();
 				t.Value.Write ();
+			}
+			jsonWriter.WriteLine();
+			IndentOut();
+			Indent();	jsonWriter.Write ("}");
+		}
+
+		if (images.Count > 0)
+		{
+			CommaNL();
+			Indent();	jsonWriter.Write ("\"images\": {\n");
+			IndentIn();
+			foreach (var i in images)
+			{
+				CommaNL();
+				i.Write ();
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
