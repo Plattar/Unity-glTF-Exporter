@@ -488,7 +488,8 @@ public class SceneToGlTFWiz : ScriptableWizard
 					node.scale = new GlTF_Scale (tr.localScale);
 				if (tr.localRotation != Quaternion.identity)
 					node.rotation = new GlTF_Rotation (tr.localRotation);
-				node.name = tr.name;
+				
+				node.name = GlTF_Node.GetNameFromObject(tr);
 				if (tr.GetComponent<Camera>() != null)
 				{
 					node.cameraName = tr.name;
