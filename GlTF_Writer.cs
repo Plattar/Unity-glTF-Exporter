@@ -194,8 +194,11 @@ public class GlTF_Writer {
 			IndentIn();
 			foreach (GlTF_BufferView bv in bufferViews)
 			{
-				CommaNL();
-				bv.Write ();
+				if (bv.byteLength > 0)
+				{
+					CommaNL();
+					bv.Write ();
+				}
 			}			
 			jsonWriter.WriteLine();
 			IndentOut();
