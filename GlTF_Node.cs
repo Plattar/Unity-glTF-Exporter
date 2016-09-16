@@ -73,11 +73,7 @@ public class GlTF_Node : GlTF_Writer {
 			IndentOut();
 			Indent();	jsonWriter.Write ("]");
 		}
-		else
-		{
-			CommaNL();
-			Indent();	jsonWriter.Write ("\"children\": []");
-		}
+
 		if (translation != null && (translation.items[0] != 0f || translation.items[1] != 0f || translation.items[2] != 0f))
 		{
 			CommaNL();
