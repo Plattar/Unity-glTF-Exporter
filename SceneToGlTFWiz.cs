@@ -355,11 +355,6 @@ public class SceneToGlTFWiz : ScriptableWizard
 											tUni.name = pName;
 											tUni.param = tParam.name;
 											tech.uniforms.Add(tUni);
-
-											var matCol = new GlTF_Material.ColorValue();
-											matCol.name = pName;
-											matCol.color = mat.GetColor(pName);
-											material.values.Add(matCol);
 										} 
 										else if (pType == ShaderUtil.ShaderPropertyType.TexEnv)
 										{
@@ -374,15 +369,6 @@ public class SceneToGlTFWiz : ScriptableWizard
 												tUni.name = pName;
 												tUni.param = tParam.name;
 												tech.uniforms.Add(tUni);
-
-												var t = mat.GetTexture(pName);
-												if (t != null) 
-												{
-													var val = new GlTF_Material.StringValue();
-													val.name = pName;
-													val.value = GlTF_Texture.GetNameFromObject(t);
-													material.values.Add(val);
-												}
 											}
 										}
 
@@ -412,6 +398,36 @@ public class SceneToGlTFWiz : ScriptableWizard
 									fs.type = GlTF_Shader.Type.Fragment;
 									fs.uri = "DefaultFS.glsl";
 									GlTF_Writer.shaders.Add(fs);
+								}
+
+								int spCount2 = ShaderUtil.GetPropertyCount(s);
+								for (var j = 0; j < spCount2; ++j) 
+								{
+									var pName = ShaderUtil.GetPropertyName(s, j);
+									var pType = ShaderUtil.GetPropertyType(s, j);
+
+									if (pType == ShaderUtil.ShaderPropertyType.Color)
+									{										
+										var matCol = new GlTF_Material.ColorValue();
+										matCol.name = pName;
+										matCol.color = mat.GetColor(pName);
+										material.values.Add(matCol);
+									} 
+									else if (pType == ShaderUtil.ShaderPropertyType.TexEnv)
+									{
+										var td = ShaderUtil.GetTexDim(s, j);
+										if (td == ShaderUtil.ShaderPropertyTexDim.TexDim2D)
+										{											
+											var t = mat.GetTexture(pName);
+											if (t != null) 
+											{
+												var val = new GlTF_Material.StringValue();
+												val.name = pName;
+												val.value = GlTF_Texture.GetNameFromObject(t);
+												material.values.Add(val);
+											}
+										}
+									}
 								}
 							}
 						}
