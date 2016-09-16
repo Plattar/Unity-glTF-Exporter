@@ -70,9 +70,6 @@ public class SceneToGlTFWiz : ScriptableWizard
 			Debug.Log ("attempting to save to "+path);
 			writer.OpenFiles (path);
 
-			// FOR NOW!
-			GlTF_Sampler sampler = new GlTF_Sampler("sampler1"); // make the default one for now
-			GlTF_Writer.samplers.Add (sampler);
 			// first, collect objects in the scene, add to lists
 			Transform[] trs = Selection.GetTransforms (SelectionMode.Deep);
 			foreach (Transform tr in trs)
@@ -229,10 +226,23 @@ public class SceneToGlTFWiz : ScriptableWizard
 										img.uri = texPath;
 										GlTF_Writer.images.Add(img);
 
+										GlTF_Sampler sampler;
+										var samplerName = GlTF_Sampler.GetNameFromObject(tex);
+										if (GlTF_Writer.samplers.ContainsKey(samplerName))
+										{
+											sampler = GlTF_Writer.samplers[samplerName];
+										}
+										else
+										{
+											sampler = new GlTF_Sampler(tex);
+											sampler.name = samplerName;
+											GlTF_Writer.samplers[samplerName] = sampler;
+										}
+
 										GlTF_Texture texture = new GlTF_Texture ();
 										texture.name = texName;
 										texture.source = img.name;
-										texture.samplerName = sampler.name; // FIX! For now!
+										texture.samplerName = samplerName;
 
 										GlTF_Writer.textures.Add (texName, texture);
 										material.diffuse = new GlTF_MaterialTexture ("diffuse", texture);

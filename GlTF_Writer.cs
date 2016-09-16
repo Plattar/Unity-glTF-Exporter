@@ -21,9 +21,9 @@ public class GlTF_Writer {
 	public static List<GlTF_Accessor> accessors = new List<GlTF_Accessor>();
 	public static List<GlTF_Node> nodes = new List<GlTF_Node>();
 	public static Dictionary<string, GlTF_Material> materials = new Dictionary<string, GlTF_Material>();
+	public static Dictionary<string, GlTF_Sampler> samplers = new Dictionary<string, GlTF_Sampler>();
 	public static Dictionary<string, GlTF_Texture> textures = new Dictionary<string, GlTF_Texture>();
 	public static List<GlTF_Image> images = new List<GlTF_Image>();
-	public static List<GlTF_Sampler> samplers = new List<GlTF_Sampler>();
 	public static List<GlTF_Animation> animations = new List<GlTF_Animation>();
 	public static Dictionary<string, GlTF_Technique> techniques = new Dictionary<string, GlTF_Technique>();
 	public static List<GlTF_Program> programs = new List<GlTF_Program>();
@@ -58,9 +58,9 @@ public class GlTF_Writer {
 		accessors = new List<GlTF_Accessor>();
 		nodes = new List<GlTF_Node>();
 		materials = new Dictionary<string, GlTF_Material>();
+		samplers = new Dictionary<string, GlTF_Sampler>();
 		textures = new Dictionary<string, GlTF_Texture>();
 		images = new List<GlTF_Image>();
-		samplers = new List<GlTF_Sampler>();
 		animations = new List<GlTF_Animation>();
 		techniques = new Dictionary<string, GlTF_Technique>();
 		programs = new List<GlTF_Program>();
@@ -393,10 +393,10 @@ public class GlTF_Writer {
 			CommaNL();
 			Indent();	jsonWriter.Write ("\"samplers\": {\n");
 			IndentIn();
-			foreach (GlTF_Sampler s in samplers)
+			foreach (KeyValuePair<string, GlTF_Sampler> s in samplers)
 			{
 				CommaNL();
-				s.Write ();
+				s.Value.Write ();
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
