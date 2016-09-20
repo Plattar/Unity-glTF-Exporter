@@ -2,43 +2,50 @@
 using System.Collections;
 
 public class GlTF_Accessor : GlTF_Writer {
+	public enum Type {
+		SCALAR,
+		VEC2,
+		VEC3,
+		VEC4
+	}
+
+	public enum ComponentType {
+		USHORT = 5123,
+		FLOAT = 5126
+	}
+
 	public GlTF_BufferView bufferView;//	"bufferView": "bufferView_30",
 	public long byteOffset; //": 0,
 	public int byteStride;// ": 12,
-	public int componentType; // GL enum vals ": BYTE (5120), UNSIGNED_BYTE (5121), SHORT (5122), UNSIGNED_SHORT (5123), FLOAT (5126)
+	public ComponentType componentType; // GL enum vals ": BYTE (5120), UNSIGNED_BYTE (5121), SHORT (5122), UNSIGNED_SHORT (5123), FLOAT (5126)
 	public int count;//": 2399,
-	public GlTF_Vector3 max = new GlTF_Vector3();//": [
-	public GlTF_Vector3 min = new GlTF_Vector3();//": [
-	public string aType = "SCALAR"; // ": "VEC3" NOTE: SHOULD BE ENUM, USE ToString to output it
+	public Type type = Type.SCALAR;
+
+	Vector4 maxFloat;
+	Vector4 minFloat;
+	int minInt;
+	int maxInt;
 
 	public GlTF_Accessor (string n) { name = n; }
-	public GlTF_Accessor (string n, string t, string c) {
+	public GlTF_Accessor (string n, Type t, ComponentType c) {
 		name = n;
-		aType = t;
+		type = t;
 		switch (t)
 		{
-		case "SCALAR":
+		case Type.SCALAR:
 			byteStride = 0;
 			break;
-		case "VEC2":
+		case Type.VEC2:
 			byteStride = 8;
 			break;
-		case "VEC3":
+		case Type.VEC3:
 			byteStride = 12;
 			break;
-		case "VEC4":
+		case Type.VEC4:
 			byteStride = 16;
 			break;
 		}
-		switch (c)
-		{
-		case "USHORT":
-			componentType = 5123;
-			break;
-		case "FLOAT":
-			componentType = 5126;
-			break;
-		}
+		componentType = c;
 	}
 
 	public static string GetNameFromObject(Object o, string name) 
@@ -46,100 +53,210 @@ public class GlTF_Accessor : GlTF_Writer {
 		return "accessor_" + name + "_"+ GlTF_Writer.GetNameFromObject(o, true);
 	}
 
+	void InitMinMaxInt()
+	{
+		maxInt = int.MinValue;
+		minInt = int.MaxValue;
+	}
+
+	void InitMinMaxFloat()
+	{
+		float min = float.MinValue;
+		float max = float.MaxValue;
+		maxFloat = new Vector4(min, min, min, min);
+		minFloat = new Vector4(max, max, max, max);
+	}
+
 	public void Populate (int[] vs, bool flippedTriangle)
 	{
-		if (aType != "SCALAR")
+		if (type != Type.SCALAR)
 			throw (new System.Exception());
 		byteOffset = bufferView.currentOffset;
 		bufferView.Populate (vs, flippedTriangle);
 		count = vs.Length;
+		if (count > 0)
+		{
+			InitMinMaxInt();
+			for (int i = 0; i < count; ++i)
+			{
+				minInt = Mathf.Min(vs[i], minInt);
+				maxInt = Mathf.Max(vs[i], maxInt);
+			}
+		}
 	}
-
+		
 	public void Populate (float[] vs)
 	{
-		if (aType != "SCALAR")
+		if (type != Type.SCALAR)
 			throw (new System.Exception());
 		byteOffset = bufferView.currentOffset;
 		bufferView.Populate (vs);
 		count = vs.Length;
+		if (count > 0)
+		{
+			InitMinMaxFloat();
+			for (int i = 0; i < count; ++i)
+			{
+				minFloat.x = Mathf.Min(vs[i], minFloat.x);
+				maxFloat.x = Mathf.Max(vs[i], maxFloat.x);
+			}
+		}
 	}
 
 	public void Populate (Vector2[] v2s, bool flip = false)
 	{
-		if (aType != "VEC2")
+		if (type != Type.VEC2)
 			throw (new System.Exception());
-		byteOffset = bufferView.currentOffset;	
-		Bounds b = new Bounds();
-		if (flip)
+		byteOffset = bufferView.currentOffset;
+		count = v2s.Length;
+		if (count > 0)
 		{
-			for (int i = 0; i < v2s.Length; i++)
+			InitMinMaxFloat();
+				
+			if (flip)
 			{
-				bufferView.Populate (v2s[i].x);
-				bufferView.Populate (1.0f - v2s[i].y);
-				b.Encapsulate (v2s[i]);
-			}
-		} else {
-			for (int i = 0; i < v2s.Length; i++)
-			{
-				bufferView.Populate (v2s[i].x);
-				bufferView.Populate (v2s[i].y);
-				b.Encapsulate (v2s[i]);
+				for (int i = 0; i < v2s.Length; i++)
+				{
+					bufferView.Populate (v2s[i].x);
+					float y = 1.0f - v2s[i].y;
+					bufferView.Populate (y);
+					minFloat.x = Mathf.Min(v2s[i].x, minFloat.x);
+					minFloat.y = Mathf.Min(y, minFloat.y);
+					maxFloat.x = Mathf.Max(v2s[i].x, maxFloat.x);
+					maxFloat.y = Mathf.Max(y, maxFloat.y);
+				}
+			} else {
+				for (int i = 0; i < v2s.Length; i++)
+				{
+					bufferView.Populate (v2s[i].x);
+					bufferView.Populate (v2s[i].y);
+					minFloat.x = Mathf.Min(v2s[i].x, minFloat.x);
+					minFloat.y = Mathf.Min(v2s[i].y, minFloat.y);
+					maxFloat.x = Mathf.Max(v2s[i].x, maxFloat.x);
+					maxFloat.y = Mathf.Max(v2s[i].y, maxFloat.y);
+				}
 			}
 		}
-		count = v2s.Length;
-		min.items[0] = b.min.x;
-		min.items[1] = b.min.y;
-		max.items[0] = b.max.x;
-		max.items[1] = b.max.y;
 	}
 
 	public void Populate (Vector3[] v3s)
 	{
-		if (aType != "VEC3")
-			throw (new System.Exception());
-		Bounds b = new Bounds();
+		if (type != Type.VEC3)
+			throw (new System.Exception());		
 		byteOffset = bufferView.currentOffset;	
-		for (int i = 0; i < v3s.Length; i++)
-		{
-			bufferView.Populate (v3s[i].x);
-			bufferView.Populate (v3s[i].y);
-			bufferView.Populate (-v3s[i].z);
-			b.Encapsulate (v3s[i]);
-		}
 		count = v3s.Length;
-		min.items[0] = b.min.x;
-		min.items[1] = b.min.y;
-		min.items[2] = b.min.z;
-		max.items[0] = b.max.x;
-		max.items[1] = b.max.y;
-		max.items[2] = b.max.z;
+		if (count > 0)
+		{
+			InitMinMaxFloat();
+
+			for (int i = 0; i < v3s.Length; i++)
+			{
+				bufferView.Populate (v3s[i].x);
+				bufferView.Populate (v3s[i].y);
+				bufferView.Populate (-v3s[i].z);
+
+				minFloat.x = Mathf.Min(v3s[i].x, minFloat.x);
+				minFloat.y = Mathf.Min(v3s[i].y, minFloat.y);
+				minFloat.z = Mathf.Min(-v3s[i].z, minFloat.z);
+				maxFloat.x = Mathf.Max(v3s[i].x, maxFloat.x);
+				maxFloat.y = Mathf.Max(v3s[i].y, maxFloat.y);
+				maxFloat.z = Mathf.Max(-v3s[i].z, maxFloat.z);
+
+			}
+		}
 	}
 
 	public void Populate (Vector4[] v4s)
 	{
-		if (aType != "VEC4")
-			throw (new System.Exception());
-		//		Bounds b = new Bounds();
+		if (type != Type.VEC4)
+			throw (new System.Exception());		
 		byteOffset = bufferView.currentOffset;	
-		for (int i = 0; i < v4s.Length; i++)
-		{
-			bufferView.Populate (v4s[i].x);
-			bufferView.Populate (v4s[i].y);
-			bufferView.Populate (v4s[i].z);
-			bufferView.Populate (v4s[i].w);
-			//			b.Expand (v4s[i]);
-		}
 		count = v4s.Length;
-		/*
-		min.items[0] = b.min.x;
-		min.items[1] = b.min.y;
-		min.items[2] = b.min.z;
-		min.items[3] = b.min.w;
-		max.items[0] = b.max.x;
-		max.items[1] = b.max.y;
-		max.items[2] = b.max.z;
-		max.items[3] = b.max.w;
-		*/
+		if (count > 0)
+		{	
+			InitMinMaxFloat();
+			for (int i = 0; i < v4s.Length; i++)
+			{
+				bufferView.Populate (v4s[i].x);
+				bufferView.Populate (v4s[i].y);
+				bufferView.Populate (v4s[i].z);
+				bufferView.Populate (v4s[i].w);
+
+				minFloat.x = Mathf.Min(v4s[i].x, minFloat.x);
+				minFloat.y = Mathf.Min(v4s[i].y, minFloat.y);
+				minFloat.z = Mathf.Min(v4s[i].z, minFloat.z);
+				minFloat.w = Mathf.Min(v4s[i].w, minFloat.w);
+				maxFloat.x = Mathf.Max(v4s[i].x, maxFloat.x);
+				maxFloat.y = Mathf.Max(v4s[i].y, maxFloat.y);
+				maxFloat.z = Mathf.Max(v4s[i].z, maxFloat.z);
+				maxFloat.w = Mathf.Max(v4s[i].w, maxFloat.w);
+			}
+		}
+
+	}
+
+	void WriteMin()
+	{
+		if (componentType == ComponentType.FLOAT)
+		{
+			switch (type)
+			{
+				case Type.SCALAR:
+					jsonWriter.Write (minFloat.x);
+				break;
+
+				case Type.VEC2:
+					jsonWriter.Write (minFloat.x + ", " + minFloat.y);
+				break;
+
+				case Type.VEC3:
+					jsonWriter.Write (minFloat.x + ", " + minFloat.y + ", " + minFloat.z);
+				break;
+
+				case Type.VEC4:
+					jsonWriter.Write (minFloat.x + ", " + minFloat.y + ", " + minFloat.z + ", " + minFloat.w);
+				break;
+			}
+		} 
+		else if (componentType == ComponentType.USHORT)
+		{
+			if (type == Type.SCALAR)
+			{
+				jsonWriter.Write(minInt);
+			}
+		}
+	}
+
+	void WriteMax()
+	{
+		if (componentType == ComponentType.FLOAT)
+		{
+			switch (type)
+			{
+			case Type.SCALAR:
+				jsonWriter.Write (maxFloat.x);
+				break;
+
+			case Type.VEC2:
+				jsonWriter.Write (maxFloat.x + ", " + maxFloat.y);
+				break;
+
+			case Type.VEC3:
+				jsonWriter.Write (maxFloat.x + ", " + maxFloat.y + ", " + maxFloat.z);
+				break;
+
+			case Type.VEC4:
+				jsonWriter.Write (maxFloat.x + ", " + maxFloat.y + ", " + maxFloat.z + ", " + maxFloat.w);
+				break;
+			}
+		} 
+		else if (componentType == ComponentType.USHORT)
+		{
+			if (type == Type.SCALAR)
+			{
+				jsonWriter.Write(maxInt);
+			}
+		}
 	}
 
 	public override void Write ()
@@ -149,15 +266,18 @@ public class GlTF_Accessor : GlTF_Writer {
 		Indent();		jsonWriter.Write ("\"bufferView\": \"" + bufferView.name+"\",\n");
 		Indent();		jsonWriter.Write ("\"byteOffset\": " + byteOffset + ",\n");
 		Indent();		jsonWriter.Write ("\"byteStride\": " + byteStride + ",\n");
-		Indent();		jsonWriter.Write ("\"componentType\": " + componentType + ",\n");
+		Indent();		jsonWriter.Write ("\"componentType\": " + (int)componentType + ",\n");
 		Indent();		jsonWriter.Write ("\"count\": " + count + ",\n");
+
+
 		Indent();		jsonWriter.Write ("\"max\": [ ");
-		max.WriteVals();
+		WriteMax();
 		jsonWriter.Write (" ],\n");
 		Indent();		jsonWriter.Write ("\"min\": [ ");
-		min.WriteVals();
+		WriteMin();
 		jsonWriter.Write (" ],\n");
-		Indent();		jsonWriter.Write ("\"type\": \"" + aType + "\"\n");
+		
+		Indent();		jsonWriter.Write ("\"type\": \"" + type + "\"\n");
 		IndentOut();
 		Indent();	jsonWriter.Write (" }");
 	}

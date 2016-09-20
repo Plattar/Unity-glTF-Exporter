@@ -24,7 +24,7 @@ public class GlTF_Parameters : GlTF_Writer {
 		string propName = curveData.propertyName;
 		if (times == null) // allocate one array of times, assumes all channels have same number of keys
 		{
-			timeAccessor = new GlTF_Accessor(name+"TimeAccessor", "SCALAR", "FLOAT");
+			timeAccessor = new GlTF_Accessor(name+"TimeAccessor", GlTF_Accessor.Type.SCALAR, GlTF_Accessor.ComponentType.FLOAT);
 			timeAccessor.bufferView = GlTF_Writer.floatBufferView;
 			GlTF_Writer.accessors.Add (timeAccessor);
 			times = new float[curveData.curve.keys.Length];
@@ -37,7 +37,7 @@ public class GlTF_Parameters : GlTF_Writer {
 		{
 			if (positions == null)
 			{
-				translationAccessor = new GlTF_Accessor(name+"TranslationAccessor", "VEC3", "FLOAT");
+				translationAccessor = new GlTF_Accessor(name+"TranslationAccessor", GlTF_Accessor.Type.VEC3, GlTF_Accessor.ComponentType.FLOAT);
 				translationAccessor.bufferView = GlTF_Writer.vec3BufferView;
 				GlTF_Writer.accessors.Add (translationAccessor);
 				positions = new Vector3[curveData.curve.keys.Length];
@@ -69,7 +69,7 @@ public class GlTF_Parameters : GlTF_Writer {
 		{
 			if (scales == null)
 			{
-				scaleAccessor = new GlTF_Accessor(name+"ScaleAccessor", "VEC3", "FLOAT");
+				scaleAccessor = new GlTF_Accessor(name+"ScaleAccessor", GlTF_Accessor.Type.VEC3, GlTF_Accessor.ComponentType.FLOAT);
 				scaleAccessor.bufferView = GlTF_Writer.vec3BufferView;
 				GlTF_Writer.accessors.Add (scaleAccessor);
 				scales = new Vector3[curveData.curve.keys.Length];
@@ -101,7 +101,7 @@ public class GlTF_Parameters : GlTF_Writer {
 		{
 			if (rotations == null)
 			{
-				rotationAccessor = new GlTF_Accessor(name+"RotationAccessor", "VEC4", "FLOAT");
+				rotationAccessor = new GlTF_Accessor(name+"RotationAccessor", GlTF_Accessor.Type.VEC4, GlTF_Accessor.ComponentType.FLOAT);
 				rotationAccessor.bufferView = GlTF_Writer.vec4BufferView;
 				GlTF_Writer.accessors.Add (rotationAccessor);
 				rotations = new Vector4[curveData.curve.keys.Length];

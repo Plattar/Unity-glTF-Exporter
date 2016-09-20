@@ -141,42 +141,42 @@ public class SceneToGlTFWiz : ScriptableWizard
 					GlTF_Mesh mesh = new GlTF_Mesh();
 					mesh.name = GlTF_Mesh.GetNameFromObject(m);
 
-					GlTF_Accessor positionAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "position"), "VEC3", "FLOAT");
+					GlTF_Accessor positionAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "position"), GlTF_Accessor.Type.VEC3, GlTF_Accessor.ComponentType.FLOAT);
 					positionAccessor.bufferView = GlTF_Writer.vec3BufferView;
 					GlTF_Writer.accessors.Add (positionAccessor);
 
 					GlTF_Accessor normalAccessor = null;
 					if (m.normals.Length > 0) 
 					{
-						normalAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "normal"), "VEC3", "FLOAT");
+						normalAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "normal"), GlTF_Accessor.Type.VEC3, GlTF_Accessor.ComponentType.FLOAT);
 						normalAccessor.bufferView = GlTF_Writer.vec3BufferView;
 						GlTF_Writer.accessors.Add (normalAccessor);
 					}
 
 					GlTF_Accessor uv0Accessor = null;
 					if (m.uv.Length > 0) {
-						uv0Accessor =  new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "uv0"), "VEC2", "FLOAT");
+						uv0Accessor =  new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "uv0"), GlTF_Accessor.Type.VEC2, GlTF_Accessor.ComponentType.FLOAT);
 						uv0Accessor.bufferView = GlTF_Writer.vec2BufferView;
 						GlTF_Writer.accessors.Add (uv0Accessor);
 					}
 
 					GlTF_Accessor uv1Accessor = null;
 					if (m.uv2.Length > 0) {
-						uv1Accessor =  new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "uv1"), "VEC2", "FLOAT");
+						uv1Accessor =  new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "uv1"), GlTF_Accessor.Type.VEC2, GlTF_Accessor.ComponentType.FLOAT);
 						uv1Accessor.bufferView = GlTF_Writer.vec2BufferView;
 						GlTF_Writer.accessors.Add (uv1Accessor);
 					}
 
 					GlTF_Accessor uv2Accessor = null;
 					if (m.uv3.Length > 0) {
-						uv2Accessor =  new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "uv2"), "VEC2", "FLOAT");
+						uv2Accessor =  new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "uv2"), GlTF_Accessor.Type.VEC2, GlTF_Accessor.ComponentType.FLOAT);
 						uv2Accessor.bufferView = GlTF_Writer.vec2BufferView;
 						GlTF_Writer.accessors.Add (uv2Accessor);
 					}
 
 					GlTF_Accessor uv3Accessor = null;
 					if (m.uv4.Length > 0) {
-						uv3Accessor =  new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "uv3"), "VEC2", "FLOAT");
+						uv3Accessor =  new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "uv3"), GlTF_Accessor.Type.VEC2, GlTF_Accessor.ComponentType.FLOAT);
 						uv3Accessor.bufferView = GlTF_Writer.vec2BufferView;
 						GlTF_Writer.accessors.Add (uv3Accessor);
 					}
@@ -195,7 +195,7 @@ public class SceneToGlTFWiz : ScriptableWizard
 						attributes.texCoord2Accessor = uv2Accessor;
 						attributes.texCoord3Accessor = uv3Accessor;
 						primitive.attributes = attributes;
-						GlTF_Accessor indexAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "indices_" + i), "SCALAR", "USHORT");
+						GlTF_Accessor indexAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "indices_" + i), GlTF_Accessor.Type.SCALAR, GlTF_Accessor.ComponentType.USHORT);
 						indexAccessor.bufferView = GlTF_Writer.ushortBufferView;
 						GlTF_Writer.accessors.Add (indexAccessor);
 						primitive.indices = indexAccessor;
