@@ -355,7 +355,30 @@ public class SceneToGlTFWiz : ScriptableWizard
 											tUni.name = pName;
 											tUni.param = tParam.name;
 											tech.uniforms.Add(tUni);
-										} 
+										}
+										else if (pType == ShaderUtil.ShaderPropertyType.Vector)
+										{
+											tParam = new GlTF_Technique.Parameter();
+											tParam.name = pName;
+											tParam.type = GlTF_Technique.Type.FLOAT_VEC4;
+											tech.parameters.Add(tParam);
+											tUni = new GlTF_Technique.Uniform();
+											tUni.name = pName;
+											tUni.param = tParam.name;
+											tech.uniforms.Add(tUni);
+										}
+										else if (pType == ShaderUtil.ShaderPropertyType.Float || 
+											pType == ShaderUtil.ShaderPropertyType.Range)
+										{
+											tParam = new GlTF_Technique.Parameter();
+											tParam.name = pName;
+											tParam.type = GlTF_Technique.Type.FLOAT;
+											tech.parameters.Add(tParam);
+											tUni = new GlTF_Technique.Uniform();
+											tUni.name = pName;
+											tUni.param = tParam.name;
+											tech.uniforms.Add(tUni);
+										}
 										else if (pType == ShaderUtil.ShaderPropertyType.TexEnv)
 										{
 											var td = ShaderUtil.GetTexDim(s, j);
@@ -412,7 +435,22 @@ public class SceneToGlTFWiz : ScriptableWizard
 										matCol.name = pName;
 										matCol.color = mat.GetColor(pName);
 										material.values.Add(matCol);
-									} 
+									}
+									else if (pType == ShaderUtil.ShaderPropertyType.Vector)
+									{										
+										var matVec = new GlTF_Material.VectorValue();
+										matVec.name = pName;
+										matVec.vector = mat.GetVector(pName);
+										material.values.Add(matVec);
+									}
+									else if (pType == ShaderUtil.ShaderPropertyType.Float || 
+										pType == ShaderUtil.ShaderPropertyType.Range)
+									{										
+										var matFloat = new GlTF_Material.FloatValue();
+										matFloat.name = pName;
+										matFloat.value = mat.GetFloat(pName);
+										material.values.Add(matFloat);
+									}
 									else if (pType == ShaderUtil.ShaderPropertyType.TexEnv)
 									{
 										var td = ShaderUtil.GetTexDim(s, j);

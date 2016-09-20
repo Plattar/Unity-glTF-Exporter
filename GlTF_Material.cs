@@ -18,6 +18,26 @@ public class GlTF_Material : GlTF_Writer {
 		}
 	}
 
+	public class VectorValue : Value {
+		public Vector4 vector;
+
+		public override void Write()
+		{
+			jsonWriter.Write ("\"" + name + "\": [");
+			jsonWriter.Write (vector.x.ToString() + ", " + vector.y.ToString() + ", " + vector.z.ToString() + ", " + vector.w.ToString());
+			jsonWriter.Write ("]");
+		}
+	}		
+
+	public class FloatValue : Value {
+		public float value;
+
+		public override void Write()
+		{
+			jsonWriter.Write ("\"" + name + "\": " + value + "");
+		}
+	}
+
 	public class StringValue : Value {
 		public string value;
 

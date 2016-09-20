@@ -3,7 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class GlTF_Technique : GlTF_Writer {
-	public enum Type {
+	public enum Type {		 
+		FLOAT = 5126,
 		FLOAT_VEC2 = 35664,
 		FLOAT_VEC3 = 35665,
 		FLOAT_VEC4 = 35666,
