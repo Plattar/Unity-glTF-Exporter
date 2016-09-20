@@ -213,42 +213,6 @@ public class SceneToGlTFWiz : ScriptableWizard
 								material.diffuse = new GlTF_MaterialColor ("diffuse", mat.color);
 								GlTF_Writer.materials.Add (material.name, material);
 
-								// if there are textures, add them too
-								if (mat.mainTexture != null)
-								{
-									var tex = mat.mainTexture;
-									var texName = GlTF_Texture.GetNameFromObject(tex);
-									if (!GlTF_Writer.textures.ContainsKey (texName))
-									{
-										var texPath = ExportTexture(tex, savedPath);
-										GlTF_Image img = new GlTF_Image();
-										img.name = GlTF_Image.GetNameFromObject(tex);
-										img.uri = texPath;
-										GlTF_Writer.images.Add(img);
-
-										GlTF_Sampler sampler;
-										var samplerName = GlTF_Sampler.GetNameFromObject(tex);
-										if (GlTF_Writer.samplers.ContainsKey(samplerName))
-										{
-											sampler = GlTF_Writer.samplers[samplerName];
-										}
-										else
-										{
-											sampler = new GlTF_Sampler(tex);
-											sampler.name = samplerName;
-											GlTF_Writer.samplers[samplerName] = sampler;
-										}
-
-										GlTF_Texture texture = new GlTF_Texture ();
-										texture.name = texName;
-										texture.source = img.name;
-										texture.samplerName = samplerName;
-
-										GlTF_Writer.textures.Add (texName, texture);
-										material.diffuse = new GlTF_MaterialTexture ("diffuse", texture);
-									}
-								}
-
 								//technique
 								var s = mat.shader;
 								var techName = GlTF_Technique.GetNameFromObject(s);
@@ -461,8 +425,38 @@ public class SceneToGlTFWiz : ScriptableWizard
 											{
 												var val = new GlTF_Material.StringValue();
 												val.name = pName;
-												val.value = GlTF_Texture.GetNameFromObject(t);
+												var texName = GlTF_Texture.GetNameFromObject(t);
+												val.value = texName;
 												material.values.Add(val);
+
+												if (!GlTF_Writer.textures.ContainsKey (texName))
+												{
+													var texPath = ExportTexture(t, savedPath);
+													GlTF_Image img = new GlTF_Image();
+													img.name = GlTF_Image.GetNameFromObject(t);
+													img.uri = texPath;
+													GlTF_Writer.images.Add(img);
+
+													GlTF_Sampler sampler;
+													var samplerName = GlTF_Sampler.GetNameFromObject(t);
+													if (GlTF_Writer.samplers.ContainsKey(samplerName))
+													{
+														sampler = GlTF_Writer.samplers[samplerName];
+													}
+													else
+													{
+														sampler = new GlTF_Sampler(t);
+														sampler.name = samplerName;
+														GlTF_Writer.samplers[samplerName] = sampler;
+													}
+
+													GlTF_Texture texture = new GlTF_Texture ();
+													texture.name = texName;
+													texture.source = img.name;
+													texture.samplerName = samplerName;
+
+													GlTF_Writer.textures.Add (texName, texture);
+												}
 											}
 										}
 									}
