@@ -153,14 +153,14 @@ public class GlTF_Accessor : GlTF_Writer {
 			{
 				bufferView.Populate (v3s[i].x);
 				bufferView.Populate (v3s[i].y);
-				bufferView.Populate (-v3s[i].z);
+				bufferView.Populate (v3s[i].z);
 
 				minFloat.x = Mathf.Min(v3s[i].x, minFloat.x);
 				minFloat.y = Mathf.Min(v3s[i].y, minFloat.y);
-				minFloat.z = Mathf.Min(-v3s[i].z, minFloat.z);
+				minFloat.z = Mathf.Min(v3s[i].z, minFloat.z);
 				maxFloat.x = Mathf.Max(v3s[i].x, maxFloat.x);
 				maxFloat.y = Mathf.Max(v3s[i].y, maxFloat.y);
-				maxFloat.z = Mathf.Max(-v3s[i].z, maxFloat.z);
+				maxFloat.z = Mathf.Max(v3s[i].z, maxFloat.z);
 
 			}
 		}

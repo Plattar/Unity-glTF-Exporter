@@ -569,23 +569,23 @@ public class SceneToGlTFWiz : ScriptableWizard
 	
 				// next, build hierarchy of nodes
 				GlTF_Node node = new GlTF_Node();
-				if (tr.parent != null)
-					node.hasParent = true;
-				if (tr.localPosition != Vector3.zero)
-					node.translation = new GlTF_Translation (tr.localPosition);
-				if (tr.localScale != Vector3.one)
-					node.scale = new GlTF_Scale (tr.localScale);
-//				if (tr.localRotation != Quaternion.identity)
-//					node.rotation = new GlTF_Rotation (tr.localRotation);
 
 				if (tr.parent == null)
 				{
-					Quaternion q = Quaternion.AngleAxis(180, Vector3.right);
-					node.rotation = new GlTF_Rotation(q * tr.localRotation);
+					Matrix4x4 mat = Matrix4x4.identity;
+					mat.m22 = -1; // flip z axis
+					mat = mat * Matrix4x4.TRS(tr.localPosition, tr.localRotation, tr.localScale);
+					node.matrix = new GlTF_Matrix(mat);
 				} 
-				else if (tr.localRotation != Quaternion.identity)
+				else
 				{
-					node.rotation = new GlTF_Rotation (tr.localRotation);
+					node.hasParent = true;
+					if (tr.localPosition != Vector3.zero)
+						node.translation = new GlTF_Translation (tr.localPosition);
+					if (tr.localScale != Vector3.one)
+						node.scale = new GlTF_Scale (tr.localScale);
+					if (tr.localRotation != Quaternion.identity)
+						node.rotation = new GlTF_Rotation (tr.localRotation);
 				}
 				
 				node.name = GlTF_Node.GetNameFromObject(tr);
