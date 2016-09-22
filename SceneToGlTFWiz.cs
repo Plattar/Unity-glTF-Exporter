@@ -73,9 +73,13 @@ public class SceneToGlTFWiz : ScriptableWizard
 					break;
 				}	
 			}
-			psPath = psPath.Remove(0, "Assets".Length);	
-			psPath = Application.dataPath + psPath;
-			preset.Load(psPath);
+
+			if (psPath != null)
+			{
+				psPath = psPath.Remove(0, "Assets".Length);	
+				psPath = Application.dataPath + psPath;
+				preset.Load(psPath);
+			}
 				
 			Export(path);
 		}
