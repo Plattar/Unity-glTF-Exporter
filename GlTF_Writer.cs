@@ -120,15 +120,10 @@ public class GlTF_Writer {
 
 		// write memory streams to binary file
 		ushortBufferView.byteOffset = 0;
-		ushortBufferView.memoryStream.WriteTo(binFile);
 		floatBufferView.byteOffset = ushortBufferView.byteLength;
-		floatBufferView.memoryStream.WriteTo(binFile);
 		vec2BufferView.byteOffset = floatBufferView.byteOffset + floatBufferView.byteLength;
-		vec2BufferView.memoryStream.WriteTo (binFile);
 		vec3BufferView.byteOffset = vec2BufferView.byteOffset + vec2BufferView.byteLength;
-		vec3BufferView.memoryStream.WriteTo (binFile);
 		vec4BufferView.byteOffset = vec3BufferView.byteOffset + vec3BufferView.byteLength;
-		vec4BufferView.memoryStream.WriteTo (binFile);
 
 		jsonWriter.Write ("{\n");
 		IndentIn();
@@ -518,5 +513,11 @@ public class GlTF_Writer {
 		Indent();			jsonWriter.Write ("}\n");
 		IndentOut();
 		Indent();			jsonWriter.Write ("}");
+
+		ushortBufferView.memoryStream.WriteTo(binFile);
+		floatBufferView.memoryStream.WriteTo(binFile);
+		vec2BufferView.memoryStream.WriteTo (binFile);
+		vec3BufferView.memoryStream.WriteTo (binFile);
+		vec4BufferView.memoryStream.WriteTo (binFile);
 	}
 }
