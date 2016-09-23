@@ -16,7 +16,7 @@ using System.Text;
 using System.Reflection;
 
 
-public class SceneToGlTFWiz : ScriptableWizard
+public class SceneToGlTFWiz : EditorWindow
 {
 //	static public List<GlTF_Accessor> Accessors;
 //	static public List<GlTF_BufferView> BufferViews;
@@ -29,6 +29,7 @@ public class SceneToGlTFWiz : ScriptableWizard
 	static XmlDocument xdoc;
 	static string savedPath = EditorPrefs.GetString (KEY_PATH, "/");
 	static string savedFile = EditorPrefs.GetString (KEY_FILE, "test.gltf");
+	static bool binary = false;
 
 	static Preset preset = new Preset();
 
@@ -38,7 +39,10 @@ public class SceneToGlTFWiz : ScriptableWizard
 		savedPath = EditorPrefs.GetString (KEY_PATH, "/");
 		savedFile = EditorPrefs.GetString (KEY_FILE, "test.gltf");
 		path = savedPath + "/"+ savedFile;
-		ScriptableWizard.DisplayWizard("Export Selected Stuff to glTF", typeof(SceneToGlTFWiz), "Export");
+//		ScriptableWizard.DisplayWizard("Export Selected Stuff to glTF", typeof(SceneToGlTFWiz), "Export");
+
+		SceneToGlTFWiz window = (SceneToGlTFWiz)EditorWindow.GetWindow (typeof (SceneToGlTFWiz));
+		window.Show();
 	}
 
 	void OnWizardUpdate ()
@@ -48,9 +52,7 @@ public class SceneToGlTFWiz : ScriptableWizard
 	}
 
     void OnWizardCreate() // Create (Export) button has been hit (NOT wizard has been created!)
-    {
-		writer = new GlTF_Writer();
-		writer.Init ();
+    {		
 /*
 		Object[] deps = EditorUtility.CollectDependencies  (trs);
 		foreach (Object o in deps)
@@ -61,32 +63,45 @@ public class SceneToGlTFWiz : ScriptableWizard
 		
 		path = EditorUtility.SaveFilePanel("Save glTF file as", savedPath, savedFile, "gltf");
 		if (path.Length != 0)
-		{			
-			var ps = AssetDatabase.FindAssets("GlTFPresets");
-			string psPath = null;
-			foreach (string guid in ps) {
-				var p = AssetDatabase.GUIDToAssetPath(guid);
-				var ext = Path.GetExtension(p);
-				if (ext == ".json")
-				{
-					psPath = p; 
-					break;
-				}	
-			}
-
-			if (psPath != null)
-			{
-				psPath = psPath.Remove(0, "Assets".Length);	
-				psPath = Application.dataPath + psPath;
-				preset.Load(psPath);
-			}
-				
+		{										
 			Export(path);
+		}
+	}
+
+	void OnGUI () 
+	{
+		GUILayout.Label("Export Options");
+		binary = GUILayout.Toggle(binary, "Binary GlTF");
+		if (GUILayout.Button("Export"))
+		{
+			OnWizardCreate();
 		}
 	}
 
 	static void Export(string path)
 	{
+		writer = new GlTF_Writer();
+		writer.Init ();
+
+		var ps = AssetDatabase.FindAssets("GlTFPresets");
+		string psPath = null;
+		foreach (string guid in ps) {
+			var p = AssetDatabase.GUIDToAssetPath(guid);
+			var ext = Path.GetExtension(p);
+			if (ext == ".json")
+			{
+				psPath = p; 
+				break;
+			}	
+		}
+
+		if (psPath != null)
+		{
+			psPath = psPath.Remove(0, "Assets".Length);	
+			psPath = Application.dataPath + psPath;
+			preset.Load(psPath);
+		}
+
 		savedPath = Path.GetDirectoryName(path);
 		savedFile = Path.GetFileName(path);
 
