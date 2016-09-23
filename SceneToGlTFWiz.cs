@@ -29,7 +29,6 @@ public class SceneToGlTFWiz : EditorWindow
 	static XmlDocument xdoc;
 	static string savedPath = EditorPrefs.GetString (KEY_PATH, "/");
 	static string savedFile = EditorPrefs.GetString (KEY_FILE, "test.gltf");
-	static bool binary = false;
 
 	static Preset preset = new Preset();
 
@@ -71,7 +70,7 @@ public class SceneToGlTFWiz : EditorWindow
 	void OnGUI () 
 	{
 		GUILayout.Label("Export Options");
-		binary = GUILayout.Toggle(binary, "Binary GlTF");
+		GlTF_Writer.binary = GUILayout.Toggle(GlTF_Writer.binary, "Binary GlTF");
 		if (GUILayout.Button("Export"))
 		{
 			OnWizardCreate();

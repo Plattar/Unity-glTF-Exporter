@@ -4,10 +4,13 @@ using System.IO;
 using System.Collections.Generic;
 
 public class GlTF_Writer {
+	public static FileStream fs;
 	public static StreamWriter jsonWriter;
+	public static BinaryWriter binWriter;
 	public static Stream binFile;
 	public static int indent = 0;
 	public static string binFileName;
+	public static bool binary;
 	static bool[] firsts = new bool[100];
 	public static GlTF_BufferView ushortBufferView = new GlTF_BufferView("ushortBufferView", 34963);
 	public static GlTF_BufferView floatBufferView = new GlTF_BufferView("floatBufferView");
@@ -95,19 +98,38 @@ public class GlTF_Writer {
 
 	public string name; // name of this object
 
-	public void OpenFiles (string filepath) {
-		jsonWriter = new StreamWriter (filepath);
-		binFileName = Path.GetFileNameWithoutExtension (filepath) + ".bin";
-		var binPath = Path.Combine(Path.GetDirectoryName(filepath), binFileName);
-		binFile = File.Open(binPath, FileMode.Create);
-		//		binWriter = new BinaryWriter (File.Open(binFileName, FileMode.Create));
-		//		binWriter = new BinaryWriter (File.Open(binFileName, FileMode.Create));
+	public void OpenFiles (string filepath) {		
+		fs = File.Open(filepath, FileMode.Create);
+
+		if (binary)
+		{
+			binWriter = new BinaryWriter(fs);
+			binFile = fs;
+			fs.Seek(20, SeekOrigin.Begin); // header skip
+		} 
+		else 
+		{
+			// separate bin file
+			binFileName = Path.GetFileNameWithoutExtension (filepath) + ".bin";
+			var binPath = Path.Combine(Path.GetDirectoryName(filepath), binFileName);
+			binFile = File.Open(binPath, FileMode.Create);
+		}
+
+		jsonWriter = new StreamWriter (fs);
 	}
 
 	public void CloseFiles() {
+		if (binary)
+		{
+			binWriter.Close();
+		}
+		else 
+		{
+			binFile.Close();
+		}
 
-		binFile.Close();
 		jsonWriter.Close ();
+		fs.Close();
 	}
 
 	public virtual void Write () {
@@ -513,11 +535,52 @@ public class GlTF_Writer {
 		Indent();			jsonWriter.Write ("}\n");
 		IndentOut();
 		Indent();			jsonWriter.Write ("}");
+				;
+		jsonWriter.Flush();
+
+		uint contentLength = 0;
+		if (binary)
+		{
+			long curLen = fs.Position;
+			var rem = curLen % 4;
+			if (rem != 0)
+			{
+				// add padding if not aligned to 4 bytes
+				var next = (curLen / 4 + 1) * 4;
+				rem = next - curLen;
+				for (int i = 0; i < rem; ++i)
+				{
+					jsonWriter.Write(" ");
+				}
+			}
+			jsonWriter.Flush();
+
+			// current pos - header size
+			contentLength = (uint)(fs.Position - 20);
+		}
+			
 
 		ushortBufferView.memoryStream.WriteTo(binFile);
 		floatBufferView.memoryStream.WriteTo(binFile);
 		vec2BufferView.memoryStream.WriteTo (binFile);
 		vec3BufferView.memoryStream.WriteTo (binFile);
 		vec4BufferView.memoryStream.WriteTo (binFile);
+
+		binFile.Flush();
+		if (binary)
+		{
+			uint fileLength = (uint)fs.Length;
+			Debug.Log("fl: " + fileLength);
+
+			// write header
+			fs.Seek(0, SeekOrigin.Begin);
+			jsonWriter.Write("glTF");	// magic
+			jsonWriter.Flush();
+			binWriter.Write(1);	// version
+			binWriter.Write(fileLength);
+			binWriter.Write(contentLength);
+			binWriter.Write(0);	// format
+			binWriter.Flush();
+		}
 	}
 }
