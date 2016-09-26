@@ -31,6 +31,7 @@ public class SceneToGlTFWiz : EditorWindow
 	static string savedFile = EditorPrefs.GetString (KEY_FILE, "test.gltf");
 
 	static Preset preset = new Preset();
+	static UnityEngine.TextAsset presetAsset;
 
 	[MenuItem ("File/Export/glTF")]
 	static void CreateWizard()
@@ -71,6 +72,7 @@ public class SceneToGlTFWiz : EditorWindow
 	{
 		GUILayout.Label("Export Options");
 		GlTF_Writer.binary = GUILayout.Toggle(GlTF_Writer.binary, "Binary GlTF");
+		presetAsset = EditorGUILayout.ObjectField("Preset file", presetAsset, typeof(UnityEngine.TextAsset), false) as UnityEngine.TextAsset;	
 		if (GUILayout.Button("Export"))
 		{
 			OnWizardCreate();
@@ -81,24 +83,16 @@ public class SceneToGlTFWiz : EditorWindow
 	{
 		writer = new GlTF_Writer();
 		writer.Init ();
-
-		var ps = AssetDatabase.FindAssets("GlTFPresets");
-		string psPath = null;
-		foreach (string guid in ps) {
-			var p = AssetDatabase.GUIDToAssetPath(guid);
-			var ext = Path.GetExtension(p);
-			if (ext == ".json")
-			{
-				psPath = p; 
-				break;
-			}	
-		}
-
-		if (psPath != null)
+				 
+		if (presetAsset != null)
 		{
-			psPath = psPath.Remove(0, "Assets".Length);	
-			psPath = Application.dataPath + psPath;
-			preset.Load(psPath);
+			string psPath = AssetDatabase.GetAssetPath(presetAsset);
+			if (psPath != null)
+			{
+				psPath = psPath.Remove(0, "Assets".Length);	
+				psPath = Application.dataPath + psPath;
+				preset.Load(psPath);
+			}
 		}
 
 		savedPath = Path.GetDirectoryName(path);
