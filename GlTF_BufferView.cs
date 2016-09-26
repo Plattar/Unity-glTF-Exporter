@@ -11,7 +11,7 @@ public class GlTF_BufferView : GlTF_Writer  {
 	//	public string target = "ARRAY_BUFFER";
 	public int currentOffset = 0;
 	public MemoryStream memoryStream = new MemoryStream();
-	public bool binary = false;
+	public bool bin = false;
 
 	public GlTF_BufferView (string n) { name = n; }
 	public GlTF_BufferView (string n, int t) { name = n; target = t; }

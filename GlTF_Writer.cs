@@ -140,11 +140,11 @@ public class GlTF_Writer {
 		bufferViews.Add (vec3BufferView);
 		bufferViews.Add (vec4BufferView);
 
-		ushortBufferView.binary = binary;
-		floatBufferView.binary = binary;
-		vec2BufferView.binary = binary;
-		vec3BufferView.binary = binary;
-		vec4BufferView.binary = binary;
+		ushortBufferView.bin = binary;
+		floatBufferView.bin = binary;
+		vec2BufferView.bin = binary;
+		vec3BufferView.bin = binary;
+		vec4BufferView.bin = binary;
 
 		// write memory streams to binary file
 		ushortBufferView.byteOffset = 0;
