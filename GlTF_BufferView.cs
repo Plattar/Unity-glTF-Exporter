@@ -11,6 +11,7 @@ public class GlTF_BufferView : GlTF_Writer  {
 	//	public string target = "ARRAY_BUFFER";
 	public int currentOffset = 0;
 	public MemoryStream memoryStream = new MemoryStream();
+	public bool binary = false;
 
 	public GlTF_BufferView (string n) { name = n; }
 	public GlTF_BufferView (string n, int t) { name = n; target = t; }
@@ -78,7 +79,8 @@ public class GlTF_BufferView : GlTF_Writer  {
 	*/
 		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
 		IndentIn();
-		Indent();		jsonWriter.Write ("\"buffer\": \"" + Path.GetFileNameWithoutExtension(GlTF_Writer.binFileName)+"\",\n");
+		var binName = binary ? "binary_glTF" : Path.GetFileNameWithoutExtension(GlTF_Writer.binFileName);
+		Indent();		jsonWriter.Write ("\"buffer\": \"" + binName +"\",\n");
 		Indent();		jsonWriter.Write ("\"byteLength\": " + byteLength + ",\n");
 		Indent();		jsonWriter.Write ("\"byteOffset\": " + byteOffset + ",\n");
 		Indent();		jsonWriter.Write ("\"target\": " + target + "\n");

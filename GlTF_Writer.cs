@@ -140,6 +140,12 @@ public class GlTF_Writer {
 		bufferViews.Add (vec3BufferView);
 		bufferViews.Add (vec4BufferView);
 
+		ushortBufferView.binary = binary;
+		floatBufferView.binary = binary;
+		vec2BufferView.binary = binary;
+		vec3BufferView.binary = binary;
+		vec4BufferView.binary = binary;
+
 		// write memory streams to binary file
 		ushortBufferView.byteOffset = 0;
 		floatBufferView.byteOffset = ushortBufferView.byteLength;
@@ -158,21 +164,40 @@ public class GlTF_Writer {
 		IndentOut();
 		Indent();	jsonWriter.Write ("}");
 
-		// FIX: Should support multiple buffers
-		CommaNL();
-		Indent();	jsonWriter.Write ("\"buffers\": {\n");
-		IndentIn();
-		Indent();	jsonWriter.Write ("\"" + Path.GetFileNameWithoutExtension(GlTF_Writer.binFileName) +"\": {\n");
-		IndentIn();
-		Indent();	jsonWriter.Write ("\"byteLength\": "+ (vec4BufferView.byteOffset+vec4BufferView.byteLength)+",\n");
-		Indent();	jsonWriter.Write ("\"type\": \"arraybuffer\",\n");
-		Indent();	jsonWriter.Write ("\"uri\": \"" + GlTF_Writer.binFileName + "\"\n");
+		if (!binary)
+		{
+			// FIX: Should support multiple buffers
+			CommaNL();
+			Indent();	jsonWriter.Write ("\"buffers\": {\n");
+			IndentIn();
+			Indent();	jsonWriter.Write ("\"" + Path.GetFileNameWithoutExtension(GlTF_Writer.binFileName) +"\": {\n");
+			IndentIn();
+			Indent();	jsonWriter.Write ("\"byteLength\": "+ (vec4BufferView.byteOffset+vec4BufferView.byteLength)+",\n");
+			Indent();	jsonWriter.Write ("\"type\": \"arraybuffer\",\n");
+			Indent();	jsonWriter.Write ("\"uri\": \"" + GlTF_Writer.binFileName + "\"\n");
 
-		IndentOut();
-		Indent();	jsonWriter.Write ("}\n");
+			IndentOut();
+			Indent();	jsonWriter.Write ("}\n");
 
-		IndentOut();
-		Indent();	jsonWriter.Write ("}");
+			IndentOut();
+			Indent();	jsonWriter.Write ("}");
+		}
+		else
+		{
+			CommaNL();
+			Indent();	jsonWriter.Write ("\"buffers\": {\n");
+			IndentIn();
+			Indent();	jsonWriter.Write ("\"binary_glTF\": {\n");
+			IndentIn();
+			Indent();	jsonWriter.Write ("\"byteLength\": "+ (vec4BufferView.byteOffset+vec4BufferView.byteLength)+",\n");
+			Indent();	jsonWriter.Write ("\"type\": \"arraybuffer\"\n");
+
+			IndentOut();
+			Indent();	jsonWriter.Write ("}\n");
+
+			IndentOut();
+			Indent();	jsonWriter.Write ("}");
+		}
 
 		if (cameras != null && cameras.Count > 0)
 		{
@@ -532,10 +557,23 @@ public class GlTF_Writer {
 		IndentOut();
 		Indent();			jsonWriter.Write ("}\n");
 		IndentOut();
-		Indent();			jsonWriter.Write ("}\n");
+		Indent();			jsonWriter.Write ("}");
+
+		if (binary)
+		{
+			CommaNL();
+			Indent();			jsonWriter.Write ("\"extensionsUsed\": [\n");
+			IndentIn();
+			Indent();			jsonWriter.Write ("\"KHR_binary_glTF\"\n");
+			IndentOut();
+			Indent();			jsonWriter.Write ("]");
+
+		}
+
+		jsonWriter.Write ("\n");
 		IndentOut();
 		Indent();			jsonWriter.Write ("}");
-				;
+
 		jsonWriter.Flush();
 
 		uint contentLength = 0;
