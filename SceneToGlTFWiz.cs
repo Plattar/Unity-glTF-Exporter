@@ -59,8 +59,8 @@ public class SceneToGlTFWiz : EditorWindow
 			Debug.Log("obj "+o.name+"  "+o.GetType());
 		}
 */		
-		
-		path = EditorUtility.SaveFilePanel("Save glTF file as", savedPath, savedFile, "gltf");
+		var ext = GlTF_Writer.binary ? "glb" : "gltf";
+		path = EditorUtility.SaveFilePanel("Save glTF file as", savedPath, savedFile, ext);
 		if (path.Length != 0)
 		{										
 			Export(path);
@@ -102,7 +102,7 @@ public class SceneToGlTFWiz : EditorWindow
 		}
 
 		savedPath = Path.GetDirectoryName(path);
-		savedFile = Path.GetFileName(path);
+		savedFile = Path.GetFileNameWithoutExtension(path);
 
 		EditorPrefs.SetString(KEY_PATH, savedPath);
 		EditorPrefs.SetString(KEY_FILE, savedFile);
