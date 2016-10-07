@@ -17,7 +17,8 @@ public class GlTF_Writer {
 	public static GlTF_BufferView vec2BufferView = new GlTF_BufferView("vec2BufferView");
 	public static GlTF_BufferView vec3BufferView = new GlTF_BufferView("vec3BufferView");
 	public static GlTF_BufferView vec4BufferView = new GlTF_BufferView("vec4BufferView");
-	public static List<GlTF_BufferView> bufferViews = new List<GlTF_BufferView>();	
+	public static GlTF_BufferView mat4BufferView = new GlTF_BufferView("mat4BufferView");
+	public static List<GlTF_BufferView> bufferViews = new List<GlTF_BufferView>();
 	public static List<GlTF_Camera> cameras = new List<GlTF_Camera>();
 	public static List<GlTF_Light> lights = new List<GlTF_Light>();
 	public static List<GlTF_Mesh> meshes = new List<GlTF_Mesh>();
@@ -31,15 +32,20 @@ public class GlTF_Writer {
 	public static Dictionary<string, GlTF_Technique> techniques = new Dictionary<string, GlTF_Technique>();
 	public static List<GlTF_Program> programs = new List<GlTF_Program>();
 	public static List<GlTF_Shader> shaders = new List<GlTF_Shader>();
+	public static List<GlTF_Skin> skins = new List<GlTF_Skin>();
 
-	static public string GetNameFromObject(Object o, bool useId = false) 
+	// Exporter specifics
+	public static bool bakeAnimation;
+	public static bool exportPBRMaterials;
+
+	static public string GetNameFromObject(Object o, bool useId = false)
 	{
 		var ret = o.name;
 		ret = ret.Replace(" ", "_");
 		ret = ret.Replace("/", "_");
 		ret = ret.Replace("\\", "_");
 
-		if (useId) 
+		if (useId)
 		{
 			ret += "_" + o.GetInstanceID();
 		}
@@ -54,7 +60,8 @@ public class GlTF_Writer {
 		vec2BufferView = new GlTF_BufferView("vec2BufferView");
 		vec3BufferView = new GlTF_BufferView("vec3BufferView");
 		vec4BufferView = new GlTF_BufferView("vec4BufferView");
-		bufferViews = new List<GlTF_BufferView>();	
+		mat4BufferView = new GlTF_BufferView("mat4BufferView");
+		bufferViews = new List<GlTF_BufferView>();
 		cameras = new List<GlTF_Camera>();
 		lights = new List<GlTF_Light>();
 		meshes = new List<GlTF_Mesh>();
@@ -98,16 +105,15 @@ public class GlTF_Writer {
 
 	public string name; // name of this object
 
-	public void OpenFiles (string filepath) {		
+	public void OpenFiles (string filepath) {
 		fs = File.Open(filepath, FileMode.Create);
-
 		if (binary)
 		{
 			binWriter = new BinaryWriter(fs);
 			binFile = fs;
 			fs.Seek(20, SeekOrigin.Begin); // header skip
-		} 
-		else 
+		}
+		else
 		{
 			// separate bin file
 			binFileName = Path.GetFileNameWithoutExtension (filepath) + ".bin";
@@ -123,7 +129,7 @@ public class GlTF_Writer {
 		{
 			binWriter.Close();
 		}
-		else 
+		else
 		{
 			binFile.Close();
 		}
@@ -139,12 +145,14 @@ public class GlTF_Writer {
 		bufferViews.Add (vec2BufferView);
 		bufferViews.Add (vec3BufferView);
 		bufferViews.Add (vec4BufferView);
+		bufferViews.Add (mat4BufferView);
 
 		ushortBufferView.bin = binary;
 		floatBufferView.bin = binary;
 		vec2BufferView.bin = binary;
 		vec3BufferView.bin = binary;
 		vec4BufferView.bin = binary;
+		mat4BufferView.bin = binary;
 
 		// write memory streams to binary file
 		ushortBufferView.byteOffset = 0;
@@ -152,6 +160,7 @@ public class GlTF_Writer {
 		vec2BufferView.byteOffset = floatBufferView.byteOffset + floatBufferView.byteLength;
 		vec3BufferView.byteOffset = vec2BufferView.byteOffset + vec2BufferView.byteLength;
 		vec4BufferView.byteOffset = vec3BufferView.byteOffset + vec3BufferView.byteLength;
+		mat4BufferView.byteOffset = vec4BufferView.byteOffset + vec4BufferView.byteLength;
 
 		jsonWriter.Write ("{\n");
 		IndentIn();
@@ -160,6 +169,7 @@ public class GlTF_Writer {
 		CommaNL();
 		Indent();	jsonWriter.Write ("\"asset\": {\n");
 		IndentIn();
+		Indent();	jsonWriter.Write ("\"generator\": \"Unity "+ Application.unityVersion + "\",\n");
 		Indent();	jsonWriter.Write ("\"version\": \"1\"\n");
 		IndentOut();
 		Indent();	jsonWriter.Write ("}");
@@ -172,7 +182,7 @@ public class GlTF_Writer {
 			IndentIn();
 			Indent();	jsonWriter.Write ("\"" + Path.GetFileNameWithoutExtension(GlTF_Writer.binFileName) +"\": {\n");
 			IndentIn();
-			Indent();	jsonWriter.Write ("\"byteLength\": "+ (vec4BufferView.byteOffset+vec4BufferView.byteLength)+",\n");
+			Indent();	jsonWriter.Write ("\"byteLength\": "+ (mat4BufferView.byteOffset+ mat4BufferView.byteLength)+",\n");
 			Indent();	jsonWriter.Write ("\"type\": \"arraybuffer\",\n");
 			Indent();	jsonWriter.Write ("\"uri\": \"" + GlTF_Writer.binFileName + "\"\n");
 
@@ -189,7 +199,7 @@ public class GlTF_Writer {
 			IndentIn();
 			Indent();	jsonWriter.Write ("\"binary_glTF\": {\n");
 			IndentIn();
-			Indent();	jsonWriter.Write ("\"byteLength\": "+ (vec4BufferView.byteOffset+vec4BufferView.byteLength)+",\n");
+			Indent();	jsonWriter.Write ("\"byteLength\": "+ (mat4BufferView.byteOffset+ mat4BufferView.byteLength)+",\n");
 			Indent();	jsonWriter.Write ("\"type\": \"arraybuffer\"\n");
 
 			IndentOut();
@@ -223,7 +233,7 @@ public class GlTF_Writer {
 			{
 				CommaNL();
 				a.Write ();
-			}			
+			}
 			jsonWriter.WriteLine();
 			IndentOut();
 			Indent();	jsonWriter.Write ("}");
@@ -241,7 +251,7 @@ public class GlTF_Writer {
 					CommaNL();
 					bv.Write ();
 				}
-			}			
+			}
 			jsonWriter.WriteLine();
 			IndentOut();
 			Indent();	jsonWriter.Write ("}");
@@ -264,7 +274,7 @@ public class GlTF_Writer {
 			jsonWriter.Write ("}");
 		}
 
-		if (shaders != null && shaders.Count > 0) 
+		if (shaders != null && shaders.Count > 0)
 		{
 			CommaNL();
 			Indent();
@@ -281,7 +291,7 @@ public class GlTF_Writer {
 			jsonWriter.Write ("}");
 		}
 
-		if (programs != null && programs.Count > 0) 
+		if (programs != null && programs.Count > 0)
 		{
 			CommaNL();
 			Indent();
@@ -298,13 +308,13 @@ public class GlTF_Writer {
 			jsonWriter.Write ("}");
 		}
 
-		if (techniques != null && techniques.Count > 0) 
+		if (techniques != null && techniques.Count > 0)
 		{
 			CommaNL();
 			Indent();
 			jsonWriter.Write ("\"techniques\": {\n");
 			IndentIn();
-			foreach (KeyValuePair<string, GlTF_Technique> k in techniques) 
+			foreach (KeyValuePair<string, GlTF_Technique> k in techniques)
 			{
 				CommaNL();
 				k.Value.Write();
@@ -315,123 +325,134 @@ public class GlTF_Writer {
 			jsonWriter.Write ("}");
 		}
 
-//		CommaNL();
-//		string tqs = @"
-//	'techniques': {
-//		'technique1': {
-//			'parameters': {
-//				'ambient': {
-//					'type': 35666
-//				},
-//				'diffuse': {
-//					'type': 35678
-//				},
-//				'emission': {
-//					'type': 35666
-//				},
-//				'light0Color': {
-//					'type': 35665,
-//					'value': [
-//					    1,
-//					    1,
-//					    1
-//					    ]
-//				},
-//				'light0Transform': {
-//					'semantic': 'MODELVIEW',
-//					'source': 'directionalLight1',
-//					'type': 35676
-//				},
-//				'modelViewMatrix': {
-//					'semantic': 'MODELVIEW',
-//					'type': 35676
-//				},
-//				'normal': {
-//					'semantic': 'NORMAL',
-//					'type': 35665
-//				},
-//				'normalMatrix': {
-//					'semantic': 'MODELVIEWINVERSETRANSPOSE',
-//					'type': 35675
-//				},
-//				'position': {
-//					'semantic': 'POSITION',
-//					'type': 35665
-//				},
-//				'projectionMatrix': {
-//					'semantic': 'PROJECTION',
-//					'type': 35676
-//				},
-//				'shininess': {
-//					'type': 5126
-//				},
-//				'specular': {
-//					'type': 35666
-//				},
-//				'texcoord0': {
-//					'semantic': 'TEXCOORD_0',
-//					'type': 35664
-//				}
-//			},
-//			'pass': 'defaultPass',
-//			'passes': {
-//				'defaultPass': {
-//					'details': {
-//						'commonProfile': {
-//							'extras': {
-//								'doubleSided': false
-//							},
-//							'lightingModel': 'Blinn',
-//							'parameters': [
-//							    'ambient',
-//							    'diffuse',
-//							    'emission',
-//							    'light0Color',
-//							    'light0Transform',
-//							    'modelViewMatrix',
-//							    'normalMatrix',
-//							    'projectionMatrix',
-//							    'shininess',
-//							    'specular'
-//							    ],
-//							'texcoordBindings': {
-//								'diffuse': 'TEXCOORD_0'
-//							}
-//						},
-//						'type': 'COLLADA-1.4.1/commonProfile'
-//					},
-//					'instanceProgram': {
-//						'attributes': {
-//							'a_normal': 'normal',
-//							'a_position': 'position',
-//							'a_texcoord0': 'texcoord0'
-//						},
-//						'program': 'program_0',
-//						'uniforms': {
-//							'u_ambient': 'ambient',
-//							'u_diffuse': 'diffuse',
-//							'u_emission': 'emission',
-//							'u_light0Color': 'light0Color',
-//							'u_light0Transform': 'light0Transform',
-//							'u_modelViewMatrix': 'modelViewMatrix',
-//							'u_normalMatrix': 'normalMatrix',
-//							'u_projectionMatrix': 'projectionMatrix',
-//							'u_shininess': 'shininess',
-//							'u_specular': 'specular'
-//						}
-//					},
-//					'states': {
-//						'enable': [
-//						    2884,
-//						    2929
-//						    ]
-//					}
-//				}
-//			}
-//		}
-//	}";
-//		tqs = tqs.Replace ("'", "\"");
-//		jsonWriter.Write (tqs);
+		CommaNL();
+		Indent(); jsonWriter.Write("\"extensionsUsed\": [\n");
+		IndentIn();
+		Indent(); jsonWriter.Write("\"FRAUNHOFER_materials_pbr\"\n");
+		if (binary)
+		{
+			Indent(); jsonWriter.Write("\"KHR_binary_glTF\"\n");
+		}
+		IndentOut();
+		Indent(); jsonWriter.Write("]");
+
+		//		CommaNL();
+		//		string tqs = @"
+		//	'techniques': {
+		//		'technique1': {
+		//			'parameters': {
+		//				'ambient': {
+		//					'type': 35666
+		//				},
+		//				'diffuse': {
+		//					'type': 35678
+		//				},
+		//				'emission': {
+		//					'type': 35666
+		//				},
+		//				'light0Color': {
+		//					'type': 35665,
+		//					'value': [
+		//					    1,
+		//					    1,
+		//					    1
+		//					    ]
+		//				},
+		//				'light0Transform': {
+		//					'semantic': 'MODELVIEW',
+		//					'source': 'directionalLight1',
+		//					'type': 35676
+		//				},
+		//				'modelViewMatrix': {
+		//					'semantic': 'MODELVIEW',
+		//					'type': 35676
+		//				},
+		//				'normal': {
+		//					'semantic': 'NORMAL',
+		//					'type': 35665
+		//				},
+		//				'normalMatrix': {
+		//					'semantic': 'MODELVIEWINVERSETRANSPOSE',
+		//					'type': 35675
+		//				},
+		//				'position': {
+		//					'semantic': 'POSITION',
+		//					'type': 35665
+		//				},
+		//				'projectionMatrix': {
+		//					'semantic': 'PROJECTION',
+		//					'type': 35676
+		//				},
+		//				'shininess': {
+		//					'type': 5126
+		//				},
+		//				'specular': {
+		//					'type': 35666
+		//				},
+		//				'texcoord0': {
+		//					'semantic': 'TEXCOORD_0',
+		//					'type': 35664
+		//				}
+		//			},
+		//			'pass': 'defaultPass',
+		//			'passes': {
+		//				'defaultPass': {
+		//					'details': {
+		//						'commonProfile': {
+		//							'extras': {
+		//								'doubleSided': false
+		//							},
+		//							'lightingModel': 'Blinn',
+		//							'parameters': [
+		//							    'ambient',
+		//							    'diffuse',
+		//							    'emission',
+		//							    'light0Color',
+		//							    'light0Transform',
+		//							    'modelViewMatrix',
+		//							    'normalMatrix',
+		//							    'projectionMatrix',
+		//							    'shininess',
+		//							    'specular'
+		//							    ],
+		//							'texcoordBindings': {
+		//								'diffuse': 'TEXCOORD_0'
+		//							}
+		//						},
+		//						'type': 'COLLADA-1.4.1/commonProfile'
+		//					},
+		//					'instanceProgram': {
+		//						'attributes': {
+		//							'a_normal': 'normal',
+		//							'a_position': 'position',
+		//							'a_texcoord0': 'texcoord0'
+		//						},
+		//						'program': 'program_0',
+		//						'uniforms': {
+		//							'u_ambient': 'ambient',
+		//							'u_diffuse': 'diffuse',
+		//							'u_emission': 'emission',
+		//							'u_light0Color': 'light0Color',
+		//							'u_light0Transform': 'light0Transform',
+		//							'u_modelViewMatrix': 'modelViewMatrix',
+		//							'u_normalMatrix': 'normalMatrix',
+		//							'u_projectionMatrix': 'projectionMatrix',
+		//							'u_shininess': 'shininess',
+		//							'u_specular': 'specular'
+		//						}
+		//					},
+		//					'states': {
+		//						'enable': [
+		//						    2884,
+		//						    2929
+		//						    ]
+		//					}
+		//				}
+		//			}
+		//		}
+		//	}";
+		//		tqs = tqs.Replace ("'", "\"");
+		//		jsonWriter.Write (tqs);
 
 		if (samplers.Count > 0)
 		{
@@ -512,10 +533,10 @@ public class GlTF_Writer {
 		{
 			CommaNL();
 			/*
-		    "nodes": {
-        "node-Alien": {
-            "children": [],
-            "matrix": [
+			"nodes": {
+		"node-Alien": {
+			"children": [],
+			"matrix": [
 */
 			Indent();			jsonWriter.Write ("\"nodes\": {\n");
 			IndentIn();
@@ -531,7 +552,21 @@ public class GlTF_Writer {
 			jsonWriter.WriteLine();
 			IndentOut();
 			Indent();			jsonWriter.Write ("}");
+		}
 
+		if(skins.Count > 0)
+		{
+			CommaNL();
+			Indent(); jsonWriter.Write("\"skins\": {\n");
+			IndentIn();
+			foreach(GlTF_Skin skin in skins)
+			{
+				CommaNL();
+				skin.Write();
+			}
+			jsonWriter.WriteLine();
+			IndentOut();
+			Indent(); jsonWriter.Write("}");
 		}
 		CommaNL();
 
@@ -559,17 +594,6 @@ public class GlTF_Writer {
 		IndentOut();
 		Indent();			jsonWriter.Write ("}");
 
-		if (binary)
-		{
-			CommaNL();
-			Indent();			jsonWriter.Write ("\"extensionsUsed\": [\n");
-			IndentIn();
-			Indent();			jsonWriter.Write ("\"KHR_binary_glTF\"\n");
-			IndentOut();
-			Indent();			jsonWriter.Write ("]");
-
-		}
-
 		jsonWriter.Write ("\n");
 		IndentOut();
 		Indent();			jsonWriter.Write ("}");
@@ -596,19 +620,19 @@ public class GlTF_Writer {
 			// current pos - header size
 			contentLength = (uint)(fs.Position - 20);
 		}
-			
+
 
 		ushortBufferView.memoryStream.WriteTo(binFile);
 		floatBufferView.memoryStream.WriteTo(binFile);
 		vec2BufferView.memoryStream.WriteTo (binFile);
 		vec3BufferView.memoryStream.WriteTo (binFile);
 		vec4BufferView.memoryStream.WriteTo (binFile);
+		mat4BufferView.memoryStream.WriteTo(binFile);
 
 		binFile.Flush();
 		if (binary)
 		{
 			uint fileLength = (uint)fs.Length;
-			Debug.Log("fl: " + fileLength);
 
 			// write header
 			fs.Seek(0, SeekOrigin.Begin);

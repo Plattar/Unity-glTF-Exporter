@@ -6,7 +6,8 @@ public class GlTF_Accessor : GlTF_Writer {
 		SCALAR,
 		VEC2,
 		VEC3,
-		VEC4
+		VEC4, 
+		MAT4
 	}
 
 	public enum ComponentType {
@@ -20,9 +21,13 @@ public class GlTF_Accessor : GlTF_Writer {
 	public ComponentType componentType; // GL enum vals ": BYTE (5120), UNSIGNED_BYTE (5121), SHORT (5122), UNSIGNED_SHORT (5123), FLOAT (5126)
 	public int count;//": 2399,
 	public Type type = Type.SCALAR;
+	public Vector2 scaleValues;
+	public Vector2 offsetValues;
 
 	Vector4 maxFloat;
 	Vector4 minFloat;
+	Matrix4x4 minMatrix = new Matrix4x4();
+	Matrix4x4 maxMatrix = new Matrix4x4();
 	int minInt;
 	int maxInt;
 
@@ -43,6 +48,9 @@ public class GlTF_Accessor : GlTF_Writer {
 			break;
 		case Type.VEC4:
 			byteStride = 16;
+			break;
+		case Type.MAT4:
+			byteStride = 64;
 			break;
 		}
 		componentType = c;
@@ -67,6 +75,19 @@ public class GlTF_Accessor : GlTF_Writer {
 		minFloat = new Vector4(max, max, max, max);
 	}
 
+	public void PopulateWithOffsetScale(Vector2[] v2s, bool flip)
+	{
+		Vector2[] uv2 = v2s;
+		for(int i=0;  i< uv2.Length; ++i)
+		{
+			float u = uv2[i][0] * scaleValues[0] + offsetValues[0];
+			float v = uv2[i][1] * scaleValues[1] + offsetValues[1];
+			uv2[i] = new Vector2(u, v);
+		}
+
+		Populate(uv2, flip);
+	}
+
 	public void Populate (int[] vs, bool flippedTriangle)
 	{
 		if (type != Type.SCALAR)
@@ -89,6 +110,7 @@ public class GlTF_Accessor : GlTF_Writer {
 	{
 		if (type != Type.SCALAR)
 			throw (new System.Exception());
+  
 		byteOffset = bufferView.currentOffset;
 		bufferView.Populate (vs);
 		count = vs.Length;
@@ -161,7 +183,6 @@ public class GlTF_Accessor : GlTF_Writer {
 				maxFloat.x = Mathf.Max(v3s[i].x, maxFloat.x);
 				maxFloat.y = Mathf.Max(v3s[i].y, maxFloat.y);
 				maxFloat.z = Mathf.Max(v3s[i].z, maxFloat.z);
-
 			}
 		}
 	}
@@ -181,7 +202,6 @@ public class GlTF_Accessor : GlTF_Writer {
 				bufferView.Populate (v4s[i].y);
 				bufferView.Populate (v4s[i].z);
 				bufferView.Populate (v4s[i].w);
-
 				minFloat.x = Mathf.Min(v4s[i].x, minFloat.x);
 				minFloat.y = Mathf.Min(v4s[i].y, minFloat.y);
 				minFloat.z = Mathf.Min(v4s[i].z, minFloat.z);
@@ -193,6 +213,33 @@ public class GlTF_Accessor : GlTF_Writer {
 			}
 		}
 
+	}
+
+	public void Populate(Matrix4x4[] matrices, Transform m)
+	{
+		if (type != Type.MAT4)
+			throw (new System.Exception());
+
+		byteOffset = bufferView.currentOffset;
+		count = matrices.Length;
+		if(count > 0)
+		{
+			for(int i = 0; i < matrices.Length; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					for(int k=0; k < 4; k++)
+					{
+						// Matrices in unity are column major
+						// as for Gltf
+						float value = matrices[i][k, j];
+						bufferView.Populate(value);
+						minMatrix[k, j] = Mathf.Min(value, minMatrix[k, j]);
+						maxMatrix[k, j] = Mathf.Max(value, maxMatrix[k, j]);
+					}
+				}
+			}
+		}
 	}
 
 	void WriteMin()
@@ -216,6 +263,13 @@ public class GlTF_Accessor : GlTF_Writer {
 				case Type.VEC4:
 					jsonWriter.Write (minFloat.x + ", " + minFloat.y + ", " + minFloat.z + ", " + minFloat.w);
 				break;
+				case Type.MAT4:
+					for (int i = 0; i < 15; ++i)
+					{
+						jsonWriter.Write(minMatrix[i] + ", ");
+					}
+					jsonWriter.Write(minMatrix[15]);
+				break;
 			}
 		} 
 		else if (componentType == ComponentType.USHORT)
@@ -223,6 +277,10 @@ public class GlTF_Accessor : GlTF_Writer {
 			if (type == Type.SCALAR)
 			{
 				jsonWriter.Write(minInt);
+			}
+			else if (type == Type.VEC4)
+			{
+				jsonWriter.Write((int)minFloat.x + ", " + (int)minFloat.y + ", " + (int)minFloat.z + ", " + (int)minFloat.w);
 			}
 		}
 	}
@@ -248,6 +306,13 @@ public class GlTF_Accessor : GlTF_Writer {
 			case Type.VEC4:
 				jsonWriter.Write (maxFloat.x + ", " + maxFloat.y + ", " + maxFloat.z + ", " + maxFloat.w);
 				break;
+		   case Type.MAT4:
+				for(int i=0; i < 15; ++i)
+				{
+					jsonWriter.Write(maxMatrix[i] + ", ");
+				}
+				jsonWriter.Write(maxMatrix[15]);
+				break;
 			}
 		} 
 		else if (componentType == ComponentType.USHORT)
@@ -255,6 +320,10 @@ public class GlTF_Accessor : GlTF_Writer {
 			if (type == Type.SCALAR)
 			{
 				jsonWriter.Write(maxInt);
+			}
+			else if(type == Type.VEC4)
+			{
+				jsonWriter.Write((int)maxFloat.x + ", " + (int)maxFloat.y + ", " + (int)maxFloat.z + ", " + (int)maxFloat.w);
 			}
 		}
 	}
@@ -269,14 +338,13 @@ public class GlTF_Accessor : GlTF_Writer {
 		Indent();		jsonWriter.Write ("\"componentType\": " + (int)componentType + ",\n");
 		Indent();		jsonWriter.Write ("\"count\": " + count + ",\n");
 
-
-		Indent();		jsonWriter.Write ("\"max\": [ ");
+		Indent(); jsonWriter.Write("\"max\": [ ");
 		WriteMax();
-		jsonWriter.Write (" ],\n");
-		Indent();		jsonWriter.Write ("\"min\": [ ");
+		jsonWriter.Write(" ],\n");
+		Indent(); jsonWriter.Write("\"min\": [ ");
 		WriteMin();
-		jsonWriter.Write (" ],\n");
-		
+		jsonWriter.Write(" ],\n");
+
 		Indent();		jsonWriter.Write ("\"type\": \"" + type + "\"\n");
 		IndentOut();
 		Indent();	jsonWriter.Write (" }");

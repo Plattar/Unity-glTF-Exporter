@@ -23,15 +23,15 @@ public class GlTF_BufferView : GlTF_Writer  {
 			for (int i = 0; i < vs.Length; i+=3)
 			{
 				ushort u = (ushort)vs[i];
-				memoryStream.Write (BitConverter.GetBytes(u), 0, 2);
+				memoryStream.Write (BitConverter.GetBytes(u), 0, BitConverter.GetBytes(u).Length);
 				currentOffset += 2;
 
 				u = (ushort)vs[i+2];
-				memoryStream.Write (BitConverter.GetBytes(u), 0, 2);
+				memoryStream.Write (BitConverter.GetBytes(u), 0, BitConverter.GetBytes(u).Length);
 				currentOffset += 2;
 
 				u = (ushort)vs[i+1];
-				memoryStream.Write (BitConverter.GetBytes(u), 0, 2);
+				memoryStream.Write (BitConverter.GetBytes(u), 0, BitConverter.GetBytes(u).Length);
 				currentOffset += 2;
 			}
 		}
@@ -40,7 +40,7 @@ public class GlTF_BufferView : GlTF_Writer  {
 			for (int i = 0; i < vs.Length; i++)
 			{
 				ushort u = (ushort)vs[i];
-				memoryStream.Write (BitConverter.GetBytes(u), 0, 2);
+				memoryStream.Write (BitConverter.GetBytes(u), 0, BitConverter.GetBytes(u).Length);
 				currentOffset += 2;
 			}
 		}
@@ -54,7 +54,7 @@ public class GlTF_BufferView : GlTF_Writer  {
 			//			memoryStream.Write (vs[i]);
 			//			memoryStream.Write ((byte[])vs, 0, vs.Length * sizeof(int));
 			float f = vs[i];
-			memoryStream.Write (BitConverter.GetBytes(f), 0, 2);
+			memoryStream.Write (BitConverter.GetBytes(f), 0, BitConverter.GetBytes(f).Length);
 			currentOffset += 4;
 		}
 		byteLength = currentOffset;
@@ -62,7 +62,7 @@ public class GlTF_BufferView : GlTF_Writer  {
 
 	public void Populate (float v)
 	{
-		memoryStream.Write (BitConverter.GetBytes(v), 0, 4);
+		memoryStream.Write (BitConverter.GetBytes(v), 0, BitConverter.GetBytes(v).Length);
 		currentOffset += 4;
 		byteLength = currentOffset;
 	}

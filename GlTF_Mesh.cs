@@ -26,7 +26,7 @@ public class GlTF_Mesh : GlTF_Writer {
 		}
 	}
 
-	public override void Write ()
+    public override void Write ()
 	{
 		Indent();	jsonWriter.Write ("\"" + name + "\": {\n");
 		IndentIn();
