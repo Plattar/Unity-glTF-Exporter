@@ -108,7 +108,7 @@ public class GlTF_Technique : GlTF_Writer {
 			IndentOut();
 			Indent();	jsonWriter.Write ("}");
 		}
-		Indent();		jsonWriter.Write ("\n");
+		jsonWriter.Write ("\n");
 		IndentOut();
 		Indent();		jsonWriter.Write ("},\n");
 
@@ -119,7 +119,7 @@ public class GlTF_Technique : GlTF_Writer {
 			CommaNL();
 			Indent();	jsonWriter.Write ("\"" + a.name + "\": \"" + a.param + "\"");
 		}
-		Indent();		jsonWriter.Write ("\n");
+		jsonWriter.Write ("\n");
 		IndentOut();
 		Indent();		jsonWriter.Write ("},\n");
 
@@ -130,7 +130,7 @@ public class GlTF_Technique : GlTF_Writer {
 			CommaNL();
 			Indent();	jsonWriter.Write ("\"" + u.name + "\": \"" + u.param + "\"");
 		}
-		Indent();		jsonWriter.Write ("\n");
+		jsonWriter.Write ("\n");
 		IndentOut();
 		Indent();		jsonWriter.Write ("}\n");
 		IndentOut();
