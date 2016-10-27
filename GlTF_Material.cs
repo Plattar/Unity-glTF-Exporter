@@ -128,15 +128,15 @@ public class GlTF_Material : GlTF_Writer {
 //		}
 //		jsonWriter.WriteLine();
 
-		Indent(); jsonWriter.Write ("\n");
+		jsonWriter.Write ("\n");
 		IndentOut();
 		Indent(); jsonWriter.Write ("}");
-		Indent(); jsonWriter.Write("\n");
+		jsonWriter.Write("\n");
 		IndentOut();
 		Indent(); jsonWriter.Write("}");
-		Indent(); jsonWriter.Write("\n");
+		jsonWriter.Write("\n");
 		IndentOut();
-		Indent(); jsonWriter.Write("},");
+		Indent(); jsonWriter.Write("},\n");
 		CommaNL();
 		Indent();		jsonWriter.Write ("\"name\": \"" + name + "\"\n");
 		IndentOut();

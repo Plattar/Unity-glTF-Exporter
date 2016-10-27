@@ -12,7 +12,7 @@ using UnityEditor.SceneManagement;
 public class SketchfabExporterWww : MonoBehaviour
 {
 	private WWW www = null;
-	string api_url = "https://sketchfab.com/v2/models";
+	string api_url = "https://sketchfab-local.com/v2/models";
 	public bool done = false;
 	public IEnumerator UploadFileCo(string localFileName, string token, bool autopublish, bool model_private, string title, string description, string tags)
 	{
@@ -276,7 +276,7 @@ public class SketchfabExporterWindow : EditorWindow
 	private string param_password = "";
 	private string param_token = "";
 
-	private static string dashboard_url = "https://sketchfab.com/settings/password";
+	private static string dashboard_url = "https://sketchfab-local.com/settings/password";
 	private SketchfabExporter exporter;
 	private bool finished = true;
 
@@ -310,7 +310,7 @@ public class SketchfabExporterWindow : EditorWindow
 
 		if (param_token.Trim().Length == 0)
 		{
-			EditorUtility.DisplayDialog("Invalid API Token", "You can find your token at https://sketchfab.com/dashboard.", "OK");
+			EditorUtility.DisplayDialog("Invalid API Token", "You can find your token at https://sketchfab-local.com/dashboard.", "OK");
 			return;
 		}
 
@@ -419,7 +419,7 @@ public class SketchfabExporterWindow : EditorWindow
 				exporter.isActive = false;
 				if (urlid.Length > 0)
 				{
-					string modelUrl = "http://sketchfab.com/models/" + urlid;
+					string modelUrl = "http://sketchfab-local.com/models/" + urlid;
 					EditorUtility.DisplayDialog("Success", "Model has been successfully uploaded to sketchfab", "View model");
 					Application.OpenURL(modelUrl);
 				}

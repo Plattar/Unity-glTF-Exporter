@@ -106,7 +106,7 @@ public class GlTF_Node : GlTF_Writer {
 				rotation.Write();
 			}
 		}
-
+		jsonWriter.Write("\n");
 		if(skeletons.Count > 0)
 		{
 			CommaNL();

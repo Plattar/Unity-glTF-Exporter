@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class GlTF_Technique : GlTF_Writer {
-	public enum Type {		 
+	public enum Type {
 		FLOAT = 5126,
 		FLOAT_VEC2 = 35664,
 		FLOAT_VEC3 = 35665,
@@ -26,8 +26,8 @@ public class GlTF_Technique : GlTF_Writer {
 		MODELVIEWINVERSETRANSPOSE
 	}
 
-	public class Parameter {	
-		public string name;	
+	public class Parameter {
+		public string name;
 		public Type type;
 		public Semantic semantic = Semantic.UNKNOWN;
 	}
@@ -47,8 +47,8 @@ public class GlTF_Technique : GlTF_Writer {
 	public List<Parameter> parameters = new List<Parameter>();
 	public List<Uniform> uniforms = new List<Uniform>();
 
-	public static string GetNameFromObject(Object o) 
-	{		 		
+	public static string GetNameFromObject(Object o)
+	{
 		return "technique_" + GlTF_Writer.GetNameFromObject(o);
 	}
 
@@ -88,7 +88,7 @@ public class GlTF_Technique : GlTF_Writer {
 	public override void Write()
 	{
 		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
-		IndentIn();		
+		IndentIn();
 		Indent();		jsonWriter.Write ("\"program\": \"" + program +"\",\n");
 		Indent();		jsonWriter.Write ("\"parameters\": {\n");
 		IndentIn();
@@ -108,7 +108,7 @@ public class GlTF_Technique : GlTF_Writer {
 			IndentOut();
 			Indent();	jsonWriter.Write ("}");
 		}
-		Indent();		jsonWriter.Write ("\n");
+		jsonWriter.Write ("\n");
 		IndentOut();
 		Indent();		jsonWriter.Write ("},\n");
 
@@ -119,7 +119,7 @@ public class GlTF_Technique : GlTF_Writer {
 			CommaNL();
 			Indent();	jsonWriter.Write ("\"" + a.name + "\": \"" + a.param + "\"");
 		}
-		Indent();		jsonWriter.Write ("\n");
+		jsonWriter.Write ("\n");
 		IndentOut();
 		Indent();		jsonWriter.Write ("},\n");
 
@@ -130,7 +130,7 @@ public class GlTF_Technique : GlTF_Writer {
 			CommaNL();
 			Indent();	jsonWriter.Write ("\"" + u.name + "\": \"" + u.param + "\"");
 		}
-		Indent();		jsonWriter.Write ("\n");
+		jsonWriter.Write ("\n");
 		IndentOut();
 		Indent();		jsonWriter.Write ("}\n");
 		IndentOut();
