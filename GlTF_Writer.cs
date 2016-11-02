@@ -369,7 +369,7 @@ public class GlTF_Writer {
 			jsonWriter.WriteLine();
 			IndentOut();
 			Indent();
-			jsonWriter.Write ("},\n");
+			jsonWriter.Write ("}");
 		}
 
 		if (samplers.Count > 0)

@@ -31,7 +31,7 @@ public class SceneToGlTFWiz : MonoBehaviour
         {"_EmissionColor","emissiveFactor" },
 
         // Factors
-        {"_Metalllic", "metalnessFactor" },
+        {"_Metallic", "metallicFactor" },
         {"_GlossMapScale", "roughnessFactor" },
         {"_Glossiness", "roughnessFactor" },
         {"_BumpScale", "normalFactor" },
@@ -732,7 +732,11 @@ public class SceneToGlTFWiz : MonoBehaviour
 				var matCol = new GlTF_Material.ColorValue();
 				matCol.name = workflowChannelMap[pName];
 				matCol.color = mat.GetColor(pName);
-                if (pName.CompareTo("_SpecColor") ==0) matCol.color.a = 1.0f;
+                //FIXME: Unity doesn't use albedo color when there is no specular texture
+                if (pName.CompareTo("_SpecColor") == 0)
+                {
+                    matCol.color.a = 1.0f;
+                }
 
 				material.values.Add(matCol);
 			}
@@ -749,7 +753,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 				var matFloat = new GlTF_Material.FloatValue();
 				matFloat.name = workflowChannelMap[pName];
 				matFloat.value = mat.GetFloat(pName);
-                if (isMetal && pName.CompareTo("_GlossMapScale") == 0) matFloat.value = 1 - matFloat.value;
+                if (isMetal && (pName.CompareTo("_GlossMapScale") == 0 || pName.CompareTo("_Glossiness") == 0)) matFloat.value = 1 - matFloat.value;
 				material.values.Add(matFloat);
 			}
 			else if (pType == ShaderUtil.ShaderPropertyType.TexEnv && workflowChannelMap.ContainsKey(pName))
@@ -819,12 +823,13 @@ public class SceneToGlTFWiz : MonoBehaviour
 							var texName = GlTF_Texture.GetNameFromObject(t);
 							val.value = texName;
 							material.values.Add(val);
-							if(pName.CompareTo("_MainTex") == 0 && mat.GetFloat("_DstBlend") == 10.0)
+
+                            // Handle transparency 
+                            if (pName.CompareTo("_MainTex") == 0 && mat.GetFloat("_Mode") != 0)
 							{
-								var transval = new GlTF_Material.StringValue();
-								transval.name = "opacityTexture";
-								transval.value = texName;
-								material.values.Add(transval);
+                                string mode = mat.GetFloat("_Mode") == 1 ? "alphaMask" : "alphaBlend";
+                                material.extraString.Add("blendMode", mode);
+                                material.extraFloat.Add("cutoff", mat.GetFloat("_Cutoff"));
 							}
 
 							if (!GlTF_Writer.textures.ContainsKey(texName))

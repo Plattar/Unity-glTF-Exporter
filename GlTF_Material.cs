@@ -76,8 +76,10 @@ public class GlTF_Material : GlTF_Writer {
 	public float shininess;
 	public GlTF_ColorOrTexture specular;// = new GlTF_ColorRGBA ("specular");
 	public List<Value> values = new List<Value>();
+    public Dictionary<string, string> extraString = new Dictionary<string, string>();
+    public Dictionary<string, float> extraFloat = new Dictionary<string, float>();
 
-	public static string GetNameFromObject(Object o)
+    public static string GetNameFromObject(Object o)
 	{
 		return "material_" + GlTF_Writer.GetNameFromObject(o, true);
 	}
@@ -91,15 +93,34 @@ public class GlTF_Material : GlTF_Writer {
 		//Indent();		jsonWriter.Write ("\"values\": {\n");
 		//IndentIn();
 
-		Indent(); jsonWriter.Write("\"" + name + "\": {\n");
+		Indent(); jsonWriter.Write("\"" + id + "\": {\n");
 		IndentIn();
 		//Indent();		jsonWriter.Write ("\"technique\": \"" + instanceTechniqueName + "\",\n");
 		Indent(); jsonWriter.Write("\"extensions\": {\n");
 		IndentIn();
 		Indent(); jsonWriter.Write("\"FRAUNHOFER_materials_pbr\": {\n");
 		IndentIn();
-		CommaNL();
-		Indent(); jsonWriter.Write("\"materialModel\": \"" + materialModel + "\",\n");
+		
+        if(extraFloat.Count > 0 ||extraString.Count > 0)
+        {   
+            Indent(); jsonWriter.Write("\"extras\": {\n");
+            IndentIn();
+            foreach (var s in extraString)
+            {
+                CommaNL();
+                Indent(); jsonWriter.Write("\"" + s.Key + "\" : \"" + s.Value + "\"");
+            }
+            foreach (var s in extraFloat)
+            {
+                CommaNL();
+                Indent(); jsonWriter.Write("\"" + s.Key + "\" : " + s.Value + "");
+            }
+            IndentOut();
+            jsonWriter.Write("\n");
+            Indent(); jsonWriter.Write("},");
+            jsonWriter.Write("\n");
+        }
+        Indent(); jsonWriter.Write("\"materialModel\": \"" + materialModel + "\",\n");
 		Indent(); jsonWriter.Write("\"values\": {\n");
 		IndentIn();
 		foreach (var v in values)
