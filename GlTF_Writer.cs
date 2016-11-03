@@ -103,6 +103,7 @@ public class GlTF_Writer {
 		firsts[indent] = false;
 	}
 
+    public string id;
 	public string name; // name of this object
 
 	public void OpenFiles (string filepath) {
@@ -400,7 +401,7 @@ public class GlTF_Writer {
 			if (!n.hasParent)
 			{
 				CommaNL();
-				Indent();		jsonWriter.Write ("\"" + n.name + "\"");
+				Indent();		jsonWriter.Write ("\"" + n.id + "\"");
 			}
 		}
 		jsonWriter.WriteLine();

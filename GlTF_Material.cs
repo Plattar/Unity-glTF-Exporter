@@ -129,31 +129,11 @@ public class GlTF_Material : GlTF_Writer {
 			Indent();	v.Write();
 		}
 
-
-//		if (ambient != null)
-//		{
-//			CommaNL();
-//			ambient.Write ();
-//		}
-//		if (diffuse != null)
-//		{
-//			CommaNL();
-//			diffuse.Write ();
-//		}
-//		CommaNL();
-//		Indent();		jsonWriter.Write ("\"shininess\": " + shininess);
-//		if (specular != null)
-//		{
-//			CommaNL();
-//			specular.Write ();
-//		}
-//		jsonWriter.WriteLine();
-
 		jsonWriter.Write ("\n");
 		IndentOut();
 		Indent(); jsonWriter.Write ("}");
 		jsonWriter.Write("\n");
-		IndentOut();
+        IndentOut();
 		Indent(); jsonWriter.Write("}");
 		jsonWriter.Write("\n");
 		IndentOut();

@@ -30,7 +30,7 @@ public class GlTF_Node : GlTF_Writer {
 	public override void Write ()
 	{
 		Indent();
-		jsonWriter.Write ("\""+name+"\": {\n");
+		jsonWriter.Write ("\""+id+"\": {\n");
 		IndentIn();
 		Indent();
 		jsonWriter.Write ("\"name\": \""+name+"\",\n");
