@@ -313,9 +313,10 @@ public class SceneToGlTFWiz : MonoBehaviour
 						if (!GlTF_Writer.materials.ContainsKey (matName))
 						{
 							GlTF_Material material = new GlTF_Material();
-							material.name = matName;
+							material.id = matName;
+							material.name = mat.name;
 							material.diffuse = new GlTF_MaterialColor ("diffuse", mat.color);
-							GlTF_Writer.materials.Add (material.name, material);
+							GlTF_Writer.materials.Add (material.id, material);
 
 							//technique
 							var s = mat.shader;
@@ -456,7 +457,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 			// next, build hierarchy of nodes
 			GlTF_Node node = new GlTF_Node();
-			node.name = GlTF_Node.GetNameFromObject(tr);
+			node.id = GlTF_Node.GetNameFromObject(tr);
+			node.name = tr.name;
 
 			// Parse animations
 			Animator a = tr.GetComponent<Animator>();
@@ -473,11 +475,19 @@ public class SceneToGlTFWiz : MonoBehaviour
 			}
 
 			// Parse transform
-			if (tr.parent == null || (tr.parent != null && !trs.Contains(tr.parent)) )
+			if (tr.parent == null)
 			{
 				Matrix4x4 mat = Matrix4x4.identity;
 				mat.m22 = -1;
 				mat = mat * Matrix4x4.TRS(tr.localPosition, tr.localRotation, tr.localScale);
+				node.matrix = new GlTF_Matrix(mat);
+			}
+			// Use good transform if parent object is not in selection
+			else if (!trs.Contains(tr.parent))
+			{
+				Matrix4x4 mat = Matrix4x4.identity;
+				mat.m22 = -1;
+				mat = mat * tr.localToWorldMatrix;
 				node.matrix = new GlTF_Matrix(mat);
 			}
 			else
@@ -716,13 +726,11 @@ public class SceneToGlTFWiz : MonoBehaviour
 		// Is smoothness is defined by diffuse/albedo alpha or metal/specular texture alpha
 		bool usePBRTextureAlpha = mat.GetFloat("_SmoothnessTextureChannel") == 0;
 		Dictionary<string, string> workflowChannelMap = isMetal ? UnityToPBRMetalChannel : UnityToPBRSpecularChannel;
-
 		bool hasPBRMap = (!isMetal && mat.GetTexture("_SpecGlossMap") != null || isMetal && mat.GetTexture("_MetallicGlossMap") != null);
 		for (var j = 0; j < spCount2; ++j)
 		{
 			var pName = ShaderUtil.GetPropertyName(s, j);
 			var pType = ShaderUtil.GetPropertyType(s, j);
-
 			// Smoothness factor is given by glossMapScale if there is a MetalGloss/SpecGloss texture, glossiness otherwise
 			if (pName == "_Glossiness" && hasPBRMap || pName == "_GlossMapScale" && !hasPBRMap)
 				continue;
