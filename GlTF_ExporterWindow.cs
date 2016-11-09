@@ -18,10 +18,11 @@ public class GlTFExporterWindow : EditorWindow
 	static UnityEngine.TextAsset presetAsset;
 	GameObject exporterGo;
 	SceneToGlTFWiz exporter;
+	bool buildZip=true;
 
 	//EditorPrefs.SetString(KEY_PATH, savedPath);
 	//EditorPrefs.SetString(KEY_FILE, savedFile);
-	[MenuItem("File/Export/glTF")]
+	[MenuItem("Tools/Export to glTF")]
 	static void CreateWizard()
 	{
 		savedPath = EditorPrefs.GetString(KEY_PATH, "/");
@@ -43,6 +44,8 @@ public class GlTFExporterWindow : EditorWindow
 	{
 		GUILayout.Label("Export Options");
 		GlTF_Writer.binary = GUILayout.Toggle(GlTF_Writer.binary, "Binary GlTF");
+		buildZip = GUILayout.Toggle(buildZip, "Export Zip");
+
 		// Force animation baking for now
 		GlTF_Writer.bakeAnimation = GUILayout.Toggle(true, "Bake animations (forced for now)");
 		presetAsset = EditorGUILayout.ObjectField("Preset file", presetAsset, typeof(UnityEngine.TextAsset), false) as UnityEngine.TextAsset;
@@ -57,7 +60,7 @@ public class GlTFExporterWindow : EditorWindow
 		GUI.enabled = (Selection.GetTransforms(SelectionMode.Deep).Length > 0);
 		if (GUILayout.Button("Export to glTF"))
 		{
-			OnWizardCreate();
+			ExportFile();
 		}
 		GUI.enabled = true;
 	}
@@ -68,13 +71,24 @@ public class GlTFExporterWindow : EditorWindow
 		exporter = null;
 	}
 
-	void OnWizardCreate() // Create (Export) button has been hit (NOT wizard has been created!)
+	void ExportFile() // Create (Export) button has been hit (NOT wizard has been created!)
 	{
 		var ext = GlTF_Writer.binary ? "glb" : "gltf";
 		path = EditorUtility.SaveFilePanel("Save glTF file as", savedPath, savedFile, ext);
 		if (path.Length != 0)
 		{
-			exporter.ExportCoroutine(path, null, true);
+			if (presetAsset != null)
+			{
+				string psPath = AssetDatabase.GetAssetPath(presetAsset);
+				if (psPath != null)
+				{
+					psPath = psPath.Remove(0, "Assets".Length);
+					psPath = Application.dataPath + psPath;
+					preset.Load(psPath);
+				}
+			}
+
+			exporter.ExportCoroutine(path, preset, buildZip, true);
 		}
 	}
 }

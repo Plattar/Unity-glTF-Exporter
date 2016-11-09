@@ -215,6 +215,7 @@ public class GlTF_Parameters : GlTF_Writer {
 			rotationCurves[3] = createConstantCurve("m_LocalRotation.w", targetObject.name, targetObject.localRotation.w, endTime);
 		}
 	}
+
 	public void retrieveCurvesFromClip(AnimationClip clip, string target, ref AnimationClipCurveData[] translationCurves, ref AnimationClipCurveData[] rotationCurves, ref AnimationClipCurveData[] scaleCurves)
 	{
 		AnimationClipCurveData[] curveDatas = AnimationUtility.GetAllCurves(clip, true);

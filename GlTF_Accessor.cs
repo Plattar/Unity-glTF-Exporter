@@ -191,7 +191,9 @@ public class GlTF_Accessor : GlTF_Writer {
 	{
 		if (type != Type.VEC4)
 			throw (new System.Exception());
+
 		byteOffset = bufferView.currentOffset;
+
 		count = v4s.Length;
 		if (count > 0)
 		{
