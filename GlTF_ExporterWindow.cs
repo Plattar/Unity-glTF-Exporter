@@ -18,6 +18,7 @@ public class GlTFExporterWindow : EditorWindow
     static UnityEngine.TextAsset presetAsset;
     GameObject exporterGo;
     SceneToGlTFWiz exporter;
+    bool buildZip=true;
 
     //EditorPrefs.SetString(KEY_PATH, savedPath);
 	//EditorPrefs.SetString(KEY_FILE, savedFile);
@@ -43,6 +44,8 @@ public class GlTFExporterWindow : EditorWindow
     {
         GUILayout.Label("Export Options");
         GlTF_Writer.binary = GUILayout.Toggle(GlTF_Writer.binary, "Binary GlTF");
+        buildZip = GUILayout.Toggle(buildZip, "Export Zip");
+
         // Force animation baking for now
         GlTF_Writer.bakeAnimation = GUILayout.Toggle(true, "Bake animations (forced for now)");
         presetAsset = EditorGUILayout.ObjectField("Preset file", presetAsset, typeof(UnityEngine.TextAsset), false) as UnityEngine.TextAsset;
@@ -74,7 +77,7 @@ public class GlTFExporterWindow : EditorWindow
         path = EditorUtility.SaveFilePanel("Save glTF file as", savedPath, savedFile, ext);
         if (path.Length != 0)
         {
-            exporter.ExportCoroutine(path, null, true);
+            exporter.ExportCoroutine(path, null, buildZip, true);
         }
     }
 }

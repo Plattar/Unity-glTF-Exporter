@@ -34,6 +34,7 @@ public class GlTF_Writer {
 	public static List<GlTF_Shader> shaders = new List<GlTF_Shader>();
 	public static List<GlTF_Skin> skins = new List<GlTF_Skin>();
 
+    public static List<string> exportedFiles = new List<string>();
 	// Exporter specifics
 	public static bool bakeAnimation;
 	public static bool exportPBRMaterials;
@@ -108,7 +109,8 @@ public class GlTF_Writer {
 
 	public void OpenFiles (string filepath) {
 		fs = File.Open(filepath, FileMode.Create);
-		if (binary)
+        exportedFiles.Add(filepath);
+        if (binary)
 		{
 			binWriter = new BinaryWriter(fs);
 			binFile = fs;
@@ -116,10 +118,11 @@ public class GlTF_Writer {
 		}
 		else
 		{
-			// separate bin file
-			binFileName = Path.GetFileNameWithoutExtension (filepath) + ".bin";
+            // separate bin file
+            binFileName = Path.GetFileNameWithoutExtension(filepath) + ".bin";
 			var binPath = Path.Combine(Path.GetDirectoryName(filepath), binFileName);
-			binFile = File.Open(binPath, FileMode.Create);
+            exportedFiles.Add(binPath);
+            binFile = File.Open(binPath, FileMode.Create);
 		}
 
 		jsonWriter = new StreamWriter (fs);
