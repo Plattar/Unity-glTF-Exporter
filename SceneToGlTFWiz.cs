@@ -284,7 +284,15 @@ public class SceneToGlTFWiz : MonoBehaviour
 					GlTF_Writer.accessors.Add(weightAccessor);
 				}
 
-				var smCount = m.subMeshCount;
+                GlTF_Accessor tangentAccessor = null;
+                if (m.tangents.Length > 0)
+                {
+                    tangentAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "tangents"), GlTF_Accessor.Type.VEC4, GlTF_Accessor.ComponentType.FLOAT);
+                    tangentAccessor.bufferView = GlTF_Writer.vec2BufferView;
+                    GlTF_Writer.accessors.Add(tangentAccessor);
+                }
+
+                var smCount = m.subMeshCount;
 				for (var i = 0; i < smCount; ++i)
 				{
 					GlTF_Primitive primitive = new GlTF_Primitive();
@@ -299,6 +307,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 					attributes.texCoord3Accessor = uv3Accessor;
 					attributes.jointAccessor = jointAccessor;
 					attributes.weightAccessor = weightAccessor;
+                    attributes.tangentAccessor = tangentAccessor;
 					primitive.attributes = attributes;
 					GlTF_Accessor indexAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "indices_" + i), GlTF_Accessor.Type.SCALAR, GlTF_Accessor.ComponentType.USHORT);
 					indexAccessor.bufferView = GlTF_Writer.ushortBufferView;
@@ -479,7 +488,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 			if (tr.parent == null || (tr.parent != null && !trs.Contains(tr.parent)) )
 			{
 				Matrix4x4 mat = Matrix4x4.identity;
-				mat.m22 = -1;
 				mat = mat * Matrix4x4.TRS(tr.localPosition, tr.localRotation, tr.localScale);
 				node.matrix = new GlTF_Matrix(mat);
 			}

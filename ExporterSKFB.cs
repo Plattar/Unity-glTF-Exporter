@@ -6,14 +6,17 @@ using System.IO;
 using SimpleJSON;
 using System.Runtime.Serialization.Formatters.Binary;
 using System;
+using UnityEditor.SceneManagement;
 
 public enum ExporterState
 {
     IDLE,
     REQUEST_CODE,
     PUBLISH_MODEL,
-    GET_CATEGORIES
+    GET_CATEGORIES,
+    USER_ACCOUNT_TYPE
 }
+
 
 public class ExporterSKFB : EditorWindow {
 
@@ -26,6 +29,22 @@ public class ExporterSKFB : EditorWindow {
 		EditorUtility.DisplayDialog("Error", "Your build target must be set to standalone", "Okay");
 #endif
     }
+
+    [SerializeField]
+    Texture2D header;
+    // Limits
+    const int NAME_LIMIT = 48;
+    const int DESC_LIMIT = 1024;
+    const int TAGS_LIMIT = 58;
+    const int PASSWORD_LIMIT = 64;
+    const int SPACE_SIZE = 5; 
+
+    // static color
+    Color invalid = Color.red;
+    Color valid = Color.black;
+
+    GUIStyle exporterTextArea;
+    GUIStyle exporterLabel;
 
     WWW www;
     WWW test;
@@ -43,13 +62,16 @@ public class ExporterSKFB : EditorWindow {
     Dictionary<string, string> parameters = new Dictionary<string, string>();
 
     //Fields
-    private string param_name = "Unity model";
-    private string param_description = "Model exported from Unity Engine.";
-    private string param_tags = "unity";
+    private string param_name = "";
+    private string param_description = "";
+    private string param_tags = "";
     private bool param_autopublish = true;
     private bool param_private = false;
     private string param_password = "";
     private string param_token = "";
+    private string status = "";
+    private bool isUserPro = false;
+    private string userDisplayName = "";
 
     private bool isDirty = true;
     private string exportPath;
@@ -62,9 +84,11 @@ public class ExporterSKFB : EditorWindow {
     private string credfile = Application.persistentDataPath + "/creds.txt";
     private string renewToken = "";
     private float expiresIn = 0;
-    private float lastTokenTime = 0;
-    DateTime date;
+    private int lastTokenTime = 0;
 
+    //private List<String> tagList;
+
+    private Texture2D headerImg = null;
     void Awake()
     {
         zipPath = Application.temporaryCachePath + "/" + "Unity2Skfb.zip";
@@ -73,20 +97,85 @@ public class ExporterSKFB : EditorWindow {
         publisher = exporterGo.AddComponent<ExporterScript>();
         exporter = exporterGo.AddComponent<SceneToGlTFWiz>();
         publisher.getCategories();
-        if (File.Exists(credfile))
+        //if (File.Exists(credfile))
+        //{
+        //    readToken();
+        //}
+
+        this.minSize = new Vector2(600, 250);
+        //tagList = new List<string>();
+    }
+
+    void OnEnable()
+    {
+        Debug.Log(Application.dataPath + "/Unity-glTF-Exporter/ExporterHeader.png");
+        headerImg = (Texture2D)Resources.Load(Application.dataPath + "/Unity-glTF-Exporter/ExporterHeader.png", typeof(Texture2D));
+        // Pre-fill model name with scene name if empty
+        if (param_name.Length == 0)
         {
-            readToken();
+            param_name = EditorSceneManager.GetActiveScene().name;
+        }
+        Debug.Log("Enable! " + user_name);
+        // Try to login if username/password
+        relog();
+    }
+
+    int convertToSeconds(DateTime time)
+    {
+        return (int)(time.Hour * 3600 + time.Minute * 60 + time.Second);
+    }
+
+    void OnSelectionChange()
+    {
+        // do nothing for now
+    }
+
+    void relog()
+    {
+        if(publisher && publisher.getState() == ExporterState.REQUEST_CODE)
+        {
+            return;
+        }
+        if (user_name.Length == 0 && EditorPrefs.HasKey("UnityExporter_password") == true)
+        {
+            user_name = EditorPrefs.GetString("UnityExporter_username");
+            user_password = EditorPrefs.GetString("UnityExporter_password");
+        }
+
+        if (publisher && user_name.Length > 0 && user_password.Length > 0)
+        {
+            publisher.oauth(user_name, user_password);
         }
     }
 
     // Update is called once per frame
     void OnInspectorUpdate()
     {
+        //if(Event.current != null && Event.current.type == EventType.keyDown && Event.current.keyCode == KeyCode.Escape)
+        //{
+        //    if (param_tags.Length > 0)
+        //    {
+        //        // Add tag
+        //        string[] splitTags = param_tags.Split(' ');
+        //        foreach(string tag in splitTags)
+        //        {
+        //            if(tag.Length > 0 && tagList.Contains(tag) == false)
+        //            {
+        //                tagList.Add(tag);
+        //            }
+        //        }
+        //        Debug.Log("Added");
+        //        param_tags = "";
+        //    }
+        //}
+
         Repaint();
-        date = DateTime.Now;
-        float currentTimeSecond = date.Hour * 3600 + date.Minute * 60 + date.Second;
-        if(currentTimeSecond - lastTokenTime > expiresIn)
+        float currentTimeSecond = convertToSeconds(DateTime.Now);
+        if (currentTimeSecond - lastTokenTime > expiresIn)
+        {
             access_token = "";
+            relog();
+        } 
 
         if (publisher != null && publisher.www != null && publisher.www.isDone)
         {
@@ -102,34 +191,78 @@ public class ExporterSKFB : EditorWindow {
                         access_token = JSON.Parse(www.text)["access_token"];
                         renewToken = JSON.Parse(www.text)["refresh_token"];
                         expiresIn = JSON.Parse(www.text)["expires_in"].AsFloat;
-                        lastTokenTime = DateTime.Now.Hour * 3600 + DateTime.Now.Minute * 60 + DateTime.Now.Second;
-                        saveToken();
+                        lastTokenTime = convertToSeconds(DateTime.Now);
+                        publisher.getAccountType(access_token);
                     }
-                        
-                    publisher.setIdle();
+                    else
+                    {
+                        Debug.Log(www.text);
+                        EditorUtility.DisplayDialog("Authentication failed", "Failed to authenticate on Sketchfab.com.\nPlease check your credentials", "Ok");
+                        publisher.setIdle();
+                    }
+
                     break;
                 case ExporterState.PUBLISH_MODEL:
-                    if (www.responseHeaders["STATUS"].Contains("201"));
+                    foreach(string key in www.responseHeaders.Keys)
+                    {
+                        Debug.Log("[" + key + "] = " + www.responseHeaders[key]);
+                    }
+                    if (www.responseHeaders["STATUS"].Contains("201") == true)
                     {
                         string urlid = www.responseHeaders["LOCATION"].Split('/')[www.responseHeaders["LOCATION"].Split('/').Length -1];
                         string url = "https://sketchfab-local.com/models/" + urlid;
                         Application.OpenURL(url);
                     }
+                    else
+                    {
+                        EditorUtility.DisplayDialog("Upload failed", www.responseHeaders["STATUS"], "Ok");
+                    }
                     publisher.setIdle();
                     break;
                 case ExporterState.GET_CATEGORIES:
-                    string jsonify = www.text.Replace("null", "\"null\"");
+                    string jsonify = this.jsonify(www.text);
+                    if (!jsonify.Contains("results"))
+                    {
+                        Debug.Log(jsonify);
+                        Debug.Log("Failed to retrieve categories");
+                        publisher.setIdle();
+                        break;
+                    }
+                        
                     JSONArray categoriesArray = JSON.Parse(jsonify)["results"].AsArray;
                     foreach (JSONNode node in categoriesArray)
                     {
-                        categories.Add(node["name"], node["uid"]);
+                        categories.Add(node["name"], node["slug"]);
                         categoriesNames.Add(node["name"]);
                     }
+                    publisher.setIdle();
+                    break;
 
+                case ExporterState.USER_ACCOUNT_TYPE:
+                    string accountRequest = this.jsonify(www.text);
+                    Debug.Log(www.text);
+                    if(!accountRequest.Contains("account"))
+                    {
+                        Debug.Log(accountRequest);
+                        Debug.Log("Failed to retrieve user account type");
+                        publisher.setIdle();
+                        break;
+                    }
+
+                    var userSettings = JSON.Parse(accountRequest);
+                    Debug.Log(userSettings["account"]);
+                    isUserPro = userSettings["account"].ToString().Contains("free") == false;
+                    userDisplayName = userSettings["displayName"];
+                    Debug.Log("is user pro ? " + isUserPro);
                     publisher.setIdle();
                     break;
             }
         }
+    }
+    
+    private string jsonify(string jsondata)
+    {
+        return jsondata.Replace("null", "\"null\"");
     }
 
     public float progress()
@@ -140,84 +273,141 @@ public class ExporterSKFB : EditorWindow {
         return 0.99f * www.uploadProgress + 0.01f * www.progress;
     }
 
-    void OnSelectionChange()
+    private void updateExporterStatus()
     {
-        isDirty = true;
-    }
+        status = "";
+        if (Selection.GetTransforms(SelectionMode.Deep).Length == 0)
+            status = "No object selected to export";
 
-    void OnWizardCreate() // Create (Export) button has been hit (NOT wizard has been created!)
-    {
-        Debug.Log("ok");
+        if (param_name.Length > NAME_LIMIT)
+            status = "Model name is too long";
+
+        if (param_name.Length == 0)
+            status = "Please give a name to your model";
+
+        if (param_description.Length > DESC_LIMIT)
+            status = "Model description is too long";
+
+        if (param_tags.Length > TAGS_LIMIT)
+            status = "Model tags are too long";
     }
 
     void OnGUI()
     {
+        if(exporterLabel == null)
+        {
+            exporterLabel = new GUIStyle(GUI.skin.label);
+            exporterLabel.richText = true;
+        }
+
+        if(exporterTextArea == null)
+        {
+            exporterTextArea = new GUIStyle(GUI.skin.textArea);
+            exporterTextArea.fixedHeight = 150;
+            exporterTextArea.fixedWidth = 600;
+        }
+        //Header
+        GUILayout.Label(header);
+
         // Account settings
-        GUILayout.Label("Sketchfab authentication", EditorStyles.boldLabel);
-        if (access_token.Length == 0 && renewToken.Length == 0)
+        if (access_token.Length == 0)
         {
             user_name = EditorGUILayout.TextField("User name", user_name);
-            user_password = EditorGUILayout.TextField("User password", user_password);
-            GUILayout.Space(5);
-            if (GUILayout.Button("Authorize exporter"))
+            user_password = EditorGUILayout.PasswordField("User password", user_password);
+            GUILayout.Space(SPACE_SIZE);
+            if (GUILayout.Button("Login"))
             {
                 www = publisher.www;
                 publisher.oauth(user_name, user_password);
+                Debug.Log("Print");
+                EditorPrefs.SetString("UnityExporter_username", user_name);
+                EditorPrefs.SetString("UnityExporter_password", user_password);
             }
         }
         else
         {
-            GUILayout.Label("Sketchfab authentication status: OK");
-            if (GUILayout.Button("Revoke autorization"))
+            GUILayout.BeginHorizontal("Box");
+            GUILayout.Label("Account: <b>" + userDisplayName + "</b> (" + (isUserPro ? "PRO" : "FREE") + " account)", exporterLabel);
+            if (GUILayout.Button("Logout"))
             {
-                renewToken = "";
                 access_token = "";
                 if (File.Exists(credfile))
                     File.Delete(credfile);
             }
-
-            GUI.enabled = renewToken.Length > 0 && access_token.Length == 0;
-            if (GUILayout.Button("Renew authorization"))
-            {
-                www = publisher.www;
-                publisher.renewOauth(renewToken);
-            }
+            GUILayout.EndHorizontal();
         }
 
-        GUILayout.Space(10);
-        GUI.enabled = access_token.Length > 0;
-        // Model settings
-        GUILayout.Label("Model settings", EditorStyles.boldLabel);
-        param_name = EditorGUILayout.TextField("Title (Scene name)", param_name); //edit: added name source
-        param_description = EditorGUILayout.TextField("Description", param_description);
-        param_tags = EditorGUILayout.TextField("Tags", param_tags);
-        if(categories.Count > 0)
-            categoryIndex = EditorGUILayout.Popup(categoryIndex, categoriesNames.ToArray());
-
-        if (GUILayout.Button("Upload"))
+        GUILayout.Space(SPACE_SIZE);
+        if(access_token.Length > 0)
         {
-            if (isDirty)
+            // Model settings
+            GUILayout.Label("Model properties", EditorStyles.boldLabel);
+
+            // Model name
+            GUILayout.Label("Model name");
+            param_name = EditorGUILayout.TextField(param_name);
+            GUILayout.Label("(" + param_name.Length + "/" + NAME_LIMIT + ")", EditorStyles.centeredGreyMiniLabel);
+            EditorStyles.textField.wordWrap = true;
+            GUILayout.Space(SPACE_SIZE);
+          
+            GUILayout.Label("Description");
+            param_description = EditorGUILayout.TextArea(param_description, exporterTextArea);
+            GUILayout.Label("(" + param_description.Length + " / 1024)", EditorStyles.centeredGreyMiniLabel);
+            GUILayout.Space(SPACE_SIZE);
+            GUILayout.Label("Tags (separated by spaces)");
+            param_tags = EditorGUILayout.TextField(param_tags);
+            GUILayout.Label("'unity' added automatically", EditorStyles.centeredGreyMiniLabel);
+            GUILayout.Space(SPACE_SIZE);
+            param_autopublish = EditorGUILayout.Toggle("Publish immediately ", param_autopublish);
+            GUILayout.Space(SPACE_SIZE *2);
+            // ENable only if user is pro
+           
+            GUI.enabled = isUserPro;
+            param_private = EditorGUILayout.Toggle("Private model", param_private);
+            GUI.enabled = isUserPro && param_private;
+            GUILayout.Label("Password");
+            param_password = EditorGUILayout.TextField(param_password);
+            GUILayout.Label("PRO only features", EditorStyles.centeredGreyMiniLabel);
+            GUI.enabled = true;
+            GUILayout.Space(SPACE_SIZE);
+
+            if (categories.Count > 0)
+                categoryIndex = EditorGUILayout.Popup(categoryIndex, categoriesNames.ToArray());
+
+            GUILayout.Space(SPACE_SIZE);
+            updateExporterStatus();
+            GUI.color = new Color(69 / 255.0f, 185 / 255.0f, 223 / 255.0f);
+            int nbSelectedObjects = Selection.GetTransforms(SelectionMode.Deep).Length;
+            if (GUILayout.Button("Upload " + nbSelectedObjects + " object" + (nbSelectedObjects != 1 ? "s" : "")))
             {
-                if (System.IO.File.Exists(zipPath))
+                if(status.Length > 0)
                 {
-                    System.IO.File.Delete(zipPath);
+                    EditorUtility.DisplayDialog("Error", status, "Ok");
+                }     
+                else
+                {
+                    if (System.IO.File.Exists(zipPath))
+                    {
+                        System.IO.File.Delete(zipPath);
+                    }
+
+                    exporter.ExportCoroutine(exportPath, null, true, true);
+
+                    if (File.Exists(zipPath))
+                    {
+                        publisher.setFilePath(zipPath);
+                        www = publisher.www;
+
+                        publisher.publish(buildParameterDict(), access_token);
+                    }
+                    else
+                    {
+                        Debug.Log("Zip file has not been generated. Aborting publish.");
+                    }
                 }
-                exporter.ExportCoroutine(exportPath, null, true, true);
-            }
-
-            if(File.Exists(zipPath))
-            {
-                publisher.setFilePath(zipPath);
-                www = publisher.www;
-
-                publisher.publish(parameters, access_token);
-            }
-            else
-            {
-                Debug.Log("Zip file has not been generated. Aborting publish.");
             }
         }
-
+        
         if (publisher != null && publisher.getState() == ExporterState.PUBLISH_MODEL && publisher.www != null)
         {
             Rect r = EditorGUILayout.BeginVertical();
@@ -232,9 +422,12 @@ public class ExporterSKFB : EditorWindow {
         Dictionary<string, string> parameters = new Dictionary<string, string>();
         parameters["name"] = param_name;
         parameters["description"] = param_description;
-        parameters["tags"] = param_tags;
+        parameters["tags"] = "unity " + param_tags;
         parameters["private"] = param_private ? "1" : "0";
         parameters["isPublished"] = param_autopublish ? "1" : "0";
+        //string category = categories[categoriesNames[categoryIndex]];
+        //Debug.Log(category);
+        //parameters["categories"] = category;
         if (param_private)
             parameters["password"] = param_password;
 
@@ -252,22 +445,6 @@ public class ExporterSKFB : EditorWindow {
             exporter = null;
             publisher = null;
         }
-    }
-
-    private void readToken()
-    {
-        FileStream file = File.Open(credfile, FileMode.Open, FileAccess.Read);
-        BinaryFormatter bf = new BinaryFormatter();
-        string renewToken = bf.Deserialize(file) as string;
-        file.Close();
-    }
-
-    private void saveToken()
-    {
-        BinaryFormatter bf = new BinaryFormatter();
-        FileStream file = File.Create(credfile);
-        bf.Serialize(file, renewToken);
-        file.Close();
     }
 }
 
@@ -295,10 +472,10 @@ public class ExporterScript : MonoBehaviour
         StartCoroutine(oauthCoroutine(user_name, user_password));
     }
 
-    public void renewOauth(string renewToken)
-    {
-        StartCoroutine(renewOauthCoroutine(renewToken));
-    }
+    //public void renewOauth(string renewToken)
+    //{
+    //    StartCoroutine(renewOauthCoroutine(renewToken));
+    //}
 
     public void publish(Dictionary<string, string> para, string accessToken)
     {
@@ -324,12 +501,18 @@ public class ExporterScript : MonoBehaviour
         StartCoroutine(categoriesCoroutine());
     }
 
+    public void getAccountType(string access_token)
+    {
+        StartCoroutine(userAccountCoroutine(access_token));
+    }
+
     private IEnumerator categoriesCoroutine()
     {
         state = ExporterState.GET_CATEGORIES;
         www = new WWW("https://sketchfab-local.com/v3/categories");
         yield return www;
     }
+
     string dummyClientId = "sMBE2QzkCPPfubljKi6zmRmV3yXzJppZXSORuSS6";
     // Request access_token
     private IEnumerator oauthCoroutine(string user_name, string user_password)
@@ -343,13 +526,24 @@ public class ExporterScript : MonoBehaviour
         yield return www;
     }
 
-    private IEnumerator renewOauthCoroutine(string renew_token)
+    //private IEnumerator renewOauthCoroutine(string renew_token)
+    //{
+    //    done = false;
+    //    state = ExporterState.REQUEST_CODE;
+    //    WWWForm oform = new WWWForm();
+    //    oform.AddField("refresh_token", renew_token);
+    //    www = new WWW("https://sketchfab-local.com/oauth2/token/?grant_type=refresh_token&client_id=" + dummyClientId, oform);
+    //    yield return www;
+    //}
+
+    private IEnumerator userAccountCoroutine(string access_token)
     {
         done = false;
-        state = ExporterState.REQUEST_CODE;
+        state = ExporterState.USER_ACCOUNT_TYPE;
         WWWForm oform = new WWWForm();
-        oform.AddField("refresh_token", renew_token);
-        www = new WWW("https://sketchfab-local.com/oauth2/token/?grant_type=password&client_id=" + dummyClientId, oform);
+        Dictionary<string, string> headers = oform.headers;
+        headers["Authorization"] = "Bearer " + access_token;
+        www = new WWW("https://sketchfab-local.com/v3/me", null, headers);
         yield return www;
     }
 
