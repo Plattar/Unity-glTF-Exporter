@@ -2,7 +2,6 @@
 using System.Collections;
 
 public class GlTF_Target : GlTF_Writer {
-	public string id;
 	public string path;
 	public override void Write()
 	{

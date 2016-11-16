@@ -59,12 +59,7 @@ public class SceneToGlTFWiz : MonoBehaviour
     };
 
 	public GlTF_Writer writer;
-	string path ="";
-	string exportDirectory = "";
-	Preset preset = new Preset();
-
 	string savedPath = "";
-	string savedFile = "";
 	bool exportPBRMaterials = true;
 	string currentTransformName = "";
 	int currentObjectIndex = 0;
@@ -143,7 +138,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		}
 	}
 
-	public void ExportCoroutine(string path, UnityEngine.TextAsset presetAsset, bool buildZip, bool exportPBRMaterials)
+	public void ExportCoroutine(string path, Preset presetAsset, bool buildZip, bool exportPBRMaterials)
 	{
 		StartCoroutine(Export(path, presetAsset, buildZip, exportPBRMaterials));
 	}
@@ -163,7 +158,7 @@ public class SceneToGlTFWiz : MonoBehaviour
         return nbSelectedObjects;
     }
 
-	public IEnumerator Export(string path, UnityEngine.TextAsset presetAsset, bool buildZip, bool exportPBRMaterials)
+	public IEnumerator Export(string path, Preset presetAsset, bool buildZip, bool exportPBRMaterials)
 	{
 		writer = new GlTF_Writer();
 		writer.Init ();
@@ -173,19 +168,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 		// Check if scene has lightmap data
 		bool hasLightmap = LightmapSettings.lightmaps.Length != 0;
 
-		if (presetAsset != null)
-		{
-			string psPath = AssetDatabase.GetAssetPath(presetAsset);
-			if (psPath != null)
-			{
-				psPath = psPath.Remove(0, "Assets".Length);
-				psPath = Application.dataPath + psPath;
-				preset.Load(psPath);
-			}
-		}
 		path = toGlTFname(path);
 		savedPath = Path.GetDirectoryName(path);
-		savedFile = Path.GetFileNameWithoutExtension(path);
 
 		// Temp list to keep track of skeletons
 		Dictionary<string, GlTF_Skin> parsedSkins = new Dictionary<string, GlTF_Skin>();
@@ -442,6 +426,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 								//fs.type = GlTF_Shader.Type.Fragment;
 								//fs.uri = preset.GetFragmentShader(s.name);
 								//GlTF_Writer.shaders.Add(fs);
+
 							}
 
 							unityToPBRMaterial(mat, ref material);
@@ -597,7 +582,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 		MeshFilter meshfilter = tr.GetComponent<MeshFilter>();
 		if (meshfilter)
 		{
-			Vector2[] lightmapUVs = tr.GetComponent<MeshFilter>().sharedMesh.uv2;
 			GlTF_Accessor lightmapUVAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(GetMesh(tr), "uv4"), GlTF_Accessor.Type.VEC2, GlTF_Accessor.ComponentType.FLOAT);
 			lightmapUVAccessor.bufferView = GlTF_Writer.vec2BufferView;
 			GlTF_Writer.accessors.Add(lightmapUVAccessor);
@@ -795,6 +779,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 					{
 						Texture2D t2d = t as Texture2D;
                         // These textures need split
+                        // FIXME: Should check and avoid to split two times the same textures
                         if (usePBRTextureAlpha && ((pName.CompareTo("_SpecGlossMap") == 0 || pName.CompareTo("_MetallicGlossMap") == 0)) || !usePBRTextureAlpha && pName.CompareTo("_MainTex") == 0)
 						{
 							// Split PBR texture into two textures (RGB => metal/specular and A => roughness)
@@ -831,17 +816,20 @@ public class SceneToGlTFWiz : MonoBehaviour
 							pbrTex.samplerName = samplerName;
 							roughnessTex.samplerName = samplerName;
 
-							// Add textures
-							if(!GlTF_Writer.textures.ContainsKey(pbrTex.name))
-								GlTF_Writer.textures.Add(pbrTex.name, pbrTex);
+                            // Add textures
+                            if (!GlTF_Writer.textures.ContainsKey(pbrTex.name))
+                            {
+                                GlTF_Writer.textures.Add(pbrTex.name, pbrTex);
+                                GlTF_Writer.images.Add(pbrImg);
+                            }
 
-							if (!GlTF_Writer.textures.ContainsKey(roughnessTex.name))
-								GlTF_Writer.textures.Add(roughnessTex.name, roughnessTex);
+                            if (!GlTF_Writer.textures.ContainsKey(roughnessTex.name))
+                            {
+                                GlTF_Writer.textures.Add(roughnessTex.name, roughnessTex);
+                                GlTF_Writer.images.Add(roughnessImage);
+                            }
 
 							// Add images to the collection
-							GlTF_Writer.images.Add(pbrImg);
-							GlTF_Writer.images.Add(roughnessImage);
-
                             material.values.Add(valPBR);
                             material.values.Add(valRoughness);
                         }
@@ -902,8 +890,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 		GlTF_Texture pbrTex = new GlTF_Texture();
 		GlTF_Texture roughnessTex = new GlTF_Texture();
-        string pbrSuffix = isMetal ? "_metallic" : "_roughness";
-        string smoothSuffix = isMetal ? "_specular" : "_glossiness";
+        string pbrSuffix = isMetal ? "_metallic" : "_specular";
+        string smoothSuffix = isMetal ? "_roughness" : "_glossiness";
 
 		pbrTex.name = GlTF_Texture.GetNameFromObject(texture) + pbrSuffix;
 		roughnessTex.name = GlTF_Texture.GetNameFromObject(texture) + smoothSuffix;
@@ -954,11 +942,18 @@ public class SceneToGlTFWiz : MonoBehaviour
 		string fileNamePbr = fileNameBase + pbrSuffix +  ".png";
 		string filenameRough = fileNameBase + smoothSuffix + ".png";
 
-		// Write PBR map
-		File.WriteAllBytes(path + "/" + fileNamePbr, pbrData);
-		File.WriteAllBytes(path + "/" + filenameRough, roughnessData);
-        GlTF_Writer.exportedFiles.Add(path + "/" + fileNamePbr);
-        GlTF_Writer.exportedFiles.Add(path + "/" + filenameRough);
+        // Write PBR map
+        string pbrPath = path + "/" + fileNamePbr;
+        string roughPath = path + "/" + filenameRough;
+
+        File.WriteAllBytes(pbrPath, pbrData);
+		File.WriteAllBytes(roughPath, roughnessData);
+
+        if (GlTF_Writer.exportedFiles.Contains(pbrPath) == false)
+            GlTF_Writer.exportedFiles.Add(pbrPath);
+
+        if (GlTF_Writer.exportedFiles.Contains(roughPath) == false)
+            GlTF_Writer.exportedFiles.Add(roughPath);
 
         GlTF_Image pbrImg = new GlTF_Image();
 		GlTF_Image roughnessImg = new GlTF_Image();
@@ -1052,7 +1047,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			{
 				fn = Path.GetFileNameWithoutExtension(assetPath) + ".png";
 				var dstPath = Path.Combine(path, fn);
-				dstPath = toGlTFname(dstPath);
+				//dstPath = toGlTFname(dstPath);
 				Texture2D t2 = new Texture2D(t.width, t.height, TextureFormat.RGBA32, false);
 				t2.SetPixels(t.GetPixels());
 				t2.Apply();

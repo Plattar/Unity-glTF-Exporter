@@ -60,7 +60,7 @@ public class GlTFExporterWindow : EditorWindow
         GUI.enabled = (Selection.GetTransforms(SelectionMode.Deep).Length > 0);
         if (GUILayout.Button("Export to glTF"))
         {
-            OnWizardCreate();
+            ExportFile();
         }
         GUI.enabled = true;
     }
@@ -71,13 +71,24 @@ public class GlTFExporterWindow : EditorWindow
         exporter = null;
     }
 
-    void OnWizardCreate() // Create (Export) button has been hit (NOT wizard has been created!)
+    void ExportFile() // Create (Export) button has been hit (NOT wizard has been created!)
     {
         var ext = GlTF_Writer.binary ? "glb" : "gltf";
         path = EditorUtility.SaveFilePanel("Save glTF file as", savedPath, savedFile, ext);
         if (path.Length != 0)
         {
-            exporter.ExportCoroutine(path, null, buildZip, true);
+            if (presetAsset != null)
+            {
+                string psPath = AssetDatabase.GetAssetPath(presetAsset);
+                if (psPath != null)
+                {
+                    psPath = psPath.Remove(0, "Assets".Length);
+                    psPath = Application.dataPath + psPath;
+                    preset.Load(psPath);
+                }
+            }
+
+            exporter.ExportCoroutine(path, preset, buildZip, true);
         }
     }
 }

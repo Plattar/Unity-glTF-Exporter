@@ -7,12 +7,11 @@ public class GlTF_Animation : GlTF_Writer {
 	public List<GlTF_Channel> channels = new List<GlTF_Channel>();
 	public GlTF_Parameters parameters;
 	public List<GlTF_AnimSampler> animSamplers = new List<GlTF_AnimSampler>();
-	bool gotTranslation = false;
-	bool gotRotation = false;
-	bool gotScale = false;
+	//bool gotTranslation = false;
+	//bool gotRotation = false;
+	//bool gotScale = false;
 	string targetName;
 
-    bool bakeAnimation = true;
     int bakingFramerate = 30; // FPS
 
 	public GlTF_Animation (string n, string target) {
@@ -30,7 +29,7 @@ public class GlTF_Animation : GlTF_Writer {
 
         // A clip contains curves that can affect different targets
         foreach(AnimationClipCurveData cu in curveDatas)
-        {
+        { 
             string lastNodePath = cu.path.Split('/')[cu.path.Split('/').Length - 1];
             if (!targetList.Contains(lastNodePath))
                 targetList.Add(lastNodePath);

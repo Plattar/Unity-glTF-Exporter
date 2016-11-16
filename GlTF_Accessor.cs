@@ -190,7 +190,8 @@ public class GlTF_Accessor : GlTF_Writer {
 	public void Populate (Vector4[] v4s)
 	{
 		if (type != Type.VEC4)
-			throw (new System.Exception());		
+			throw (new System.Exception());
+
 		byteOffset = bufferView.currentOffset;	
 		count = v4s.Length;
 		if (count > 0)
@@ -209,7 +210,7 @@ public class GlTF_Accessor : GlTF_Writer {
 				maxFloat.x = Mathf.Max(v4s[i].x, maxFloat.x);
 				maxFloat.y = Mathf.Max(v4s[i].y, maxFloat.y);
 				maxFloat.z = Mathf.Max(v4s[i].z, maxFloat.z);
-				maxFloat.w = Mathf.Max(v4s[i].w, maxFloat.w);
+                maxFloat.w = Mathf.Max(v4s[i].w, maxFloat.w);
 			}
 		}
 
