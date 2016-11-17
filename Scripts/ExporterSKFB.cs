@@ -33,7 +33,6 @@ public class ExporterSKFB : EditorWindow {
 
     // Keys used to save credentials in editor prefs
     const string usernameEditorKey = "UnityExporter_username";
-    const string passwordEditorKey = "UnityExporter_password";
 
     // UI dimensions (to be cleaned)
     [SerializeField]
@@ -568,7 +567,8 @@ public class ExporterScript : MonoBehaviour
         yield return www;
     }
 
-    string dummyClientId = "IUO8d5VVOIUCzWQArQ3VuXfbwx5QekZfLeDlpOmW";
+    // FIXME need to put this somewhere else
+    string clientId = "IUO8d5VVOIUCzWQArQ3VuXfbwx5QekZfLeDlpOmW";
 
     // Request access_token
     private IEnumerator oauthCoroutine(string user_name, string user_password)
@@ -578,7 +578,7 @@ public class ExporterScript : MonoBehaviour
         WWWForm oform = new WWWForm();
         oform.AddField("username", user_name);
         oform.AddField("password", user_password);
-        www = new WWW(skfbUrl + "oauth2/token/?grant_type=password&client_id=" + dummyClientId, oform);
+        www = new WWW(skfbUrl + "oauth2/token/?grant_type=password&client_id=" + clientId, oform);
         yield return www;
     }
 
