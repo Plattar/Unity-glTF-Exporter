@@ -67,7 +67,7 @@ public class ExporterSKFB : EditorWindow {
     private string zipPath;
 
     ////Account settings
-    private string skfbUrl = "https://sketchfab-local.com/";
+    private string skfbUrl = "https://sketchfab.com/";
 
     //Fields
     private string user_name = "";
@@ -464,9 +464,8 @@ public class ExporterSKFB : EditorWindow {
                         if (File.Exists(zipPath))
                         {
                             publisher.setFilePath(zipPath);
-                            www = publisher.www;
-
                             publisher.publish(buildParameterDict(), access_token);
+                            www = publisher.www;
                         }
                         else
                         {
@@ -515,7 +514,7 @@ public class ExporterScript : MonoBehaviour
     ExporterState state;
     public WWW www;
     public string localFileName = "";
-    private string skfbUrl = "https://sketchfab-local.com/";
+    private string skfbUrl = "https://sketchfab.com/";
 
     public void Start()
     {
@@ -569,7 +568,8 @@ public class ExporterScript : MonoBehaviour
         yield return www;
     }
 
-    string dummyClientId = "sMBE2QzkCPPfubljKi6zmRmV3yXzJppZXSORuSS6";
+    string dummyClientId = "IUO8d5VVOIUCzWQArQ3VuXfbwx5QekZfLeDlpOmW";
+
     // Request access_token
     private IEnumerator oauthCoroutine(string user_name, string user_password)
     {
@@ -622,4 +622,3 @@ public class ExporterScript : MonoBehaviour
         yield return www;
     }
 }
-

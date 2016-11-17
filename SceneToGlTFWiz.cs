@@ -4,7 +4,6 @@ GlamExport
 
 
 ****************************************************************************/
-
 using UnityEngine;
 using UnityEditor;
 using System;
@@ -168,7 +167,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		// Check if scene has lightmap data
 		bool hasLightmap = LightmapSettings.lightmaps.Length != 0;
 
-		path = toGlTFname(path);
+		//path = toGlTFname(path);
 		savedPath = Path.GetDirectoryName(path);
 
 		// Temp list to keep track of skeletons
@@ -411,7 +410,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 								}
 								GlTF_Writer.programs.Add(program);
 
-								// Shaders are not written for now since PBR extension is used (cf materialModel value in materials)
+								// Shaders are not written for now since PBR extension is used
 								// shader
 								//GlTF_Shader vs = new GlTF_Shader();
 								//vs.name = GlTF_Shader.GetNameFromObject(s, GlTF_Shader.Type.Vertex);
@@ -501,7 +500,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			// Parse node's skin data
 			GlTF_Accessor invBindMatrixAccessor = null;
 			SkinnedMeshRenderer skinMesh = tr.GetComponent<SkinnedMeshRenderer>();
-			if (skinMesh != null && skinMesh.enabled)
+			if (skinMesh != null && skinMesh.enabled && skinMesh.rootBone != null)
 			{
 				node.skeletons.Add(GlTF_Node.GetNameFromObject(skinMesh.rootBone));
 				if (!parsedSkins.ContainsKey(skinMesh.rootBone.name))
@@ -782,8 +781,8 @@ public class SceneToGlTFWiz : MonoBehaviour
                         // FIXME: Should check and avoid to split two times the same textures
                         if (usePBRTextureAlpha && ((pName.CompareTo("_SpecGlossMap") == 0 || pName.CompareTo("_MetallicGlossMap") == 0)) || !usePBRTextureAlpha && pName.CompareTo("_MainTex") == 0)
 						{
-							// Split PBR texture into two textures (RGB => metal/specular and A => roughness)
-							// Output two textures and two images
+                            // Split PBR texture into two textures (RGB => metal/specular and A => roughness)
+                            // Output two textures and two images
 							List<KeyValuePair<GlTF_Texture, GlTF_Image>> outputs = splitPBRTexture(t2d, savedPath, isMetal);
 							GlTF_Texture pbrTex = outputs[0].Key;
 							GlTF_Texture roughnessTex = outputs[1].Key;
@@ -887,7 +886,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 	private List<KeyValuePair<GlTF_Texture, GlTF_Image>> splitPBRTexture(Texture2D texture, string path, bool isMetal)
 	{
 		List<KeyValuePair<GlTF_Texture, GlTF_Image>> outputs = new List<KeyValuePair<GlTF_Texture, GlTF_Image>>();
-
 		GlTF_Texture pbrTex = new GlTF_Texture();
 		GlTF_Texture roughnessTex = new GlTF_Texture();
         string pbrSuffix = isMetal ? "_metallic" : "_specular";

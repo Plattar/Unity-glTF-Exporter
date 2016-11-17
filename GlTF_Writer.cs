@@ -76,6 +76,8 @@ public class GlTF_Writer {
 		techniques = new Dictionary<string, GlTF_Technique>();
 		programs = new List<GlTF_Program>();
 		shaders = new List<GlTF_Shader>();
+
+        bakeAnimation = true;
 	}
 
 	public void Indent() {
@@ -531,119 +533,119 @@ public class GlTF_Writer {
 }
 
 //		CommaNL();
-		//		string tqs = @"
-		//	'techniques': {
-		//		'technique1': {
-		//			'parameters': {
-		//				'ambient': {
-		//					'type': 35666
-		//				},
-		//				'diffuse': {
-		//					'type': 35678
-		//				},
-		//				'emission': {
-		//					'type': 35666
-		//				},
-		//				'light0Color': {
-		//					'type': 35665,
-		//					'value': [
-		//					    1,
-		//					    1,
-		//					    1
-		//					    ]
-		//				},
-		//				'light0Transform': {
-		//					'semantic': 'MODELVIEW',
-		//					'source': 'directionalLight1',
-		//					'type': 35676
-		//				},
-		//				'modelViewMatrix': {
-		//					'semantic': 'MODELVIEW',
-		//					'type': 35676
-		//				},
-		//				'normal': {
-		//					'semantic': 'NORMAL',
-		//					'type': 35665
-		//				},
-		//				'normalMatrix': {
-		//					'semantic': 'MODELVIEWINVERSETRANSPOSE',
-		//					'type': 35675
-		//				},
-		//				'position': {
-		//					'semantic': 'POSITION',
-		//					'type': 35665
-		//				},
-		//				'projectionMatrix': {
-		//					'semantic': 'PROJECTION',
-		//					'type': 35676
-		//				},
-		//				'shininess': {
-		//					'type': 5126
-		//				},
-		//				'specular': {
-		//					'type': 35666
-		//				},
-		//				'texcoord0': {
-		//					'semantic': 'TEXCOORD_0',
-		//					'type': 35664
-		//				}
-		//			},
-		//			'pass': 'defaultPass',
-		//			'passes': {
-		//				'defaultPass': {
-		//					'details': {
-		//						'commonProfile': {
-		//							'extras': {
-		//								'doubleSided': false
-		//							},
-		//							'lightingModel': 'Blinn',
-		//							'parameters': [
-		//							    'ambient',
-		//							    'diffuse',
-		//							    'emission',
-		//							    'light0Color',
-		//							    'light0Transform',
-		//							    'modelViewMatrix',
-		//							    'normalMatrix',
-		//							    'projectionMatrix',
-		//							    'shininess',
-		//							    'specular'
-		//							    ],
-		//							'texcoordBindings': {
-		//								'diffuse': 'TEXCOORD_0'
-		//							}
-		//						},
-		//						'type': 'COLLADA-1.4.1/commonProfile'
-		//					},
-		//					'instanceProgram': {
-		//						'attributes': {
-		//							'a_normal': 'normal',
-		//							'a_position': 'position',
-		//							'a_texcoord0': 'texcoord0'
-		//						},
-		//						'program': 'program_0',
-		//						'uniforms': {
-		//							'u_ambient': 'ambient',
-		//							'u_diffuse': 'diffuse',
-		//							'u_emission': 'emission',
-		//							'u_light0Color': 'light0Color',
-		//							'u_light0Transform': 'light0Transform',
-		//							'u_modelViewMatrix': 'modelViewMatrix',
-		//							'u_normalMatrix': 'normalMatrix',
-		//							'u_projectionMatrix': 'projectionMatrix',
-		//							'u_shininess': 'shininess',
-		//							'u_specular': 'specular'
-		//						}
-		//					},
-		//					'states': {
-		//						'enable': [
-		//						    2884,
-		//						    2929
-		//						    ]
-		//					}
-		//				}
-		//			}
-		//		}
-		//	}";
-		//		tqs = tqs.Replace ("'", "\"");
-		//		jsonWriter.Write (tqs);
+//		string tqs = @"
+//	'techniques': {
+//		'technique1': {
+//			'parameters': {
+//				'ambient': {
+//					'type': 35666
+//				},
+//				'diffuse': {
+//					'type': 35678
+//				},
+//				'emission': {
+//					'type': 35666
+//				},
+//				'light0Color': {
+//					'type': 35665,
+//					'value': [
+//					    1,
+//					    1,
+//					    1
+//					    ]
+//				},
+//				'light0Transform': {
+//					'semantic': 'MODELVIEW',
+//					'source': 'directionalLight1',
+//					'type': 35676
+//				},
+//				'modelViewMatrix': {
+//					'semantic': 'MODELVIEW',
+//					'type': 35676
+//				},
+//				'normal': {
+//					'semantic': 'NORMAL',
+//					'type': 35665
+//				},
+//				'normalMatrix': {
+//					'semantic': 'MODELVIEWINVERSETRANSPOSE',
+//					'type': 35675
+//				},
+//				'position': {
+//					'semantic': 'POSITION',
+//					'type': 35665
+//				},
+//				'projectionMatrix': {
+//					'semantic': 'PROJECTION',
+//					'type': 35676
+//				},
+//				'shininess': {
+//					'type': 5126
+//				},
+//				'specular': {
+//					'type': 35666
+//				},
+//				'texcoord0': {
+//					'semantic': 'TEXCOORD_0',
+//					'type': 35664
+//				}
+//			},
+//			'pass': 'defaultPass',
+//			'passes': {
+//				'defaultPass': {
+//					'details': {
+//						'commonProfile': {
+//							'extras': {
+//								'doubleSided': false
+//							},
+//							'lightingModel': 'Blinn',
+//							'parameters': [
+//							    'ambient',
+//							    'diffuse',
+//							    'emission',
+//							    'light0Color',
+//							    'light0Transform',
+//							    'modelViewMatrix',
+//							    'normalMatrix',
+//							    'projectionMatrix',
+//							    'shininess',
+//							    'specular'
+//							    ],
+//							'texcoordBindings': {
+//								'diffuse': 'TEXCOORD_0'
+//							}
+//						},
+//						'type': 'COLLADA-1.4.1/commonProfile'
+//					},
+//					'instanceProgram': {
+//						'attributes': {
+//							'a_normal': 'normal',
+//							'a_position': 'position',
+//							'a_texcoord0': 'texcoord0'
+//						},
+//						'program': 'program_0',
+//						'uniforms': {
+//							'u_ambient': 'ambient',
+//							'u_diffuse': 'diffuse',
+//							'u_emission': 'emission',
+//							'u_light0Color': 'light0Color',
+//							'u_light0Transform': 'light0Transform',
+//							'u_modelViewMatrix': 'modelViewMatrix',
+//							'u_normalMatrix': 'normalMatrix',
+//							'u_projectionMatrix': 'projectionMatrix',
+//							'u_shininess': 'shininess',
+//							'u_specular': 'specular'
+//						}
+//					},
+//					'states': {
+//						'enable': [
+//						    2884,
+//						    2929
+//						    ]
+//					}
+//				}
+//			}
+//		}
+//	}";
+//		tqs = tqs.Replace ("'", "\"");
+//		jsonWriter.Write (tqs);

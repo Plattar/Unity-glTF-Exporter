@@ -208,12 +208,11 @@ public class GlTF_Parameters : GlTF_Writer {
         }
 
         if (rotationCurves[0] == null)
-        {
             rotationCurves[0] = createConstantCurve("m_LocalRotation.x", targetObject.name, targetObject.localRotation.x, endTime);
             rotationCurves[1] = createConstantCurve("m_LocalRotation.y", targetObject.name, targetObject.localRotation.y, endTime);
             rotationCurves[2] = createConstantCurve("m_LocalRotation.z", targetObject.name, targetObject.localRotation.z, endTime);
-            rotationCurves[2] = createConstantCurve("m_LocalRotation.w", targetObject.name, targetObject.localRotation.w, endTime);
-        }
+            rotationCurves[3] = createConstantCurve("m_LocalRotation.w", targetObject.name, targetObject.localRotation.w, endTime);
+    
     }
     public void retrieveCurvesFromClip(AnimationClip clip, string target, ref AnimationClipCurveData[] translationCurves, ref AnimationClipCurveData[] rotationCurves, ref AnimationClipCurveData[] scaleCurves)
     {
