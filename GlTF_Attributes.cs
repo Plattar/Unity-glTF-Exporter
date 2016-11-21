@@ -11,7 +11,7 @@ public class GlTF_Attributes : GlTF_Writer {
 	public GlTF_Accessor lightmapTexCoordAccessor;
 	public GlTF_Accessor jointAccessor;
 	public GlTF_Accessor weightAccessor;
-    public GlTF_Accessor tangentAccessor;
+	public GlTF_Accessor tangentAccessor;
 
 	private Vector4[] boneWeightToBoneVec4(BoneWeight[] bw)
 	{
@@ -72,10 +72,10 @@ public class GlTF_Attributes : GlTF_Writer {
 			Vector4[] weights = boneWeightToWeightVec4(m.boneWeights);
 			weightAccessor.Populate(weights);
 		}
-        if(tangentAccessor != null)
-        {
-            tangentAccessor.Populate(m.tangents);
-        }
+		if(tangentAccessor != null)
+		{
+			tangentAccessor.Populate(m.tangents);
+		}
 	}
 
 	public override void Write ()
@@ -127,13 +127,13 @@ public class GlTF_Attributes : GlTF_Writer {
 			CommaNL();
 			Indent(); jsonWriter.Write("\"WEIGHT\": \"" + weightAccessor.name + "\"");
 		}
-        if (tangentAccessor != null)
-        {
-            CommaNL();
-            Indent(); jsonWriter.Write("\"TANGENT\": \"" + tangentAccessor.name + "\"");
-        }
-        //CommaNL();
-        jsonWriter.WriteLine();
+		if (tangentAccessor != null)
+		{
+			CommaNL();
+			Indent(); jsonWriter.Write("\"TANGENT\": \"" + tangentAccessor.name + "\"");
+		}
+		//CommaNL();
+		jsonWriter.WriteLine();
 		IndentOut();
 		Indent();	jsonWriter.Write ("}");
 	}

@@ -161,18 +161,22 @@ public class GlTF_Accessor : GlTF_Writer {
 		}
 	}
 
-	public void Populate (Vector3[] v3s)
+	public void Populate (Vector3[] v3s, bool noConvert=false)
 	{
 		if (type != Type.VEC3)
 			throw (new System.Exception());
 		byteOffset = bufferView.currentOffset;
 		count = v3s.Length;
+
 		if (count > 0)
 		{
 			InitMinMaxFloat();
 
 			for (int i = 0; i < v3s.Length; i++)
 			{
+				if (convertRightHanded && !noConvert)
+					convertVector3LeftToRightHandedness(ref v3s[i]);
+
 				bufferView.Populate (v3s[i].x);
 				bufferView.Populate (v3s[i].y);
 				bufferView.Populate (v3s[i].z);
@@ -228,13 +232,17 @@ public class GlTF_Accessor : GlTF_Writer {
 		{
 			for(int i = 0; i < matrices.Length; i++)
 			{
+				Matrix4x4 mat = matrices[i];
+				if (convertRightHanded)
+					convertMatrixLeftToRightHandedness(ref mat);
+
 				for (int j = 0; j < 4; j++)
 				{
 					for(int k=0; k < 4; k++)
 					{
 						// Matrices in unity are column major
 						// as for Gltf
-						float value = matrices[i][k, j];
+						float value = mat[k, j];
 						bufferView.Populate(value);
 						minMatrix[k, j] = Mathf.Min(value, minMatrix[k, j]);
 						maxMatrix[k, j] = Mathf.Max(value, maxMatrix[k, j]);

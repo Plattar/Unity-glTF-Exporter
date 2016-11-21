@@ -8,8 +8,12 @@ public class GlTF_Matrix : GlTF_FloatArray {
 		name = "matrix";
 		minItems = 16;
 		maxItems = 16;
+
 		// unity: m[row][col]
 		// gltf: column major
+		if(convertRightHanded)
+			convertMatrixLeftToRightHandedness(ref m);
+
 		items = new float[] {
 			m.m00, m.m10, m.m20, m.m30,
 			m.m01, m.m11, m.m21, m.m31,

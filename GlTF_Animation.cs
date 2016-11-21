@@ -151,6 +151,9 @@ public class GlTF_Animation : GlTF_Writer {
 
 	public override void Write()
 	{
+		if (channels.Count == 0)
+			return;
+
 		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
 		IndentIn();
 		Indent();		jsonWriter.Write ("\"channels\": [\n");

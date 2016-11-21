@@ -38,6 +38,7 @@ public class GlTF_Writer {
 	// Exporter specifics
 	public static bool bakeAnimation;
 	public static bool exportPBRMaterials;
+	public static bool convertRightHanded = true;
 
 	static public string GetNameFromObject(Object o, bool useId = false)
 	{
@@ -51,6 +52,31 @@ public class GlTF_Writer {
 			ret += "_" + o.GetInstanceID();
 		}
 		return ret;
+	}
+
+	public void convertVector3LeftToRightHandedness(ref Vector3 vect)
+	{
+		vect.z = -vect.z;
+	}
+
+	public void convertQuatLeftToRightHandedness(ref Quaternion quat)
+	{
+		quat.w = -quat.w;
+		quat.z = -quat.z;
+	}
+
+	public void convertMatrixLeftToRightHandedness(ref Matrix4x4 mat)
+	{
+		Vector3 position = mat.GetColumn(3);
+		convertVector3LeftToRightHandedness(ref position);
+
+		Quaternion rotation = Quaternion.LookRotation(mat.GetColumn(2), mat.GetColumn(1));
+		convertQuatLeftToRightHandedness(ref rotation);
+
+		Vector3 scale = new Vector3(mat.GetColumn(0).magnitude, mat.GetColumn(1).magnitude, mat.GetColumn(2).magnitude);
+
+		// convert transform values from left handed to right handed
+		mat.SetTRS(position, rotation, scale);
 	}
 
 	public void Init()

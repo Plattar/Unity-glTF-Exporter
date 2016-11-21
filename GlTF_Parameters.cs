@@ -308,7 +308,7 @@ public class GlTF_Parameters : GlTF_Writer {
 		timeAccessor.Populate(times);
 		translationAccessor.Populate(positions);
 		rotationAccessor.Populate(rotations);
-		scaleAccessor.Populate(scales);
+		scaleAccessor.Populate(scales, true);
 
 		// For now, one time parameter for each target.
 		// Time could be merged inside a single parameter/accessor for baking since sampling is the same for every curve in a given clip

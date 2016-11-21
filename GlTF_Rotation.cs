@@ -2,7 +2,16 @@
 using System.Collections;
 
 public class GlTF_Rotation : GlTF_FloatArray4 {
-	public GlTF_Rotation(Quaternion q) { name = "rotation"; minItems = 4; maxItems = 4; items = new float[] { q.x, q.y, q.z, q.w }; }
+	public GlTF_Rotation(Quaternion q)
+	{
+		if (convertRightHanded)
+			convertQuatLeftToRightHandedness(ref q);
+
+		name = "rotation";
+		minItems = 4;
+		maxItems = 4;
+		items = new float[] { q.x, q.y, q.z, q.w };
+	}
 	/*
 	public override void Write()
 	{

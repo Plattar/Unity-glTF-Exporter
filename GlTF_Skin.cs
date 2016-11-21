@@ -22,6 +22,7 @@ public class GlTF_Skin : GlTF_Writer {
 		Matrix4x4 mat = mesh.worldToLocalMatrix;
 		if (mesh.parent)
 			mat = mat * mesh.parent.localToWorldMatrix;
+
 		bindShapeMatrix = new GlTF_Matrix(mat);
 		bindShapeMatrix.name = "bindShapeMatrix";
 	}

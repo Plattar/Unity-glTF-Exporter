@@ -162,7 +162,10 @@ public class SceneToGlTFWiz : MonoBehaviour
 		writer = new GlTF_Writer();
 		writer.Init ();
 		done = false;
+		bool debugRightHandedScale = false;
 		GlTF_Writer.exportedFiles.Clear();
+		if (debugRightHandedScale)
+			GlTF_Writer.convertRightHanded = false;
 
 		// Check if scene has lightmap data
 		bool hasLightmap = LightmapSettings.lightmaps.Length != 0;
@@ -472,7 +475,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 			if (tr.parent == null)
 			{
 				Matrix4x4 mat = Matrix4x4.identity;
-				mat.m22 = -1;
+				if(debugRightHandedScale)
+					mat.m22 = -1;
 				mat = mat * Matrix4x4.TRS(tr.localPosition, tr.localRotation, tr.localScale);
 				node.matrix = new GlTF_Matrix(mat);
 			}
@@ -480,7 +484,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 			else if (!trs.Contains(tr.parent))
 			{
 				Matrix4x4 mat = Matrix4x4.identity;
-				mat.m22 = -1;
+				if(debugRightHandedScale)
+					mat.m22 = -1;
 				mat = mat * tr.localToWorldMatrix;
 				node.matrix = new GlTF_Matrix(mat);
 			}
