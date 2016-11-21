@@ -4,21 +4,21 @@ using System.Collections;
 public class GlTF_Sampler : GlTF_Writer {
 	public enum MagFilter {
 		NEAREST = 9728,
-		LINEAR = 9729		 
+		LINEAR = 9729
 	}
 
 	public enum MinFilter {
-		NEAREST = 9728, 
-		LINEAR = 9729, 
-		NEAREST_MIPMAP_NEAREST = 9984, 
-		LINEAR_MIPMAP_NEAREST = 9985, 
+		NEAREST = 9728,
+		LINEAR = 9729,
+		NEAREST_MIPMAP_NEAREST = 9984,
+		LINEAR_MIPMAP_NEAREST = 9985,
 		NEAREST_MIPMAP_LINEAR = 9986,
 		LINEAR_MIPMAP_LINEAR = 9987
 	}
 
 	public enum Wrap {
-		CLAMP_TO_EDGE = 33071, 
-		MIRRORED_REPEAT = 33648, 
+		CLAMP_TO_EDGE = 33071,
+		MIRRORED_REPEAT = 33648,
 		REPEAT = 10497
 	}
 
@@ -27,7 +27,7 @@ public class GlTF_Sampler : GlTF_Writer {
 	Wrap wrap = Wrap.REPEAT;
 
 	public static string GetNameFromObject(Texture tex)
-	{		
+	{
 		int fm = (int)tex.filterMode;
 		int w = (int)tex.wrapMode;
 		var n = "sampler_" + fm + "_" + w;
@@ -42,7 +42,7 @@ public class GlTF_Sampler : GlTF_Writer {
 		return n;
 	}
 
-	public GlTF_Sampler (Texture tex) 
+	public GlTF_Sampler (Texture tex)
 	{
 		bool hasMipMap = false;
 		Texture2D t = tex as Texture2D;
@@ -74,11 +74,11 @@ public class GlTF_Sampler : GlTF_Writer {
 			{
 				magFilter = MagFilter.LINEAR;
 				if (hasMipMap)
-				{					
+				{
 					minFilter = MinFilter.LINEAR_MIPMAP_NEAREST;
 				}
 				else
-				{					
+				{
 					minFilter = MinFilter.LINEAR;
 				}
 			}
@@ -88,11 +88,11 @@ public class GlTF_Sampler : GlTF_Writer {
 			{
 				magFilter = MagFilter.LINEAR;
 				if (hasMipMap)
-				{					
+				{
 					minFilter = MinFilter.LINEAR;
 				}
 				else
-				{					
+				{
 					minFilter = MinFilter.LINEAR_MIPMAP_LINEAR;
 				}
 			}
@@ -124,6 +124,6 @@ public class GlTF_Sampler : GlTF_Writer {
 		Indent();	jsonWriter.Write ("\"wrapS\": " + (int)wrap + ",\n");
 		Indent();	jsonWriter.Write ("\"wrapT\": " + (int)wrap + "\n");
 		IndentOut();
-		Indent();	jsonWriter.Write ("}");		
+		Indent();	jsonWriter.Write ("}");
 	}
 }

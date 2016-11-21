@@ -22,7 +22,7 @@ public class GlTF_Attributes : GlTF_Writer {
 
 		return bones;
 	}
-	
+
 	private Vector4[] boneWeightToWeightVec4(BoneWeight[] bw)
 	{
 		Vector4[] weights = new Vector4[bw.Length];
@@ -37,11 +37,11 @@ public class GlTF_Attributes : GlTF_Writer {
 	public void Populate (Mesh m)
 	{
 		positionAccessor.Populate (m.vertices);
-		if (normalAccessor != null) 
+		if (normalAccessor != null)
 		{
 			normalAccessor.Populate (m.normals);
 		}
-		if (texCoord0Accessor != null) 
+		if (texCoord0Accessor != null)
 		{
 			texCoord0Accessor.Populate (m.uv, false);
 		}
@@ -49,11 +49,11 @@ public class GlTF_Attributes : GlTF_Writer {
 		{
 			texCoord1Accessor.Populate (m.uv2, false);
 		}
-		if (texCoord2Accessor != null) 
+		if (texCoord2Accessor != null)
 		{
 			texCoord2Accessor.Populate (m.uv3, false);
 		}
-		if (texCoord3Accessor != null) 
+		if (texCoord3Accessor != null)
 		{
 			texCoord3Accessor.Populate (m.uv4, false);
 		}

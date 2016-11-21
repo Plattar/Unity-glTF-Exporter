@@ -4,7 +4,7 @@ using System.Collections;
 public class GlTF_Shader : GlTF_Writer {
 	public enum Type {
 		Vertex,
-		Fragment	
+		Fragment
 	}
 
 	public Type type = Type.Vertex;
@@ -20,20 +20,20 @@ public class GlTF_Shader : GlTF_Writer {
 	public override void Write()
 	{
 		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
-		IndentIn();		
+		IndentIn();
 		Indent();		jsonWriter.Write ("\"type\": " + TypeStr() +",\n");
 		Indent();		jsonWriter.Write ("\"uri\": \"" + uri +"\"\n");
 		IndentOut();
 		Indent();		jsonWriter.Write ("}");
 	}
 
-	int TypeStr() 
+	int TypeStr()
 	{
-		if (type == Type.Vertex) 
+		if (type == Type.Vertex)
 		{
 			return 35633;
-		} 
-		else if (type == Type.Fragment) 
+		}
+		else if (type == Type.Fragment)
 		{
 			return 35632;
 		}

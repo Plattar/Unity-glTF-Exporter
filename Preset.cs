@@ -9,7 +9,7 @@ public class Preset {
 		public string vertexShader;
 		public string fragmentShader;
 	}
-		
+
 	public Dictionary<string, Shader> shaderMap = new Dictionary<string, Shader>();
 
 	const string DEFAULT_VERTEX_SHADER = "DefaultVS.glsl";
@@ -21,7 +21,7 @@ public class Preset {
 		{
 			var s = shaderMap[shaderName];
 			return s.vertexShader;
-		} 
+		}
 		return DEFAULT_VERTEX_SHADER;
 	}
 
@@ -31,7 +31,7 @@ public class Preset {
 		{
 			var s = shaderMap[shaderName];
 			return s.fragmentShader;
-		} 
+		}
 		return DEFAULT_FRAGMENT_SHADER;
 	}
 
