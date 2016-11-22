@@ -211,7 +211,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			if (m != null)
 			{
 				GlTF_Mesh mesh = new GlTF_Mesh();
-				mesh.name = GlTF_Mesh.GetNameFromObject(m);
+				mesh.name = GlTF_Mesh.GetNameFromObject(m) + tr.name;
 
 				GlTF_Accessor positionAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "position"), GlTF_Accessor.Type.VEC3, GlTF_Accessor.ComponentType.FLOAT);
 				positionAccessor.bufferView = GlTF_Writer.vec3BufferView;
@@ -508,7 +508,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 				node.lightName = tr.name;
 			else if (m != null)
 			{
-				node.meshNames.Add (GlTF_Mesh.GetNameFromObject(m));
+				node.meshNames.Add (GlTF_Mesh.GetNameFromObject(m) + tr.name);
 			}
 
 			// Parse node's skin data
