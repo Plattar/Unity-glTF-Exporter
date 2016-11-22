@@ -39,7 +39,7 @@ public class ExporterSKFB : EditorWindow {
 	[SerializeField]
 	Vector2 loginSize = new Vector2(603, 145);
 	[SerializeField]
-	Vector2 fullSize = new Vector2(603, 610);
+	Vector2 fullSize = new Vector2(603, 635);
 	[SerializeField]
 	Vector2 descSize = new Vector2(603, 175);
 
@@ -80,6 +80,7 @@ public class ExporterSKFB : EditorWindow {
 	private bool param_private = false;
 	private string param_password = "";
 	private string param_token = "";
+	private bool convertTextures = false;
 
 	// Exporter UI: dynamic elements
 	private string status = "";
@@ -405,6 +406,7 @@ public class ExporterSKFB : EditorWindow {
 			EditorGUILayout.EndVertical();
 			GUI.enabled = true;
 			param_autopublish = EditorGUILayout.Toggle("Publish immediately ", param_autopublish);
+			convertTextures = EditorGUILayout.Toggle("Use JPG (beta)", convertTextures);
 			GUILayout.Space(SPACE_SIZE);
 
 			if (categories.Count > 0)
@@ -441,7 +443,7 @@ public class ExporterSKFB : EditorWindow {
 							System.IO.File.Delete(zipPath);
 						}
 
-						exporter.ExportCoroutine(exportPath, null, true, true);
+						exporter.ExportCoroutine(exportPath, null, true, true, convertTextures);
 
 						if (File.Exists(zipPath))
 						{
