@@ -74,7 +74,7 @@ public class GlTF_Attributes : GlTF_Writer {
 		}
 		if(tangentAccessor != null)
 		{
-			tangentAccessor.Populate(m.tangents);
+			tangentAccessor.Populate(m.tangents, false);
 		}
 	}
 
