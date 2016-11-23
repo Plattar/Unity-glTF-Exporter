@@ -78,6 +78,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 	static bool done = true;
 	bool parseSkinAndAnimation = false;
+	bool parseLightmaps = false;
 
 	public static void parseUnityCamera(Transform tr)
 	{
@@ -459,7 +460,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 							unityToPBRMaterial(mat, ref material, doConvertImages);
 							// Handle lightmap
-							if(hasLightmap)
+							if(parseLightmaps && hasLightmap)
 							{
 								KeyValuePair<GlTF_Texture,GlTF_Image> lightmapdata = exportLightmap(tr, ref primitive, ref material);
 								if(lightmapdata.Key != null)
