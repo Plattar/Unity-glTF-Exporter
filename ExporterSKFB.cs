@@ -406,7 +406,6 @@ public class ExporterSKFB : EditorWindow {
 			EditorGUILayout.EndVertical();
 			GUI.enabled = true;
 			param_autopublish = EditorGUILayout.Toggle("Publish immediately ", param_autopublish);
-			convertTextures = EditorGUILayout.Toggle("Use JPG (beta)", convertTextures);
 			GUILayout.Space(SPACE_SIZE);
 
 			if (categories.Count > 0)
@@ -443,7 +442,7 @@ public class ExporterSKFB : EditorWindow {
 							System.IO.File.Delete(zipPath);
 						}
 
-						exporter.ExportCoroutine(exportPath, null, true, true, convertTextures);
+						exporter.ExportCoroutine(exportPath, null, true, true, true);
 
 						if (File.Exists(zipPath))
 						{

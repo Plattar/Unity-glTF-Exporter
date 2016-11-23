@@ -27,7 +27,7 @@ public enum IMAGETYPE
 public class SceneToGlTFWiz : MonoBehaviour
 {
 	public int jpgQuality = 92;
-	public int jpgQualityNormalMap = 95;
+	public int jpgQualityNormalMap = 98;
 
 	public static Dictionary<string, string> UnityToPBRMetalChannel = new Dictionary<string, string>
 	{
@@ -563,7 +563,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		}
 
 		// Other texture conversion method
-		//if(doConvertImages)
+		//if (doConvertImages)
 		//    convertImages(ref GlTF_Writer.images, ref GlTF_Writer.exportedFiles, savedPath);
 
 		writer.OpenFiles(path);
@@ -857,12 +857,21 @@ public class SceneToGlTFWiz : MonoBehaviour
 							material.values.Add(val);
 							IMAGETYPE format = doConvertImages ? IMAGETYPE.RGB : IMAGETYPE.IGNORE;
 
+							// Force psd conversion
+							if(t2d != null)
+							{
+								string ext = Path.GetExtension(AssetDatabase.GetAssetPath(t2d));
+								if(ext == ".psd")
+									format = IMAGETYPE.RGB;
+							}
+
 							// Handle transparency
 							if (pName.CompareTo("_MainTex") == 0 && mat.GetFloat("_Mode") != 0)
 							{
 								string mode = mat.GetFloat("_Mode") == 1 ? "alphaMask" : "alphaBlend";
 								material.extraString.Add("blendMode", mode);
 								material.extraFloat.Add("cutoff", mat.GetFloat("_Cutoff"));
+
 								if(doConvertImages)
 									format = IMAGETYPE.RGBA;
 							}
@@ -1076,56 +1085,81 @@ public class SceneToGlTFWiz : MonoBehaviour
 		}
 	}
 
+	private void getBytesFromTexture(ref Texture2D texture, out byte[] pixels, IMAGETYPE imageFormat)
+	{
+		//Make texture readable
+		TextureImporter im = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(texture)) as TextureImporter;
+		bool readable = im.isReadable;
+		TextureImporterFormat format = im.textureFormat;
+		TextureImporterType type = im.textureType;
+
+		if (!readable)
+			im.isReadable = true;
+		if (type != TextureImporterType.Image)
+			im.textureType = TextureImporterType.Image;
+
+		im.textureFormat = TextureImporterFormat.ARGB32;
+		im.SaveAndReimport();
+
+		if (imageFormat == IMAGETYPE.RGBA)
+			pixels = texture.EncodeToPNG();
+		else
+			pixels = texture.EncodeToJPG(imageFormat == IMAGETYPE.NORMAL_MAP ? jpgQualityNormalMap : jpgQuality);
+
+		if (!readable)
+			im.isReadable = false;
+		if (type != TextureImporterType.Image)
+			im.textureType = type;
+
+		im.textureFormat = format;
+		im.SaveAndReimport();
+	}
+
 	//public static void convertImages(ref List<GlTF_Image> images, ref List<string> exportedFiles, string path)
 	//{
-	//	TextureConverter converter = new TextureConverter();
-	//	converter.init();
-	//	foreach (GlTF_Image img in images)
-	//	{
-	//		// uri contains only the filename, not the full path
-	//		string uri = converter.convert(path, img);
-	//		string inputPath = path + "/" + img.uri;
-	//		string outputPath = path + "/" + uri;
-	//		if (uri.Length > 0 && File.Exists(outputPath))
-	//		{
-	//			File.Delete(inputPath);
-	//			exportedFiles.Remove(inputPath);
-	//			img.uri = uri;
-	//			exportedFiles.Add(outputPath);
-	//		}
-	//	}
+	//    TextureConverter converter = new TextureConverter();
+	//    //converter.init();
+	//    foreach (GlTF_Image img in images)
+	//    {
+	//        // uri contains only the filename, not the full path
+	//        string uri = converter.convert(path, img);
+	//        string inputPath = path + "/" + img.uri;
+	//        string outputPath = path + "/" + uri;
+	//        if (uri.Length > 0 && File.Exists(outputPath))
+	//        {
+	//            File.Delete(inputPath);
+	//            exportedFiles.Remove(inputPath);
+	//            img.uri = uri;
+	//            exportedFiles.Add(outputPath);
+	//        }
+	//    }
 	//}
 
 	// Return texture filename with good extension
-	public string convertNormalMap(string assetPath, string outputDir)
-	{
-		string filename = Path.GetFileNameWithoutExtension(assetPath) + ".jpg";
-		string outputPath = Path.Combine(outputDir, filename);
+	//   public string convertNormalMap(string assetPath, string outputDir)
+	//{
+	//	string filename = Path.GetFileNameWithoutExtension(assetPath) + ".png";
+	//	string outputPath = Path.Combine(outputDir, filename);
 
-		System.Drawing.Image img = System.Drawing.Image.FromFile(assetPath);
-		System.Drawing.Image target = new System.Drawing.Bitmap(img);
+	//	System.Drawing.Image img = System.Drawing.Image.FromFile(assetPath);
+	//	System.Drawing.Image target = new System.Drawing.Bitmap(img);
 
-		target.Save(outputPath, System.Drawing.Imaging.ImageFormat.Jpeg);
-		target.Dispose();
+	//	target.Save(outputPath, System.Drawing.Imaging.ImageFormat.Png);
+	//	target.Dispose();
 
-		GlTF_Writer.exportedFiles.Add(outputPath);
-		return filename;
-	}
+	//	GlTF_Writer.exportedFiles.Add(outputPath);
+	//	return filename;
+	//}
 
 	public string convertTexture(Texture2D inputTexture, string assetPath, string outputDir, IMAGETYPE format)
 	{
-		Texture2D tex = new Texture2D(inputTexture.width, inputTexture.height, TextureFormat.ARGB32, false);
 		Color[] pixels;
 		getPixelsFromTexture(ref inputTexture, out pixels);
 
-		if(tex == null)
-			tex = new Texture2D(inputTexture.width, inputTexture.height, TextureFormat.ARGB32, false);
-		tex.SetPixels(pixels);
-
-		int quality = format == IMAGETYPE.NORMAL_MAP ? jpgQualityNormalMap : jpgQuality;
-
-		byte[] outputData = format == IMAGETYPE.RGB ? tex.EncodeToJPG(quality) : tex.EncodeToPNG();
-		string outputFilename = Path.GetFileNameWithoutExtension(assetPath) + (format == IMAGETYPE.RGB ? ".jpg" : ".png");
+		//byte[] outputData = format == IMAGETYPE.RGB ? tex.EncodeToJPG(jpgQuality) : tex.EncodeToPNG();
+		byte[] outputData;
+		getBytesFromTexture(ref inputTexture, out outputData, format);
+		string outputFilename = Path.GetFileNameWithoutExtension(assetPath) + (format == IMAGETYPE.RGB || format == IMAGETYPE.NORMAL_MAP ? ".jpg" : ".png");
 		string outputPath = Path.Combine(outputDir,outputFilename);
 
 		File.WriteAllBytes(outputPath, outputData);
@@ -1139,7 +1173,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 		var assetPath = AssetDatabase.GetAssetPath(texture);
 		var fn = Path.GetFileName(assetPath);
 		var t = texture as Texture2D;
-		string ext = Path.GetExtension(fn);
 		if (t != null)
 		{
 			if (forceRGBA32 && t.format != TextureFormat.RGBA32)
@@ -1154,11 +1187,11 @@ public class SceneToGlTFWiz : MonoBehaviour
 				File.WriteAllBytes(dstPath, b);
 				GlTF_Writer.exportedFiles.Add(dstPath);
 			}
-			else if(format == IMAGETYPE.NORMAL_MAP)
-			{
-				return convertNormalMap(assetPath, path);
-			}
-			else if (format != IMAGETYPE.IGNORE || ext == ".psd")
+			//else if(format == IMAGETYPE.NORMAL_MAP)
+			//{
+			//	return convertNormalMap(assetPath, path);
+			//}
+			else if (format != IMAGETYPE.IGNORE)
 			{
 				return convertTexture(t, assetPath, path, format);
 			}
