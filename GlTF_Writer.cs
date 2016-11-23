@@ -60,6 +60,11 @@ public class GlTF_Writer {
 		vect.z = -vect.z;
 	}
 
+	public void convertVector4LeftToRightHandedness(ref Vector4 vect)
+	{
+		vect.z = -vect.z;
+	}
+
 	public void convertQuatLeftToRightHandedness(ref Quaternion quat)
 	{
 		quat.w = -quat.w;
