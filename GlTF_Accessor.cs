@@ -191,7 +191,7 @@ public class GlTF_Accessor : GlTF_Writer {
 		}
 	}
 
-	public void Populate (Vector4[] v4s)
+	public void Populate (Vector4[] v4s, bool noConvert = true)
 	{
 		if (type != Type.VEC4)
 			throw (new System.Exception());
@@ -204,6 +204,9 @@ public class GlTF_Accessor : GlTF_Writer {
 			InitMinMaxFloat();
 			for (int i = 0; i < v4s.Length; i++)
 			{
+				if (convertRightHanded && !noConvert)
+					convertVector4LeftToRightHandedness(ref v4s[i]);
+
 				bufferView.Populate (v4s[i].x);
 				bufferView.Populate (v4s[i].y);
 				bufferView.Populate (v4s[i].z);

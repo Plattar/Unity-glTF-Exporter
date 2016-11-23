@@ -301,7 +301,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 				if (m.tangents.Length > 0)
 				{
 					tangentAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "tangents"), GlTF_Accessor.Type.VEC4, GlTF_Accessor.ComponentType.FLOAT);
-					tangentAccessor.bufferView = GlTF_Writer.vec2BufferView;
+					tangentAccessor.bufferView = GlTF_Writer.vec4BufferView;
 					GlTF_Writer.accessors.Add(tangentAccessor);
 				}
 
