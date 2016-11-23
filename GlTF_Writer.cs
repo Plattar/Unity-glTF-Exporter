@@ -33,6 +33,7 @@ public class GlTF_Writer {
 	public static List<GlTF_Program> programs = new List<GlTF_Program>();
 	public static List<GlTF_Shader> shaders = new List<GlTF_Shader>();
 	public static List<GlTF_Skin> skins = new List<GlTF_Skin>();
+	public static List<GlTF_Node> rootNodes = new List<GlTF_Node>();
 
 	public static List<string> exportedFiles = new List<string>();
 	// Exporter specifics
@@ -427,13 +428,13 @@ public class GlTF_Writer {
 		CommaNL();
 		Indent();			jsonWriter.Write ("\"nodes\": [\n");
 		IndentIn();
-		foreach (GlTF_Node n in nodes)
+		foreach (GlTF_Node n in rootNodes)
 		{
-			if (!n.hasParent)
-			{
+			//if (!n.hasParent)
+			//{
 				CommaNL();
 				Indent();		jsonWriter.Write ("\"" + n.id + "\"");
-			}
+			//}
 		}
 		jsonWriter.WriteLine();
 		IndentOut();

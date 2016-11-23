@@ -179,6 +179,19 @@ public class SceneToGlTFWiz : MonoBehaviour
 		if (debugRightHandedScale)
 			GlTF_Writer.convertRightHanded = false;
 
+		// Create rootNode
+		GlTF_Node correctionNode = new GlTF_Node();
+		correctionNode.id = "UnityGlTF_correctionMatrix";
+		correctionNode.name = "UnityGlTF_correctionMatrix";
+
+		Matrix4x4 correctionMat = Matrix4x4.identity;
+		Quaternion correctionQuat = Quaternion.Euler(0, 180, 0);
+		correctionMat.SetTRS(Vector3.zero, correctionQuat, Vector3.one);
+		correctionNode.matrix = new GlTF_Matrix(correctionMat);
+		GlTF_Writer.nodes.Add(correctionNode);
+		GlTF_Writer.rootNodes.Add(correctionNode);
+
+
 		// Check if scene has lightmap data
 		bool hasLightmap = LightmapSettings.lightmaps.Length != 0;
 
@@ -511,6 +524,9 @@ public class SceneToGlTFWiz : MonoBehaviour
 				if (tr.localRotation != Quaternion.identity)
 					node.rotation = new GlTF_Rotation (tr.localRotation);
 			}
+
+			if(!node.hasParent)
+				correctionNode.childrenNames.Add(node.id);
 
 			if (tr.GetComponent<Camera>() != null)
 			{
