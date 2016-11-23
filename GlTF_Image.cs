@@ -4,8 +4,8 @@ using System.Collections;
 public class GlTF_Image : GlTF_Writer {
 	public string uri;
 
-	public static string GetNameFromObject(Object o) 
-	{		 		
+	public static string GetNameFromObject(Object o)
+	{
 		return "image_" + GlTF_Writer.GetNameFromObject(o, true);
 	}
 

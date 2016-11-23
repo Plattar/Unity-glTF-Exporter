@@ -8,7 +8,7 @@ public class GlTF_Program : GlTF_Writer {
 	public string fragmentShader = "";
 
 	public static string GetNameFromObject(Object o)
-	{		
+	{
 		return "program_" + GlTF_Writer.GetNameFromObject(o);
 	}
 
@@ -23,7 +23,7 @@ public class GlTF_Program : GlTF_Writer {
 			CommaNL();
 			Indent();	jsonWriter.Write ("\"" + a + "\"");
 		}
-		Indent();		jsonWriter.Write ("\n");
+		jsonWriter.Write ("\n");
 		IndentOut();
 		Indent();		jsonWriter.Write ("],\n");
 		Indent();		jsonWriter.Write ("\"vertexShader\": \"" + vertexShader + "\",\n");

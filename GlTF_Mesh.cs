@@ -7,20 +7,20 @@ public class GlTF_Mesh : GlTF_Writer {
 
 	public GlTF_Mesh() { primitives = new List<GlTF_Primitive>(); }
 
-	public static string GetNameFromObject(Object o) 
-	{		 		
+	public static string GetNameFromObject(Object o)
+	{
 		return "mesh_" + GlTF_Writer.GetNameFromObject(o, true);
 	}
 
 	public void Populate (Mesh m)
 	{
-		if (primitives.Count > 0) 
+		if (primitives.Count > 0)
 		{
 			// only populate first attributes because the data are shared between primitives
 			primitives[0].attributes.Populate(m);
 		}
 
-		foreach (GlTF_Primitive p in primitives) 
+		foreach (GlTF_Primitive p in primitives)
 		{
 			p.Populate (m);
 		}

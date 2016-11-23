@@ -5,17 +5,17 @@
 /* * * * *
  * A simple JSON Parser / builder
  * ------------------------------
- * 
+ *
  * It mainly has been written as a simple JSON parser. It can build a JSON string
  * from the node-tree, or generate a node tree from any valid JSON string.
- * 
+ *
  * If you want to use compression when saving to file / stream / B64 you have to include
  * SharpZipLib ( http://www.icsharpcode.net/opensource/sharpziplib/ ) in your project and
  * define "USE_SharpZipLib" at the top of the file
- * 
- * Written by Bunny83 
+ *
+ * Written by Bunny83
  * 2012-06-09
- * 
+ *
  * Modified by oPless, 2014-09-21 to round-trip properly
  *
  * Features / attributes:
@@ -29,8 +29,8 @@
  *   int / float / double / bool
  * - provides a common interface for each node so no explicit casting is required.
  * - the parser try to avoid errors, but if malformed JSON is parsed the result is undefined
- * 
- * 
+ *
+ *
  * 2012-12-17 Update:
  * - Added internal JSONLazyCreator class which simplifies the construction of a JSON tree
  *   Now you can simple reference any item that doesn't exist yet and it will return a JSONLazyCreator
@@ -41,12 +41,13 @@
  * - The serializer uses different types when it comes to store the values. Since my data values
  *   are all of type string, the serializer will "try" which format fits best. The order is: int, float, double, bool, string.
  *   It's not the most efficient way but for a moderate amount of data it should work on all platforms.
- * 
+ *
  * * * * */
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 
 namespace SimpleJSON
@@ -584,7 +585,7 @@ namespace SimpleJSON
 				}
 			case JSONBinaryTag.Class:
 				{
-					int count = aReader.ReadInt32 ();                
+					int count = aReader.ReadInt32 ();
 					JSONClass tmp = new JSONClass ();
 					for (int i = 0; i < count; i++) {
 						string key = aReader.ReadString ();
@@ -772,7 +773,7 @@ namespace SimpleJSON
 			foreach (JSONNode N in m_List) {
 				if (result.Length > 3)
 					result += ", ";
-				result += "\n" + aPrefix + "   ";                
+				result += "\n" + aPrefix + "   ";
 				result += N.ToString (aPrefix + "   ");
 			}
 			result += "\n" + aPrefix + "]";
@@ -869,7 +870,7 @@ namespace SimpleJSON
 				return null;
 			JSONNode tmp = m_Dict [aKey];
 			m_Dict.Remove (aKey);
-			return tmp;        
+			return tmp;
 		}
 
 		public override JSONNode Remove (int aIndex)

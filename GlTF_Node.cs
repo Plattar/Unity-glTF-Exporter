@@ -17,20 +17,24 @@ public class GlTF_Node : GlTF_Writer {
 	public GlTF_Rotation rotation;
 	public GlTF_Scale scale;
 	public GlTF_Translation translation;
+	public string skinID = "";
+	public List<string> skeletons = new List<string>();
+	public string jointName = "";
 	public bool additionalProperties = false;
 
-	public static string GetNameFromObject(Object o) 
-	{		 		
+	public static string GetNameFromObject(Object o)
+	{
 		return "node_" + GlTF_Writer.GetNameFromObject(o, true);
 	}
 
 	public override void Write ()
 	{
 		Indent();
-		jsonWriter.Write ("\""+name+"\": {\n");
+		jsonWriter.Write ("\""+id+"\": {\n");
 		IndentIn();
 		Indent();
-		jsonWriter.Write ("\"name\": \""+name+"\",\n");
+		CommaNL();
+		jsonWriter.Write ("\"name\": \""+ name + "\"");
 		if (cameraName != null)
 		{
 			CommaNL();
@@ -73,27 +77,54 @@ public class GlTF_Node : GlTF_Writer {
 			IndentOut();
 			Indent();	jsonWriter.Write ("]");
 		}
+
+		if (jointName.Length > 0)
+		{
+			CommaNL();
+			Indent(); jsonWriter.Write("\"jointName\": \"" + jointName + "\"");
+		}
+
 		if (matrix != null)
 		{
 			CommaNL();
 			matrix.Write();
 		}
-		if (translation != null && (translation.items[0] != 0f || translation.items[1] != 0f || translation.items[2] != 0f))
+		else
+		{
+			if (translation != null && (translation.items[0] != 0f || translation.items[1] != 0f || translation.items[2] != 0f))
+			{
+				CommaNL();
+				translation.Write();
+			}
+			if (scale != null && (scale.items[0] != 1f || scale.items[1] != 1f || scale.items[2] != 1f))
+			{
+				CommaNL();
+				scale.Write();
+			}
+			if (rotation != null && (rotation.items[0] != 0f || rotation.items[1] != 0f || rotation.items[2] != 0f || rotation.items[3] != 0f))
+			{
+				CommaNL();
+				rotation.Write();
+			}
+		}
+		jsonWriter.Write("\n");
+		if(skeletons.Count > 0)
 		{
 			CommaNL();
-			translation.Write ();
+			Indent(); jsonWriter.Write("\"skeletons\": [\n");
+			IndentIn();
+			if(skeletons.Count > 0)
+				Indent(); jsonWriter.Write("\""+ skeletons[0] + "\"\n");
+			IndentOut();
+			Indent(); jsonWriter.Write("]");
 		}
-		if (scale != null && (scale.items[0] != 1f || scale.items[1] != 1f || scale.items[2] != 1f))
+
+		if(skinID.Length > 0)
 		{
 			CommaNL();
-			scale.Write();
+			Indent(); jsonWriter.Write("\"skin\": \"" + skinID + "\"\n");
 		}
-		if (rotation != null && (rotation.items[0] != 0f || rotation.items[1] != 0f || rotation.items[2] != 0f || rotation.items[3] != 0f))
-		{
-			CommaNL();
-			rotation.Write ();
-		}
-		jsonWriter.WriteLine();
+
 		IndentOut();
 		Indent();		jsonWriter.Write ("}");
 	}
