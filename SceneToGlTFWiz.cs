@@ -77,6 +77,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 	int nbSelectedObjects = 0;
 
 	static bool done = true;
+	bool parseSkinAndAnimation = false;
 
 	public static void parseUnityCamera(Transform tr)
 	{
@@ -280,7 +281,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 				}
 
 				GlTF_Accessor jointAccessor = null;
-				if (m.boneWeights.Length > 0)
+				if (parseSkinAndAnimation && m.boneWeights.Length > 0)
 				{
 					jointAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "joints"), GlTF_Accessor.Type.VEC4, GlTF_Accessor.ComponentType.FLOAT);
 					jointAccessor.bufferView = GlTF_Writer.vec4BufferView;
@@ -288,7 +289,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 				}
 
 				GlTF_Accessor weightAccessor = null;
-				if (m.boneWeights.Length > 0)
+				if (parseSkinAndAnimation && m.boneWeights.Length > 0)
 				{
 					weightAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "weights"), GlTF_Accessor.Type.VEC4, GlTF_Accessor.ComponentType.FLOAT);
 					weightAccessor.bufferView = GlTF_Writer.vec4BufferView;
@@ -483,16 +484,19 @@ public class SceneToGlTFWiz : MonoBehaviour
 			node.name = tr.name;
 
 			// Parse animations
-			Animator a = tr.GetComponent<Animator>();
-			if (a != null)
+			if (parseSkinAndAnimation)
 			{
-				AnimationClip[] clips = AnimationUtility.GetAnimationClips(tr.gameObject);
-				//					int nClips = a.GetClipCount();
-				for (int i = 0; i < clips.Length; i++)
+				Animator a = tr.GetComponent<Animator>();
+				if (a != null)
 				{
-					GlTF_Animation anim = new GlTF_Animation(a.name, node.name);
-					anim.Populate(clips[i]);
-					GlTF_Writer.animations.Add(anim);
+					AnimationClip[] clips = AnimationUtility.GetAnimationClips(tr.gameObject);
+					//					int nClips = a.GetClipCount();
+					for (int i = 0; i < clips.Length; i++)
+					{
+						GlTF_Animation anim = new GlTF_Animation(a.name, node.name);
+						anim.Populate(clips[i]);
+						GlTF_Writer.animations.Add(anim);
+					}
 				}
 			}
 
@@ -542,7 +546,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			// Parse node's skin data
 			GlTF_Accessor invBindMatrixAccessor = null;
 			SkinnedMeshRenderer skinMesh = tr.GetComponent<SkinnedMeshRenderer>();
-			if (skinMesh != null && skinMesh.enabled && skinMesh.rootBone != null)
+			if (parseSkinAndAnimation && skinMesh != null && skinMesh.enabled && skinMesh.rootBone != null)
 			{
 				node.skeletons.Add(GlTF_Node.GetNameFromObject(skinMesh.rootBone));
 				if (!parsedSkins.ContainsKey(skinMesh.rootBone.name))
