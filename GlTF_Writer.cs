@@ -141,6 +141,11 @@ public class GlTF_Writer {
 	public string id;
 	public string name; // name of this object
 
+	// Extra data for objects
+	public Dictionary<string, string> extraString = new Dictionary<string, string>();
+	public Dictionary<string, float> extraFloat = new Dictionary<string, float>();
+	public Dictionary<string, bool> extraBool = new Dictionary<string, bool>();
+
 	public void OpenFiles (string filepath) {
 		fs = File.Open(filepath, FileMode.Create);
 		exportedFiles.Add(filepath);
@@ -174,6 +179,34 @@ public class GlTF_Writer {
 
 		jsonWriter.Close ();
 		fs.Close();
+	}
+
+	public void writeExtras()
+	{
+		if (extraFloat.Count > 0 || extraString.Count > 0 || extraBool.Count > 0)
+		{
+			Indent(); jsonWriter.Write("\"extras\": {\n");
+			IndentIn();
+			foreach (var s in extraString)
+			{
+				CommaNL();
+				Indent(); jsonWriter.Write("\"" + s.Key + "\" : \"" + s.Value + "\"");
+			}
+			foreach (var s in extraFloat)
+			{
+				CommaNL();
+				Indent(); jsonWriter.Write("\"" + s.Key + "\" : " + s.Value + "");
+			}
+			foreach (var s in extraBool)
+			{
+				CommaNL();
+				Indent(); jsonWriter.Write("\"" + s.Key + "\" : " + (s.Value ? "true" : "false") + "");
+			}
+			IndentOut();
+			jsonWriter.Write("\n");
+			Indent(); jsonWriter.Write("},");
+			jsonWriter.Write("\n");
+		}
 	}
 
 	public virtual void Write () {

@@ -939,6 +939,9 @@ public class SceneToGlTFWiz : MonoBehaviour
 								texture.source = img.name;
 								texture.samplerName = samplerName;
 
+								if(pName.CompareTo("_BumpMap") == 0 && isNormalMap)
+									texture.extraBool.Add("yUp", true);
+
 								GlTF_Writer.textures.Add(texName, texture);
 							}
 						}

@@ -29,6 +29,9 @@ public class GlTF_Texture : GlTF_Writer {
 	{
 		Indent();	jsonWriter.Write ("\"" + name + "\": {\n");
 		IndentIn();
+
+		writeExtras();
+
 		Indent();	jsonWriter.Write ("\"format\": " + format + ",\n");
 		Indent();	jsonWriter.Write ("\"internalFormat\": " + internalFormat + ",\n");
 		Indent();	jsonWriter.Write ("\"flipY\": " + flipy.ToString().ToLower() + ",\n");
