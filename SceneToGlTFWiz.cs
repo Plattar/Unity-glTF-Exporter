@@ -871,6 +871,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 						}
 						else
 						{
+							bool isBumpTexture = pName.CompareTo("_BumpMap") == 0;
+							bool isNormalMap = true;
 							var val = new GlTF_Material.StringValue();
 							val.name = workflowChannelMap[pName];
 							var texName = GlTF_Texture.GetNameFromObject(t);
@@ -897,9 +899,16 @@ public class SceneToGlTFWiz : MonoBehaviour
 									format = IMAGETYPE.RGBA;
 							}
 
+							if(isBumpTexture)
+							{
+								TextureImporter im = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(t)) as TextureImporter;
+								isNormalMap = im.textureType == TextureImporterType.Bump;
+								val.name = isNormalMap ? "normalTexture" : "bumpTexture";
+							}
+
 							if (!GlTF_Writer.textures.ContainsKey(texName))
 							{
-								if (doConvertImages && pName.CompareTo("_BumpMap") == 0)
+								if (doConvertImages && isBumpTexture && isNormalMap)
 								{
 									format = IMAGETYPE.NORMAL_MAP;
 								}
