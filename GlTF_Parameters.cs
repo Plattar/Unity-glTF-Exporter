@@ -225,7 +225,7 @@ public class GlTF_Parameters : GlTF_Writer {
 		// Populate data into accessors
 		timeAccessor.Populate(times);
 		translationAccessor.Populate(positions);
-		rotationAccessor.Populate(rotations);
+		rotationAccessor.Populate(rotations, false);
 		scaleAccessor.Populate(scales, true);
 
 		// For now, one time parameter for each target.
