@@ -73,6 +73,7 @@ public class ExporterSKFB : EditorWindow {
 	private string user_name = "";
 	private string user_password = "";
 
+	private bool opt_exportAnimation = true;
 	private string param_name = "";
 	private string param_description = "";
 	private string param_tags = "";
@@ -405,6 +406,7 @@ public class ExporterSKFB : EditorWindow {
 			param_password = EditorGUILayout.TextField(param_password);
 			EditorGUILayout.EndVertical();
 			GUI.enabled = true;
+			opt_exportAnimation = EditorGUILayout.Toggle("Export animation", opt_exportAnimation);
 			param_autopublish = EditorGUILayout.Toggle("Publish immediately ", param_autopublish);
 			GUILayout.Space(SPACE_SIZE);
 
@@ -442,7 +444,7 @@ public class ExporterSKFB : EditorWindow {
 							System.IO.File.Delete(zipPath);
 						}
 
-						exporter.ExportCoroutine(exportPath, null, true, true, true);
+						exporter.ExportCoroutine(exportPath, null, true, true, opt_exportAnimation, true);
 
 						if (File.Exists(zipPath))
 						{

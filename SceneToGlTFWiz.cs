@@ -77,7 +77,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 	int nbSelectedObjects = 0;
 
 	static bool done = true;
-	bool parseSkinAndAnimation = true;
 	bool parseLightmaps = false;
 
 	public static void parseUnityCamera(Transform tr)
@@ -151,9 +150,9 @@ public class SceneToGlTFWiz : MonoBehaviour
 		}
 	}
 
-	public void ExportCoroutine(string path, Preset presetAsset, bool buildZip, bool exportPBRMaterials, bool doConvertImages = false)
+	public void ExportCoroutine(string path, Preset presetAsset, bool buildZip, bool exportPBRMaterials, bool exportAnimation = true, bool doConvertImages = false)
 	{
-		StartCoroutine(Export(path, presetAsset, buildZip, exportPBRMaterials, doConvertImages));
+		StartCoroutine(Export(path, presetAsset, buildZip, exportPBRMaterials, exportAnimation, doConvertImages));
 	}
 
 	public int getCurrentIndex()
@@ -171,7 +170,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		return nbSelectedObjects;
 	}
 
-	public IEnumerator Export(string path, Preset presetAsset, bool buildZip, bool exportPBRMaterials, bool doConvertImages = false)
+	public IEnumerator Export(string path, Preset presetAsset, bool buildZip, bool exportPBRMaterials, bool exportAnimation = true, bool doConvertImages = false)
 	{
 		writer = new GlTF_Writer();
 		writer.Init ();
@@ -283,7 +282,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 				}
 
 				GlTF_Accessor jointAccessor = null;
-				if (parseSkinAndAnimation && m.boneWeights.Length > 0)
+				if (exportAnimation && m.boneWeights.Length > 0)
 				{
 					jointAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "joints"), GlTF_Accessor.Type.VEC4, GlTF_Accessor.ComponentType.FLOAT);
 					jointAccessor.bufferView = GlTF_Writer.vec4BufferView;
@@ -291,7 +290,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 				}
 
 				GlTF_Accessor weightAccessor = null;
-				if (parseSkinAndAnimation && m.boneWeights.Length > 0)
+				if (exportAnimation && m.boneWeights.Length > 0)
 				{
 					weightAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "weights"), GlTF_Accessor.Type.VEC4, GlTF_Accessor.ComponentType.FLOAT);
 					weightAccessor.bufferView = GlTF_Writer.vec4BufferView;
@@ -486,7 +485,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			node.name = tr.name;
 
 			// Parse animations
-			if (parseSkinAndAnimation)
+			if (exportAnimation)
 			{
 				Animator a = tr.GetComponent<Animator>();
 				if (a != null)
@@ -549,7 +548,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			// Parse node's skin data
 			GlTF_Accessor invBindMatrixAccessor = null;
 			SkinnedMeshRenderer skinMesh = tr.GetComponent<SkinnedMeshRenderer>();
-			if (parseSkinAndAnimation && skinMesh != null && skinMesh.enabled && skinMesh.rootBone != null)
+			if (exportAnimation && skinMesh != null && skinMesh.enabled && skinMesh.rootBone != null)
 			{
 				node.skeletons.Add(GlTF_Node.GetNameFromObject(skinMesh.rootBone));
 				if (!parsedSkins.ContainsKey(skinMesh.rootBone.name))
