@@ -513,6 +513,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			// Use good transform if parent object is not in selection
 			else if (!trs.Contains(tr.parent))
 			{
+				node.hasParent = false;
 				Matrix4x4 mat = Matrix4x4.identity;
 				if(debugRightHandedScale)
 					mat.m22 = -1;
