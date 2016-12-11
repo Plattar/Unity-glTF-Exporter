@@ -77,7 +77,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 	int nbSelectedObjects = 0;
 
 	static bool done = true;
-	bool parseSkinAndAnimation = false;
+	bool parseSkinAndAnimation = true;
 	bool parseLightmaps = false;
 
 	public static void parseUnityCamera(Transform tr)
@@ -228,6 +228,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		{
 			currentTransformName = tr.name;
 			currentObjectIndex++;
+
 			if (tr.GetComponent<Camera>() != null)
 				parseUnityCamera(tr);
 
@@ -491,11 +492,11 @@ public class SceneToGlTFWiz : MonoBehaviour
 				if (a != null)
 				{
 					AnimationClip[] clips = AnimationUtility.GetAnimationClips(tr.gameObject);
-					//					int nClips = a.GetClipCount();
 					for (int i = 0; i < clips.Length; i++)
 					{
+						//FIXME It seems not good to generate one animation per animator.
 						GlTF_Animation anim = new GlTF_Animation(a.name, node.name);
-						anim.Populate(clips[i]);
+						anim.Populate(clips[i], GlTF_Writer.bakeAnimation);
 						GlTF_Writer.animations.Add(anim);
 					}
 				}
