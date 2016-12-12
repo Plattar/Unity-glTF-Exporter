@@ -31,9 +31,9 @@ public class GlTF_Accessor : GlTF_Writer {
 	int minInt;
 	int maxInt;
 
-	public GlTF_Accessor (string n) { name = n; }
+	public GlTF_Accessor (string n) { id = n; }
 	public GlTF_Accessor (string n, Type t, ComponentType c) {
-		name = n;
+		id = n;
 		type = t;
 		switch (t)
 		{
@@ -373,7 +373,7 @@ public class GlTF_Accessor : GlTF_Writer {
 
 	public override void Write ()
 	{
-		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
+		Indent();		jsonWriter.Write ("\"" + id + "\": {\n");
 		IndentIn();
 		Indent();		jsonWriter.Write ("\"bufferView\": \"" + bufferView.name+"\",\n");
 		Indent();		jsonWriter.Write ("\"byteOffset\": " + byteOffset + ",\n");

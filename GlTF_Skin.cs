@@ -39,7 +39,7 @@ public class GlTF_Skin : GlTF_Writer {
 		// So that we can move the root game object around freely
 		Mesh mesh = skinMesh.sharedMesh;
 		invBindMatricesAccessor.Populate(mesh.bindposes, m);
-		invBindMatricesAccessorName = invBindMatricesAccessor.name;
+		invBindMatricesAccessorName = invBindMatricesAccessor.id;
 
 		// Fill jointNames
 		jointNames = new string[skinMesh.bones.Length];
