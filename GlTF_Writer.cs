@@ -109,6 +109,7 @@ public class GlTF_Writer {
 		techniques = new Dictionary<string, GlTF_Technique>();
 		programs = new List<GlTF_Program>();
 		shaders = new List<GlTF_Shader>();
+		skins = new List<GlTF_Skin>();
 
 		bakeAnimation = true;
 	}
