@@ -224,6 +224,36 @@ public class GlTF_Accessor : GlTF_Writer {
 
 	}
 
+	public void Populate(Color[] colors)
+	{
+		if (type != Type.VEC4)
+			throw (new System.Exception());
+
+		byteOffset = bufferView.currentOffset;
+
+		count = colors.Length;
+		if (count > 0)
+		{
+			InitMinMaxFloat();
+			for (int i = 0; i < colors.Length; i++)
+			{
+				bufferView.Populate(colors[i].r);
+				bufferView.Populate(colors[i].g);
+				bufferView.Populate(colors[i].b);
+				bufferView.Populate(colors[i].a);
+				minFloat.x = Mathf.Min(colors[i].r, minFloat.x);
+				minFloat.y = Mathf.Min(colors[i].g, minFloat.y);
+				minFloat.z = Mathf.Min(colors[i].b, minFloat.z);
+				minFloat.w = Mathf.Min(colors[i].a, minFloat.w);
+				maxFloat.x = Mathf.Max(colors[i].r, maxFloat.x);
+				maxFloat.y = Mathf.Max(colors[i].g, maxFloat.y);
+				maxFloat.z = Mathf.Max(colors[i].b, maxFloat.z);
+				maxFloat.w = Mathf.Max(colors[i].a, maxFloat.w);
+			}
+		}
+
+	}
+
 	public void Populate(Matrix4x4[] matrices, Transform m)
 	{
 		if (type != Type.MAT4)

@@ -4,6 +4,7 @@ using System.Collections;
 public class GlTF_Attributes : GlTF_Writer {
 	public GlTF_Accessor normalAccessor;
 	public GlTF_Accessor positionAccessor;
+	public GlTF_Accessor colorAccessor;
 	public GlTF_Accessor texCoord0Accessor;
 	public GlTF_Accessor texCoord1Accessor;
 	public GlTF_Accessor texCoord2Accessor;
@@ -38,6 +39,10 @@ public class GlTF_Attributes : GlTF_Writer {
 	public void Populate (Mesh m)
 	{
 		positionAccessor.Populate (m.vertices);
+		if(colorAccessor != null)
+		{
+			colorAccessor.Populate(m.colors);
+		}
 		if (normalAccessor != null)
 		{
 			normalAccessor.Populate (m.normals);
@@ -91,6 +96,11 @@ public class GlTF_Attributes : GlTF_Writer {
 		{
 			CommaNL();
 			Indent();	jsonWriter.Write ("\"NORMAL\": \"" + normalAccessor.name + "\"");
+		}
+		if (colorAccessor != null)
+		{
+			CommaNL();
+			Indent(); jsonWriter.Write("\"COLOR\": \"" + colorAccessor.id + "\"");
 		}
 		if (texCoord0Accessor != null)
 		{

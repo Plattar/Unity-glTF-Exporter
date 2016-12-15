@@ -252,6 +252,14 @@ public class SceneToGlTFWiz : MonoBehaviour
 					GlTF_Writer.accessors.Add (normalAccessor);
 				}
 
+				GlTF_Accessor colorAccessor = null;
+				if (m.colors.Length > 0)
+				{
+					colorAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "color"), GlTF_Accessor.Type.VEC4, GlTF_Accessor.ComponentType.FLOAT);
+					colorAccessor.bufferView = GlTF_Writer.vec4BufferView;
+					GlTF_Writer.accessors.Add(colorAccessor);
+				}
+
 				GlTF_Accessor uv0Accessor = null;
 				if (m.uv.Length > 0) {
 					uv0Accessor =  new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "uv0"), GlTF_Accessor.Type.VEC2, GlTF_Accessor.ComponentType.FLOAT);
@@ -314,6 +322,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 					GlTF_Attributes attributes = new GlTF_Attributes();
 					attributes.positionAccessor = positionAccessor;
 					attributes.normalAccessor = normalAccessor;
+					attributes.colorAccessor = colorAccessor;
 					attributes.texCoord0Accessor = uv0Accessor;
 					attributes.texCoord1Accessor = uv1Accessor;
 					attributes.texCoord2Accessor = uv2Accessor;
