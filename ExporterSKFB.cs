@@ -14,7 +14,8 @@ public enum ExporterState
 	REQUEST_CODE,
 	PUBLISH_MODEL,
 	GET_CATEGORIES,
-	USER_ACCOUNT_TYPE
+	USER_ACCOUNT_TYPE,
+	CHECK_VERSION
 }
 
 public class ExporterSKFB : EditorWindow {
@@ -31,15 +32,18 @@ public class ExporterSKFB : EditorWindow {
 #endif
 	}
 
+	private string exporterVersion = "0.0.2";
+	private string latestVersion = "0.0.1";
+
 	// Keys used to save credentials in editor prefs
 	const string usernameEditorKey = "UnityExporter_username";
 	//const string passwordEditorKey = "UnityExporter_password";
 
 	// UI dimensions (to be cleaned)
 	[SerializeField]
-	Vector2 loginSize = new Vector2(603, 145);
+	Vector2 loginSize = new Vector2(603, 90);
 	[SerializeField]
-	Vector2 fullSize = new Vector2(603, 635);
+	Vector2 fullSize = new Vector2(603, 680);
 	[SerializeField]
 	Vector2 descSize = new Vector2(603, 175);
 
@@ -68,6 +72,7 @@ public class ExporterSKFB : EditorWindow {
 
 	////Account settings
 	private string skfbUrl = "https://sketchfab.com/";
+	private string latestReleaseUrl = "https://github.com/sketchfab/Unity-glTF-Exporter/releases";
 
 	//Fields
 	private string user_name = "";
@@ -115,6 +120,7 @@ public class ExporterSKFB : EditorWindow {
 		windowRect.width = fullSize.x;
 		windowRect.height = loginSize.y;
 		position = windowRect;
+		publisher.checkVersion();
 	}
 
 	void OnEnable()
@@ -190,6 +196,26 @@ public class ExporterSKFB : EditorWindow {
 			www = publisher.www;
 			switch (state)
 			{
+				case ExporterState.CHECK_VERSION:
+					JSONNode githubResponse = JSON.Parse(this.jsonify(www.text));
+					if(githubResponse != null && githubResponse[0]["tag_name"] != null)
+					{
+						latestVersion = githubResponse[0]["tag_name"];
+						if (exporterVersion != latestVersion)
+						{
+							bool update = EditorUtility.DisplayDialog("Exporter update", "A new version of the exporter is available \n(current: " + exporterVersion + " new: " + latestVersion + ")\nIt's strongly recommanded to use the latest version as it may include breaking changes. Retro-compatibility is not ensured", "Update", "Skip");
+							if (update)
+							{
+								Application.OpenURL(latestReleaseUrl);
+							}
+						}
+					}
+					else
+					{
+						latestVersion = "";
+					}
+					publisher.setIdle();
+					break;
 				case ExporterState.REQUEST_CODE:
 					JSONNode accessResponse = JSON.Parse(this.jsonify(www.text));
 					if (accessResponse["access_token"] != null)
@@ -356,6 +382,32 @@ public class ExporterSKFB : EditorWindow {
 		}
 		else
 		{
+			if (latestVersion.Length == 0)
+			{
+				Color current = GUI.color;
+				GUI.color = Color.red;
+				GUILayout.Label("An error occured when looking for the latest exporter version\nYou might be using an old and not fully supported version", EditorStyles.centeredGreyMiniLabel);
+				if (GUILayout.Button("Click here to be redirected to release page"))
+				{
+					Application.OpenURL(latestReleaseUrl);
+				}
+				GUI.color = current;
+			}
+			else if (exporterVersion != latestVersion)
+			{
+				Color current = GUI.color;
+				GUI.color = Color.red;
+				GUILayout.Label("New version " + latestVersion + "available (current version is " + exporterVersion + ")", EditorStyles.centeredGreyMiniLabel);
+				if (GUILayout.Button("Click here to be redirected to release page"))
+				{
+					Application.OpenURL(latestReleaseUrl);
+				}
+				GUI.color = current;
+			}
+			else
+			{
+				GUILayout.Label("Exporter is up to date (version:" + exporterVersion + ")", EditorStyles.centeredGreyMiniLabel);
+			}
 			GUILayout.BeginHorizontal("Box");
 			GUILayout.Label("Account: <b>" + userDisplayName + "</b> (" + (isUserPro ? "PRO" : "FREE") + " account)", exporterLabel);
 			if (GUILayout.Button("Logout"))
@@ -500,6 +552,7 @@ public class ExporterScript : MonoBehaviour
 	public WWW www;
 	public string localFileName = "";
 	private string skfbUrl = "https://sketchfab.com/";
+	private string latestVersionCheckUrl = "https://api.github.com/repos/sketchfab/Unity-glTF-Exporter/releases";
 
 	public void Start()
 	{
@@ -511,6 +564,10 @@ public class ExporterScript : MonoBehaviour
 	{
 		return done;
 	}
+	public void checkVersion()
+	{
+		StartCoroutine(checkVersionCoroutine());
+	}
 
 	public void oauth(string user_name, string user_password)
 	{
@@ -520,6 +577,11 @@ public class ExporterScript : MonoBehaviour
 	public void publish(Dictionary<string, string> para, string accessToken)
 	{
 		StartCoroutine(publishCoroutine(para, accessToken));
+	}
+
+	public void setState(ExporterState newState)
+	{
+		this.state = newState;
 	}
 
 	public ExporterState getState()
@@ -564,6 +626,13 @@ public class ExporterScript : MonoBehaviour
 		oform.AddField("username", user_name);
 		oform.AddField("password", user_password);
 		www = new WWW(skfbUrl + "oauth2/token/?grant_type=password&client_id=" + dummyClientId, oform);
+		yield return www;
+	}
+
+	private IEnumerator checkVersionCoroutine()
+	{
+		state = ExporterState.CHECK_VERSION;
+		www = new WWW(latestVersionCheckUrl);
 		yield return www;
 	}
 

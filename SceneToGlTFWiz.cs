@@ -179,6 +179,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 		if (debugRightHandedScale)
 			GlTF_Writer.convertRightHanded = false;
 
+		writer.extraString.Add("exporterVersion", GlTF_Writer.exporterVersion );
+
 		// Create rootNode
 		GlTF_Node correctionNode = new GlTF_Node();
 		correctionNode.id = "UnityGlTF_correctionMatrix";

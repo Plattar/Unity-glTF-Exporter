@@ -41,6 +41,7 @@ public class GlTF_Writer {
 	public static bool bakeAnimation;
 	public static bool exportPBRMaterials;
 	public static bool convertRightHanded = true;
+	public static string exporterVersion = "0.0.5b";
 
 	static public string GetNameFromObject(Object o, bool useId = false)
 	{
@@ -245,7 +246,11 @@ public class GlTF_Writer {
 		Indent();	jsonWriter.Write ("\"asset\": {\n");
 		IndentIn();
 		Indent();	jsonWriter.Write ("\"generator\": \"Unity "+ Application.unityVersion + "\",\n");
+
+		writeExtras();
+
 		Indent();	jsonWriter.Write ("\"version\": \"1\"\n");
+
 		IndentOut();
 		Indent();	jsonWriter.Write ("}");
 
