@@ -211,6 +211,9 @@ public class SceneToGlTFWiz : MonoBehaviour
 		List<Transform> bones = new List<Transform>();
 		foreach(Transform tr in trs)
 		{
+			if (!tr.gameObject.activeSelf)
+				continue;
+
 			SkinnedMeshRenderer skin = tr.GetComponent<SkinnedMeshRenderer>();
 			if (skin)
 			{
@@ -223,8 +226,15 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 		currentObjectIndex = 0;
 		nbSelectedObjects = trs.Count;
+		int nbDisabledObjects = 0;
 		foreach (Transform tr in trs)
 		{
+			if (tr.gameObject.activeInHierarchy == false)
+			{
+				nbDisabledObjects++;
+				continue;
+			}
+
 			currentTransformName = tr.name;
 			currentObjectIndex++;
 
@@ -557,7 +567,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			// Parse node's skin data
 			GlTF_Accessor invBindMatrixAccessor = null;
 			SkinnedMeshRenderer skinMesh = tr.GetComponent<SkinnedMeshRenderer>();
-			if (exportAnimation && skinMesh != null && skinMesh.enabled && skinMesh.rootBone != null)
+			if (exportAnimation && skinMesh != null && skinMesh.enabled && checkSkinValidity(skinMesh, trs) && skinMesh.rootBone != null)
 			{
 				node.skeletons.Add(GlTF_Node.GetNameFromObject(skinMesh.rootBone));
 				if (!parsedSkins.ContainsKey(skinMesh.rootBone.name))
@@ -584,11 +594,15 @@ public class SceneToGlTFWiz : MonoBehaviour
 			}
 
 			// The node is a bone?
-			if (bones.Contains(tr))
+			if (exportAnimation && bones.Contains(tr))
 				node.jointName = GlTF_Node.GetNameFromObject(tr);
 
 			foreach (Transform t in tr.transform)
-				node.childrenNames.Add (GlTF_Node.GetNameFromObject(t));
+			{
+				if(t.gameObject.activeInHierarchy)
+					node.childrenNames.Add(GlTF_Node.GetNameFromObject(t));
+			}
+
 
 			GlTF_Writer.nodes.Add (node);
 		}
@@ -600,6 +614,15 @@ public class SceneToGlTFWiz : MonoBehaviour
 		writer.OpenFiles(path);
 		writer.Write ();
 		writer.CloseFiles();
+		if(nbDisabledObjects > 0)
+			Debug.Log(nbDisabledObjects + " disabled object ignored during export");
+
+		if(GlTF_Writer.meshes.Count == 0)
+		{
+			Debug.Log("No visible objects have been exported. Aboring export");
+				yield return false;
+		}
+
 		Debug.Log("Scene has been exported to " + path);
 		if(buildZip)
 		{
@@ -622,6 +645,27 @@ public class SceneToGlTFWiz : MonoBehaviour
 		done = true;
 
 		yield return true;
+	}
+
+	// Check if all the bones referenced by the skin are in the selection
+	public bool checkSkinValidity(SkinnedMeshRenderer skin, List<Transform> selection)
+	{
+		string unselected = "";
+		foreach(Transform t in skin.bones)
+		{
+			if (!selection.Contains(t))
+			{
+				unselected = unselected + "\n" + t.name;
+			}
+		}
+
+		if(unselected.Length > 0)
+		{
+			Debug.LogError("Error while exportin skin for " + skin.name + " (skipping skinning export).\nClick for more details:\n \nThe following bones are used but are not selected" + unselected + "\n");
+			return false;
+		}
+
+		return true;
 	}
 
 	public KeyValuePair<GlTF_Texture, GlTF_Image> exportLightmap(Transform tr, ref GlTF_Primitive primitive, ref GlTF_Material material)
@@ -916,7 +960,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 								val.name = isNormalMap ? "normalTexture" : "bumpTexture";
 							}
 
-							if (!GlTF_Writer.textures.ContainsKey(texName))
+							if (!GlTF_Writer.textures.ContainsKey(texName) && AssetDatabase.GetAssetPath(t).Length > 0)
 							{
 								if (doConvertImages && isBumpTexture && isNormalMap)
 								{
@@ -953,6 +997,11 @@ public class SceneToGlTFWiz : MonoBehaviour
 									texture.extraBool.Add("yUp", true);
 
 								GlTF_Writer.textures.Add(texName, texture);
+							}
+
+							if(AssetDatabase.GetAssetPath(t).Length == 0)
+							{
+								Debug.LogWarning("Texture '" + t.name + "' has not been exported (Asset not found)");
 							}
 						}
 					}
