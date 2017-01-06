@@ -241,6 +241,10 @@ public class GlTF_Parameters : GlTF_Writer {
 		foreach (AnimationClipCurveData curve in curveDatas)
 		{
 			string lastNodePath = curve.path.Split('/')[curve.path.Split('/').Length - 1];
+			if(lastNodePath.Length == 0)
+			{
+				lastNodePath = target;
+			}
 			if (!lastNodePath.Equals(target))
 			{
 				continue;

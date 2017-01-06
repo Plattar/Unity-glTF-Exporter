@@ -31,6 +31,9 @@ public class GlTF_Animation : GlTF_Writer {
 		foreach(AnimationClipCurveData cu in curveDatas)
 		{
 			string lastNodePath = cu.path.Split('/')[cu.path.Split('/').Length - 1];
+			if (lastNodePath.Length == 0)
+				lastNodePath = targetName;
+
 			if (!targetList.Contains(lastNodePath))
 				targetList.Add(lastNodePath);
 		}
