@@ -518,6 +518,16 @@ public class SceneToGlTFWiz : MonoBehaviour
 						GlTF_Writer.animations.Add(anim);
 					}
 				}
+
+				Animation animation = tr.GetComponent<Animation>();
+				if (animation != null)
+				{
+					AnimationClip clip = animation.clip;
+					//FIXME It seems not good to generate one animation per animator.
+					GlTF_Animation anim = new GlTF_Animation(animation.name, node.name);
+					anim.Populate(clip, GlTF_Writer.bakeAnimation);
+					GlTF_Writer.animations.Add(anim);
+				}
 			}
 
 			// Parse transform
