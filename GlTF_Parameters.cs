@@ -177,18 +177,17 @@ public class GlTF_Parameters : GlTF_Writer {
 	//    }
 	//}
 
-	public void bakeAndPopulate(AnimationClip clip, int bakingFramerate, string targetId, string targetName)
+	public void bakeAndPopulate(AnimationClip clip, int bakingFramerate, string targetId, string targetPath, Transform targetTransform)
 	{
-		int nbSamples = (int)(clip.length * 30);
+		int nbSamples = (int)(clip.length * bakingFramerate);
 		float deltaTime = clip.length / nbSamples;
 
 		AnimationClipCurveData[] translationCurves = new AnimationClipCurveData[3]; // ordered curves X,Y,Z
 		AnimationClipCurveData[] rotationCurves = new AnimationClipCurveData[4]; // ordered curves X,Y,Z,W
 		AnimationClipCurveData[] scaleCurves = new AnimationClipCurveData[3]; // ordered curves X,Y,Z
 
-		Transform targetObject = GameObject.Find(targetName).transform;
-		retrieveCurvesFromClip(clip, targetName, ref translationCurves, ref rotationCurves, ref scaleCurves);
-		checkAndFixMissingCurvesWithTransform(targetObject, clip.length, ref translationCurves, ref rotationCurves, ref scaleCurves);
+		retrieveCurvesFromClip(clip, targetPath, ref translationCurves, ref rotationCurves, ref scaleCurves);
+		checkAndFixMissingCurvesWithTransform(targetTransform, clip.length, ref translationCurves, ref rotationCurves, ref scaleCurves);
 
 		// Initialize accessors for current animation
 		GlTF_Accessor timeAccessor = new GlTF_Accessor(targetId + "_TimeAccessor_" + clip.name, GlTF_Accessor.Type.SCALAR, GlTF_Accessor.ComponentType.FLOAT);
@@ -241,12 +240,7 @@ public class GlTF_Parameters : GlTF_Writer {
 		AnimationClipCurveData[] curveDatas = AnimationUtility.GetAllCurves(clip, true);
 		foreach (AnimationClipCurveData curve in curveDatas)
 		{
-			string lastNodePath = curve.path.Split('/')[curve.path.Split('/').Length - 1];
-			if(lastNodePath.Length == 0)
-			{
-				lastNodePath = target;
-			}
-			if (!lastNodePath.Equals(target))
+			if (!curve.path.Equals(target))
 			{
 				continue;
 			}

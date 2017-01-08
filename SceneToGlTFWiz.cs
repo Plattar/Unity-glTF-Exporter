@@ -494,13 +494,14 @@ public class SceneToGlTFWiz : MonoBehaviour
 					}
 					mesh.primitives.Add(primitive);
 				}
+
 				SkinnedMeshRenderer skin = tr.GetComponent<SkinnedMeshRenderer>();
 				Mesh baked = m;
 				// If skinned, bake mesh in order to end with good transforms
 				// (Unity skinning directly uses mesh to deform it, and doesn't care about transform anymore)
 				// Baking allow to take the current transform into account.
 				// FIXME: could also avoid baking and use the mesh directly and reset the transform
-				if (skin)
+				if (exportAnimation && skin)
 				{
 					baked = new Mesh();
 					skin.BakeMesh(baked);
@@ -552,8 +553,9 @@ public class SceneToGlTFWiz : MonoBehaviour
 					{
 						//FIXME It seems not good to generate one animation per animator.
 						GlTF_Animation anim = new GlTF_Animation(a.name, node.name);
-						anim.Populate(clips[i], GlTF_Writer.bakeAnimation);
-						GlTF_Writer.animations.Add(anim);
+						anim.Populate(clips[i], tr, GlTF_Writer.bakeAnimation);
+						if(anim.channels.Count > 0)
+							GlTF_Writer.animations.Add(anim);
 					}
 				}
 
@@ -563,8 +565,9 @@ public class SceneToGlTFWiz : MonoBehaviour
 					AnimationClip clip = animation.clip;
 					//FIXME It seems not good to generate one animation per animator.
 					GlTF_Animation anim = new GlTF_Animation(animation.name, node.name);
-					anim.Populate(clip, GlTF_Writer.bakeAnimation);
-					GlTF_Writer.animations.Add(anim);
+					anim.Populate(clip, tr, GlTF_Writer.bakeAnimation);
+					if (anim.channels.Count > 0)
+						GlTF_Writer.animations.Add(anim);
 				}
 			}
 
