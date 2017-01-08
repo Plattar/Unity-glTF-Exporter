@@ -484,22 +484,22 @@ public class GlTF_Writer {
 		IndentOut();
 		Indent();			jsonWriter.Write ("}");
 
-		if (shaders != null && shaders.Count > 0)
-		{
-			CommaNL();
-			Indent();
-			jsonWriter.Write ("\"shaders\": {\n");
-			IndentIn();
-			foreach (var s in shaders)
-			{
-				CommaNL();
-				s.Write();
-			}
-			jsonWriter.WriteLine();
-			IndentOut();
-			Indent();
-			jsonWriter.Write ("}");
-		}
+		//if (shaders != null && shaders.Count > 0)
+		//{
+		//	CommaNL();
+		//	Indent();
+		//	jsonWriter.Write ("\"shaders\": {\n");
+		//	IndentIn();
+		//	foreach (var s in shaders)
+		//	{
+		//		CommaNL();
+		//		s.Write();
+		//	}
+		//	jsonWriter.WriteLine();
+		//	IndentOut();
+		//	Indent();
+		//	jsonWriter.Write ("}");
+		//}
 
 		if(skins.Count > 0)
 		{
@@ -516,22 +516,22 @@ public class GlTF_Writer {
 			Indent(); jsonWriter.Write("}");
 		}
 
-		if (techniques != null && techniques.Count > 0)
-		{
-			CommaNL();
-			Indent();
-			jsonWriter.Write ("\"techniques\": {\n");
-			IndentIn();
-			foreach (KeyValuePair<string, GlTF_Technique> k in techniques)
-			{
-				CommaNL();
-				k.Value.Write();
-			}
-			jsonWriter.WriteLine();
-			IndentOut();
-			Indent();
-			jsonWriter.Write ("}");
-		}
+		//if (techniques != null && techniques.Count > 0)
+		//{
+		//	CommaNL();
+		//	Indent();
+		//	jsonWriter.Write ("\"techniques\": {\n");
+		//	IndentIn();
+		//	foreach (KeyValuePair<string, GlTF_Technique> k in techniques)
+		//	{
+		//		CommaNL();
+		//		k.Value.Write();
+		//	}
+		//	jsonWriter.WriteLine();
+		//	IndentOut();
+		//	Indent();
+		//	jsonWriter.Write ("}");
+		//}
 
 		if (textures.Count > 0)
 		{
