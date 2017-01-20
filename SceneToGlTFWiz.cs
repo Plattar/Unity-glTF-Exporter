@@ -27,7 +27,6 @@ public enum IMAGETYPE
 public class SceneToGlTFWiz : MonoBehaviour
 {
 	public int jpgQuality = 92;
-	public int jpgQualityNormalMap = 98;
 
 	public static Dictionary<string, string> UnityToPBRMetalChannel = new Dictionary<string, string>
 	{
@@ -719,7 +718,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 		//FIXME what if object has no lightmap ?
 		LightmapData lightmap = LightmapSettings.lightmaps[meshRenderer.lightmapIndex];
-		Texture2D lightmapTex = lightmap.lightmapFar;
+		Texture2D lightmapTex = lightmap.lightmapLight;
 
 		// Handle UV lightmaps
 		MeshFilter meshfilter = tr.GetComponent<MeshFilter>();
@@ -965,7 +964,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 						else
 						{
 							bool isBumpTexture = pName.CompareTo("_BumpMap") == 0;
-							bool isNormalMap = true;
+							bool isBumpMap = false;
 							var val = new GlTF_Material.StringValue();
 							val.name = workflowChannelMap[pName];
 							var texName = GlTF_Texture.GetNameFromObject(t);
@@ -995,13 +994,13 @@ public class SceneToGlTFWiz : MonoBehaviour
 							if(isBumpTexture)
 							{
 								TextureImporter im = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(t)) as TextureImporter;
-								isNormalMap = im.textureType == TextureImporterType.Bump;
-								val.name = isNormalMap ? "normalTexture" : "bumpTexture";
+								isBumpMap = im.convertToNormalmap;
+								val.name = isBumpMap ? "bumpTexture" : "normalTexture";
 							}
 
 							if (!GlTF_Writer.textures.ContainsKey(texName) && AssetDatabase.GetAssetPath(t).Length > 0)
 							{
-								if (doConvertImages && isBumpTexture && isNormalMap)
+								if (doConvertImages && isBumpTexture && !isBumpMap)
 								{
 									format = IMAGETYPE.NORMAL_MAP;
 								}
@@ -1032,7 +1031,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 								texture.source = img.name;
 								texture.samplerName = samplerName;
 
-								if(pName.CompareTo("_BumpMap") == 0 && isNormalMap)
+								if(pName.CompareTo("_BumpMap") == 0 && !isBumpMap)
 									texture.extraBool.Add("yUp", true);
 
 								GlTF_Writer.textures.Add(texName, texture);
@@ -1221,28 +1220,28 @@ public class SceneToGlTFWiz : MonoBehaviour
 		//Make texture readable
 		TextureImporter im = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(texture)) as TextureImporter;
 		bool readable = im.isReadable;
-		TextureImporterFormat format = im.textureFormat;
+		TextureImporterCompression format = im.textureCompression;
 		TextureImporterType type = im.textureType;
 
 		if (!readable)
 			im.isReadable = true;
-		if (type != TextureImporterType.Image)
-			im.textureType = TextureImporterType.Image;
+		if (type != TextureImporterType.Default)
+			im.textureType = TextureImporterType.Default;
 
-		im.textureFormat = TextureImporterFormat.ARGB32;
+		im.textureCompression = TextureImporterCompression.Uncompressed;
 		im.SaveAndReimport();
 
-		if (imageFormat == IMAGETYPE.RGBA)
+		if (imageFormat == IMAGETYPE.RGBA || imageFormat == IMAGETYPE.NORMAL_MAP)
 			pixels = texture.EncodeToPNG();
 		else
-			pixels = texture.EncodeToJPG(imageFormat == IMAGETYPE.NORMAL_MAP ? jpgQualityNormalMap : jpgQuality);
+			pixels = texture.EncodeToJPG(jpgQuality);
 
 		if (!readable)
 			im.isReadable = false;
-		if (type != TextureImporterType.Image)
+		if (type != TextureImporterType.Default)
 			im.textureType = type;
 
-		im.textureFormat = format;
+		im.textureCompression = format;
 		im.SaveAndReimport();
 	}
 
@@ -1290,7 +1289,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		//byte[] outputData = format == IMAGETYPE.RGB ? tex.EncodeToJPG(jpgQuality) : tex.EncodeToPNG();
 		byte[] outputData;
 		getBytesFromTexture(ref inputTexture, out outputData, format);
-		string outputFilename = Path.GetFileNameWithoutExtension(assetPath) + (format == IMAGETYPE.RGB || format == IMAGETYPE.NORMAL_MAP ? ".jpg" : ".png");
+		string outputFilename = Path.GetFileNameWithoutExtension(assetPath) + (format == IMAGETYPE.RGB ? ".jpg" : ".png");
 		string outputPath = Path.Combine(outputDir,outputFilename);
 
 		File.WriteAllBytes(outputPath, outputData);
