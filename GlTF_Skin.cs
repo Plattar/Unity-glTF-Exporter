@@ -36,9 +36,17 @@ public class GlTF_Skin : GlTF_Writer {
 		// So that we can move the root game object around freely
 		Mesh mesh = skinMesh.sharedMesh;
 		Matrix4x4[] invBindMatrices = new Matrix4x4[skinMesh.sharedMesh.bindposes.Length];
+
 		for(int i=0;i<invBindMatrices.Length;++i)
 		{
-			invBindMatrices[i] = skinMesh.bones[i].worldToLocalMatrix * sceneRootMatrix.inverse;
+			// Generates inverseWorldMatrix in right-handed coordinate system
+			// Manually converts world translation and rotation from left to right handed coordinates systems
+			Vector3 pos = skinMesh.bones[i].position;
+			Quaternion rot = skinMesh.bones[i].rotation;
+			convertQuatLeftToRightHandedness(ref rot);
+			convertVector3LeftToRightHandedness(ref pos);
+
+			invBindMatrices[i] = Matrix4x4.TRS(pos, rot, skinMesh.bones[i].lossyScale).inverse * sceneRootMatrix.inverse;
 		}
 
 		invBindMatricesAccessor.Populate(invBindMatrices, m);

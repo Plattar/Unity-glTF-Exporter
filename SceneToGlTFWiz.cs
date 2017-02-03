@@ -186,11 +186,12 @@ public class SceneToGlTFWiz : MonoBehaviour
 		correctionNode.id = "UnityGlTF_correctionMatrix";
 		correctionNode.name = "UnityGlTF_correctionMatrix";
 
-		Matrix4x4 correctionMat = Matrix4x4.identity;
+		// Add correction matrix to reorient scene for left to right-handed coordinate systems
 		Quaternion correctionQuat = Quaternion.Euler(0, 180, 0);
-		correctionMat.SetTRS(Vector3.zero, correctionQuat, Vector3.one);
+		writer.convertQuatLeftToRightHandedness(ref correctionQuat);
+		Matrix4x4 correctionMat = Matrix4x4.TRS(Vector3.zero, correctionQuat, Vector3.one);
 		GlTF_Writer.sceneRootMatrix = correctionMat;
-		correctionNode.matrix = new GlTF_Matrix(correctionMat);
+		correctionNode.matrix = new GlTF_Matrix(correctionMat, false);
 		GlTF_Writer.nodes.Add(correctionNode);
 		GlTF_Writer.rootNodes.Add(correctionNode);
 
