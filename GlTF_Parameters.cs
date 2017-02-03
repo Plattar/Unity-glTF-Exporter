@@ -222,6 +222,7 @@ public class GlTF_Parameters : GlTF_Writer {
 			scales[i] = new Vector3(scaleCurves[0].curve.Evaluate(currentTime), scaleCurves[1].curve.Evaluate(currentTime), scaleCurves[2].curve.Evaluate(currentTime));
 			rotations[i] = new Vector4(rotationCurves[0].curve.Evaluate(currentTime), rotationCurves[1].curve.Evaluate(currentTime), rotationCurves[2].curve.Evaluate(currentTime), rotationCurves[3].curve.Evaluate(currentTime));
 		}
+
 		// Populate data into accessors
 		timeAccessor.Populate(times);
 		translationAccessor.Populate(positions);

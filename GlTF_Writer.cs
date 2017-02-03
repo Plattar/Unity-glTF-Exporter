@@ -34,6 +34,7 @@ public class GlTF_Writer {
 	public static List<GlTF_Shader> shaders = new List<GlTF_Shader>();
 	public static List<GlTF_Skin> skins = new List<GlTF_Skin>();
 	public static List<GlTF_Node> rootNodes = new List<GlTF_Node>();
+	public static Matrix4x4 sceneRootMatrix;
 
 	public static List<string> exportedFiles = new List<string>();
 	// Exporter specifics
@@ -110,6 +111,7 @@ public class GlTF_Writer {
 		programs = new List<GlTF_Program>();
 		shaders = new List<GlTF_Shader>();
 		skins = new List<GlTF_Skin>();
+		rootNodes = new List<GlTF_Node>();
 
 		bakeAnimation = true;
 	}

@@ -188,6 +188,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		Matrix4x4 correctionMat = Matrix4x4.identity;
 		Quaternion correctionQuat = Quaternion.Euler(0, 180, 0);
 		correctionMat.SetTRS(Vector3.zero, correctionQuat, Vector3.one);
+		GlTF_Writer.sceneRootMatrix = correctionMat;
 		correctionNode.matrix = new GlTF_Matrix(correctionMat);
 		GlTF_Writer.nodes.Add(correctionNode);
 		GlTF_Writer.rootNodes.Add(correctionNode);
@@ -490,13 +491,49 @@ public class SceneToGlTFWiz : MonoBehaviour
 							}
 						}
 					}
-
 					mesh.primitives.Add(primitive);
 				}
+				SkinnedMeshRenderer skin = tr.GetComponent<SkinnedMeshRenderer>();
+				Mesh baked = m;
+				// If skinned, bake mesh in order to end with good transforms
+				// (Unity skinning directly uses mesh to deform it, and doesn't care about transform anymore)
+				// Baking allow to take the current transform into account.
+				// FIXME: could also avoid baking and use the mesh directly and reset the transform
+				if (skin)
+				{
+					baked = new Mesh();
+					skin.BakeMesh(baked);
+					baked.uv = m.uv;
+					baked.uv2 = m.uv2;
+					baked.uv3 = m.uv3;
+					baked.uv4 = m.uv4;
 
-				mesh.Populate(m);
+					baked.bindposes = m.bindposes;
+					baked.boneWeights = m.boneWeights;
+
+					Matrix4x4 correction = Matrix4x4.TRS(tr.localPosition, tr.localRotation, tr.lossyScale).inverse * Matrix4x4.TRS(tr.localPosition, tr.localRotation, Vector3.one);
+					if(!correction.isIdentity)
+					{
+						Debug.Log(correction);
+						Vector3[] verts = baked.vertices;
+						Vector3[] norms = baked.normals;
+						Vector4[] tangents = baked.tangents;
+						for (int i = 0; i < verts.Length; ++i)
+						{
+							verts[i] = correction.MultiplyPoint3x4(verts[i]);
+							norms[i] = correction.MultiplyVector(norms[i]);
+							norms[i].Normalize();
+						}
+						baked.vertices = verts;
+						baked.normals = norms;
+						baked.RecalculateBounds();
+					}
+				}
+
+				mesh.Populate(baked);
 				GlTF_Writer.meshes.Add(mesh);
 			}
+
 
 			// next, build hierarchy of nodes
 			GlTF_Node node = new GlTF_Node();
@@ -579,28 +616,20 @@ public class SceneToGlTFWiz : MonoBehaviour
 			SkinnedMeshRenderer skinMesh = tr.GetComponent<SkinnedMeshRenderer>();
 			if (exportAnimation && skinMesh != null && skinMesh.enabled && checkSkinValidity(skinMesh, trs) && skinMesh.rootBone != null)
 			{
-				node.skeletons.Add(GlTF_Node.GetNameFromObject(skinMesh.rootBone));
-				if (!parsedSkins.ContainsKey(skinMesh.rootBone.name))
-				{
-					GlTF_Skin skin = new GlTF_Skin();
-					skin.setBindShapeMatrix(tr);
-					skin.name = skinMesh.rootBone.name + "_skeleton";
+				node.skeletons = GlTF_Skin.findRootSkeletons(skinMesh);
+				GlTF_Skin skin = new GlTF_Skin();
+				skin.setBindShapeMatrix(tr);
+				skin.name = skinMesh.rootBone.name + "_skeleton_" + node.name + tr.GetInstanceID();
 
-					// Create invBindMatrices accessor
-					invBindMatrixAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "invBindMatrices"), GlTF_Accessor.Type.MAT4, GlTF_Accessor.ComponentType.FLOAT);
-					invBindMatrixAccessor.bufferView = GlTF_Writer.mat4BufferView;
-					GlTF_Writer.accessors.Add(invBindMatrixAccessor);
+				// Create invBindMatrices accessor
+				invBindMatrixAccessor = new GlTF_Accessor(skin.name + "invBindMatrices", GlTF_Accessor.Type.MAT4, GlTF_Accessor.ComponentType.FLOAT);
+				invBindMatrixAccessor.bufferView = GlTF_Writer.mat4BufferView;
+				GlTF_Writer.accessors.Add(invBindMatrixAccessor);
 
-					// Generate skin data
-					skin.Populate(tr, ref invBindMatrixAccessor);
-					parsedSkins.Add(skinMesh.rootBone.name, skin);
-					GlTF_Writer.skins.Add(skin);
-					node.skinID = skin.name;
-				}
-				else
-				{
-					node.skinID = parsedSkins[skinMesh.rootBone.name].name;
-				}
+				// Generate skin data
+				skin.Populate(tr, ref invBindMatrixAccessor);
+				GlTF_Writer.skins.Add(skin);
+				node.skinID = skin.name;
 			}
 
 			// The node is a bone?
