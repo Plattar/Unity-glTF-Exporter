@@ -41,7 +41,7 @@ public class GlTF_Writer {
 	public static bool bakeAnimation;
 	public static bool exportPBRMaterials;
 	public static bool convertRightHanded = true;
-	public static string exporterVersion = "0.0.2";
+	public static string exporterVersion = "1.0.0";
 
 	static public string GetNameFromObject(Object o, bool useId = false)
 	{
