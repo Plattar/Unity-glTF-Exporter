@@ -20,64 +20,73 @@ public class GlTF_Animation : GlTF_Writer {
 		targetName = target;
 	}
 
-	public void Populate (AnimationClip c)
+	public void Populate(AnimationClip c, Transform tr, bool bake = true)
 	{
 		AnimationClipCurveData[] curveDatas = AnimationUtility.GetAllCurves(c, true);
 
 		// Get current clip targets list
-		List<string> targetList = new List<string>();
+		List<string> targetPathList = new List<string>();
 
-		// A clip contains curves that can affect different targets
+		// A clip contains curves that can affect different targets, collect them
 		foreach(AnimationClipCurveData cu in curveDatas)
 		{
-			string lastNodePath = cu.path.Split('/')[cu.path.Split('/').Length - 1];
-			if (!targetList.Contains(lastNodePath))
-				targetList.Add(lastNodePath);
+			if(!targetPathList.Contains(cu.path))
+				targetPathList.Add(cu.path);
 		}
 
-		if(bakeAnimation)
+		if(bake)
 		{
 			// Bake animation for all animated nodes
-			foreach(string target in targetList)
+			foreach(string targetPath in targetPathList)
 			{
-				GameObject targetGo = GameObject.Find(target);
-				if (targetGo == null)
-				{
+				Transform targetTr = targetPath.Length > 0 ? tr.transform.Find(targetPath) : tr;
+				if (targetTr == null)
 					continue;
-				}
 
+				GameObject targetGo = targetTr.gameObject;
 				Transform targetObject = targetGo.transform;
-				// Setup channels
-				// Translation
-				GlTF_AnimSampler sTranslation = new GlTF_AnimSampler(name + "_"+ target + "_TranslationSampler" , target +"_time", target + "_translation");
-				GlTF_Channel chTranslation = new GlTF_Channel("translation", sTranslation);
-				GlTF_Target targetTranslation = new GlTF_Target();
-				targetTranslation.id = GlTF_Node.GetNameFromObject(targetObject);
-				targetTranslation.path = "translation";
-				chTranslation.target = targetTranslation;
-				channels.Add(chTranslation);
+				string targetId = GlTF_Node.GetNameFromObject(targetObject);
+				// Setup animation data: Samplers and Channel
+				GlTF_AnimSampler sTranslation = new GlTF_AnimSampler(name + "_"+ targetId + "_TranslationSampler" , targetId + "_time", targetId + "_translation");
 				animSamplers.Add(sTranslation);
 
+				GlTF_Target targetTranslation = new GlTF_Target();
+				targetTranslation.id = targetId;
+				targetTranslation.path = "translation";
+
+				GlTF_Channel chTranslation = new GlTF_Channel("translation", sTranslation);
+				chTranslation.target = targetTranslation;
+				channels.Add(chTranslation);
+
 				// Rotation
-				GlTF_AnimSampler sRotation = new GlTF_AnimSampler(name + "_" + target + "_RotationSampler", target + "_time", target + "_rotation");
-				GlTF_Channel chRotation = new GlTF_Channel("rotation", sRotation);
+				GlTF_AnimSampler sRotation = new GlTF_AnimSampler(name + "_" + targetId + "_RotationSampler", targetId + "_time", targetId + "_rotation");
+				animSamplers.Add(sRotation);
+
 				GlTF_Target targetRotation = new GlTF_Target();
 				targetRotation.id = GlTF_Node.GetNameFromObject(targetObject);
 				targetRotation.path = "rotation";
+
+				GlTF_Channel chRotation = new GlTF_Channel("rotation", sRotation);
 				chRotation.target = targetRotation;
 				channels.Add(chRotation);
-				animSamplers.Add(sRotation);
+
 
 				// Scale
-				GlTF_AnimSampler sScale = new GlTF_AnimSampler(name + "_" + target + "_ScaleSampler", target + "_time", target + "_scale");
-				GlTF_Channel chScale = new GlTF_Channel("scale", sScale);
+				GlTF_AnimSampler sScale = new GlTF_AnimSampler(name + "_" + targetId + "_ScaleSampler", targetId + "_time", targetId + "_scale");
+				animSamplers.Add(sScale);
 				GlTF_Target targetScale = new GlTF_Target();
 				targetScale.id = GlTF_Node.GetNameFromObject(targetObject);
 				targetScale.path = "scale";
+				GlTF_Channel chScale = new GlTF_Channel("scale", sScale);
 				chScale.target = targetScale;
 				channels.Add(chScale);
-				animSamplers.Add(sScale);
-				parameters.bakeAndPopulate(c, bakingFramerate, targetName, target);
+
+				// Bake and populate animation data
+				parameters.bakeAndPopulate(c, bakingFramerate, targetId, targetPath, tr);
+			}
+			if(channels.Count == 0)
+			{
+				Debug.Log("Error when parsing animation of node " + tr.name + " (" + (targetPathList.Count == 0 ? "Animation has no curves " : "curves paths are not valid" ) + ").");
 			}
 		}
 		else

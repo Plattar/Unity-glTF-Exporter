@@ -27,7 +27,6 @@ public enum IMAGETYPE
 public class SceneToGlTFWiz : MonoBehaviour
 {
 	public int jpgQuality = 92;
-	public int jpgQualityNormalMap = 98;
 
 	public static Dictionary<string, string> UnityToPBRMetalChannel = new Dictionary<string, string>
 	{
@@ -77,7 +76,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 	int nbSelectedObjects = 0;
 
 	static bool done = true;
-	bool parseSkinAndAnimation = false;
 	bool parseLightmaps = false;
 
 	public static void parseUnityCamera(Transform tr)
@@ -151,9 +149,9 @@ public class SceneToGlTFWiz : MonoBehaviour
 		}
 	}
 
-	public void ExportCoroutine(string path, Preset presetAsset, bool buildZip, bool exportPBRMaterials, bool doConvertImages = false)
+	public void ExportCoroutine(string path, Preset presetAsset, bool buildZip, bool exportPBRMaterials, bool exportAnimation = true, bool doConvertImages = false)
 	{
-		StartCoroutine(Export(path, presetAsset, buildZip, exportPBRMaterials, doConvertImages));
+		StartCoroutine(Export(path, presetAsset, buildZip, exportPBRMaterials, exportAnimation, doConvertImages));
 	}
 
 	public int getCurrentIndex()
@@ -171,7 +169,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		return nbSelectedObjects;
 	}
 
-	public IEnumerator Export(string path, Preset presetAsset, bool buildZip, bool exportPBRMaterials, bool doConvertImages = false)
+	public IEnumerator Export(string path, Preset presetAsset, bool buildZip, bool exportPBRMaterials, bool exportAnimation = true, bool doConvertImages = false)
 	{
 		writer = new GlTF_Writer();
 		writer.Init ();
@@ -181,15 +179,19 @@ public class SceneToGlTFWiz : MonoBehaviour
 		if (debugRightHandedScale)
 			GlTF_Writer.convertRightHanded = false;
 
+		writer.extraString.Add("exporterVersion", GlTF_Writer.exporterVersion );
+
 		// Create rootNode
 		GlTF_Node correctionNode = new GlTF_Node();
 		correctionNode.id = "UnityGlTF_correctionMatrix";
 		correctionNode.name = "UnityGlTF_correctionMatrix";
 
-		Matrix4x4 correctionMat = Matrix4x4.identity;
+		// Add correction matrix to reorient scene for left to right-handed coordinate systems
 		Quaternion correctionQuat = Quaternion.Euler(0, 180, 0);
-		correctionMat.SetTRS(Vector3.zero, correctionQuat, Vector3.one);
-		correctionNode.matrix = new GlTF_Matrix(correctionMat);
+		writer.convertQuatLeftToRightHandedness(ref correctionQuat);
+		Matrix4x4 correctionMat = Matrix4x4.TRS(Vector3.zero, correctionQuat, Vector3.one);
+		GlTF_Writer.sceneRootMatrix = correctionMat;
+		correctionNode.matrix = new GlTF_Matrix(correctionMat, false);
 		GlTF_Writer.nodes.Add(correctionNode);
 		GlTF_Writer.rootNodes.Add(correctionNode);
 
@@ -212,6 +214,9 @@ public class SceneToGlTFWiz : MonoBehaviour
 		List<Transform> bones = new List<Transform>();
 		foreach(Transform tr in trs)
 		{
+			if (!tr.gameObject.activeSelf)
+				continue;
+
 			SkinnedMeshRenderer skin = tr.GetComponent<SkinnedMeshRenderer>();
 			if (skin)
 			{
@@ -224,10 +229,18 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 		currentObjectIndex = 0;
 		nbSelectedObjects = trs.Count;
+		int nbDisabledObjects = 0;
 		foreach (Transform tr in trs)
 		{
+			if (tr.gameObject.activeInHierarchy == false)
+			{
+				nbDisabledObjects++;
+				continue;
+			}
+
 			currentTransformName = tr.name;
 			currentObjectIndex++;
+
 			if (tr.GetComponent<Camera>() != null)
 				parseUnityCamera(tr);
 
@@ -250,6 +263,14 @@ public class SceneToGlTFWiz : MonoBehaviour
 					normalAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "normal"), GlTF_Accessor.Type.VEC3, GlTF_Accessor.ComponentType.FLOAT);
 					normalAccessor.bufferView = GlTF_Writer.vec3BufferView;
 					GlTF_Writer.accessors.Add (normalAccessor);
+				}
+
+				GlTF_Accessor colorAccessor = null;
+				if (m.colors.Length > 0)
+				{
+					colorAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "color"), GlTF_Accessor.Type.VEC4, GlTF_Accessor.ComponentType.FLOAT);
+					colorAccessor.bufferView = GlTF_Writer.vec4BufferView;
+					GlTF_Writer.accessors.Add(colorAccessor);
 				}
 
 				GlTF_Accessor uv0Accessor = null;
@@ -282,7 +303,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 				}
 
 				GlTF_Accessor jointAccessor = null;
-				if (parseSkinAndAnimation && m.boneWeights.Length > 0)
+				if (exportAnimation && m.boneWeights.Length > 0)
 				{
 					jointAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "joints"), GlTF_Accessor.Type.VEC4, GlTF_Accessor.ComponentType.FLOAT);
 					jointAccessor.bufferView = GlTF_Writer.vec4BufferView;
@@ -290,7 +311,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 				}
 
 				GlTF_Accessor weightAccessor = null;
-				if (parseSkinAndAnimation && m.boneWeights.Length > 0)
+				if (exportAnimation && m.boneWeights.Length > 0)
 				{
 					weightAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "weights"), GlTF_Accessor.Type.VEC4, GlTF_Accessor.ComponentType.FLOAT);
 					weightAccessor.bufferView = GlTF_Writer.vec4BufferView;
@@ -314,6 +335,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 					GlTF_Attributes attributes = new GlTF_Attributes();
 					attributes.positionAccessor = positionAccessor;
 					attributes.normalAccessor = normalAccessor;
+					attributes.colorAccessor = colorAccessor;
 					attributes.texCoord0Accessor = uv0Accessor;
 					attributes.texCoord1Accessor = uv1Accessor;
 					attributes.texCoord2Accessor = uv2Accessor;
@@ -471,13 +493,50 @@ public class SceneToGlTFWiz : MonoBehaviour
 							}
 						}
 					}
-
 					mesh.primitives.Add(primitive);
 				}
 
-				mesh.Populate(m);
+				SkinnedMeshRenderer skin = tr.GetComponent<SkinnedMeshRenderer>();
+				Mesh baked = m;
+				// If skinned, bake mesh in order to end with good transforms
+				// (Unity skinning directly uses mesh to deform it, and doesn't care about transform anymore)
+				// Baking allow to take the current transform into account.
+				// FIXME: could also avoid baking and use the mesh directly and reset the transform
+				if (exportAnimation && skin)
+				{
+					baked = new Mesh();
+					skin.BakeMesh(baked);
+					baked.uv = m.uv;
+					baked.uv2 = m.uv2;
+					baked.uv3 = m.uv3;
+					baked.uv4 = m.uv4;
+
+					baked.bindposes = m.bindposes;
+					baked.boneWeights = m.boneWeights;
+
+					Matrix4x4 correction = Matrix4x4.TRS(tr.localPosition, tr.localRotation, tr.lossyScale).inverse * Matrix4x4.TRS(tr.localPosition, tr.localRotation, Vector3.one);
+					if(!correction.isIdentity)
+					{
+						Debug.Log(correction);
+						Vector3[] verts = baked.vertices;
+						Vector3[] norms = baked.normals;
+						Vector4[] tangents = baked.tangents;
+						for (int i = 0; i < verts.Length; ++i)
+						{
+							verts[i] = correction.MultiplyPoint3x4(verts[i]);
+							norms[i] = correction.MultiplyVector(norms[i]);
+							norms[i].Normalize();
+						}
+						baked.vertices = verts;
+						baked.normals = norms;
+						baked.RecalculateBounds();
+					}
+				}
+
+				mesh.Populate(baked);
 				GlTF_Writer.meshes.Add(mesh);
 			}
+
 
 			// next, build hierarchy of nodes
 			GlTF_Node node = new GlTF_Node();
@@ -485,19 +544,31 @@ public class SceneToGlTFWiz : MonoBehaviour
 			node.name = tr.name;
 
 			// Parse animations
-			if (parseSkinAndAnimation)
+			if (exportAnimation)
 			{
 				Animator a = tr.GetComponent<Animator>();
 				if (a != null)
 				{
 					AnimationClip[] clips = AnimationUtility.GetAnimationClips(tr.gameObject);
-					//					int nClips = a.GetClipCount();
 					for (int i = 0; i < clips.Length; i++)
 					{
+						//FIXME It seems not good to generate one animation per animator.
 						GlTF_Animation anim = new GlTF_Animation(a.name, node.name);
-						anim.Populate(clips[i]);
-						GlTF_Writer.animations.Add(anim);
+						anim.Populate(clips[i], tr, GlTF_Writer.bakeAnimation);
+						if(anim.channels.Count > 0)
+							GlTF_Writer.animations.Add(anim);
 					}
+				}
+
+				Animation animation = tr.GetComponent<Animation>();
+				if (animation != null)
+				{
+					AnimationClip clip = animation.clip;
+					//FIXME It seems not good to generate one animation per animator.
+					GlTF_Animation anim = new GlTF_Animation(animation.name, node.name);
+					anim.Populate(clip, tr, GlTF_Writer.bakeAnimation);
+					if (anim.channels.Count > 0)
+						GlTF_Writer.animations.Add(anim);
 				}
 			}
 
@@ -513,6 +584,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			// Use good transform if parent object is not in selection
 			else if (!trs.Contains(tr.parent))
 			{
+				node.hasParent = false;
 				Matrix4x4 mat = Matrix4x4.identity;
 				if(debugRightHandedScale)
 					mat.m22 = -1;
@@ -547,38 +619,34 @@ public class SceneToGlTFWiz : MonoBehaviour
 			// Parse node's skin data
 			GlTF_Accessor invBindMatrixAccessor = null;
 			SkinnedMeshRenderer skinMesh = tr.GetComponent<SkinnedMeshRenderer>();
-			if (parseSkinAndAnimation && skinMesh != null && skinMesh.enabled && skinMesh.rootBone != null)
+			if (exportAnimation && skinMesh != null && skinMesh.enabled && checkSkinValidity(skinMesh, trs) && skinMesh.rootBone != null)
 			{
-				node.skeletons.Add(GlTF_Node.GetNameFromObject(skinMesh.rootBone));
-				if (!parsedSkins.ContainsKey(skinMesh.rootBone.name))
-				{
-					GlTF_Skin skin = new GlTF_Skin();
-					skin.setBindShapeMatrix(tr);
-					skin.name = skinMesh.rootBone.name + "_skeleton";
+				node.skeletons = GlTF_Skin.findRootSkeletons(skinMesh);
+				GlTF_Skin skin = new GlTF_Skin();
+				skin.setBindShapeMatrix(tr);
+				skin.name = skinMesh.rootBone.name + "_skeleton_" + node.name + tr.GetInstanceID();
 
-					// Create invBindMatrices accessor
-					invBindMatrixAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "invBindMatrices"), GlTF_Accessor.Type.MAT4, GlTF_Accessor.ComponentType.FLOAT);
-					invBindMatrixAccessor.bufferView = GlTF_Writer.mat4BufferView;
-					GlTF_Writer.accessors.Add(invBindMatrixAccessor);
+				// Create invBindMatrices accessor
+				invBindMatrixAccessor = new GlTF_Accessor(skin.name + "invBindMatrices", GlTF_Accessor.Type.MAT4, GlTF_Accessor.ComponentType.FLOAT);
+				invBindMatrixAccessor.bufferView = GlTF_Writer.mat4BufferView;
+				GlTF_Writer.accessors.Add(invBindMatrixAccessor);
 
-					// Generate skin data
-					skin.Populate(tr, ref invBindMatrixAccessor);
-					parsedSkins.Add(skinMesh.rootBone.name, skin);
-					GlTF_Writer.skins.Add(skin);
-					node.skinID = skin.name;
-				}
-				else
-				{
-					node.skinID = parsedSkins[skinMesh.rootBone.name].name;
-				}
+				// Generate skin data
+				skin.Populate(tr, ref invBindMatrixAccessor);
+				GlTF_Writer.skins.Add(skin);
+				node.skinID = skin.name;
 			}
 
 			// The node is a bone?
-			if (bones.Contains(tr))
+			if (exportAnimation && bones.Contains(tr))
 				node.jointName = GlTF_Node.GetNameFromObject(tr);
 
 			foreach (Transform t in tr.transform)
-				node.childrenNames.Add (GlTF_Node.GetNameFromObject(t));
+			{
+				if(t.gameObject.activeInHierarchy)
+					node.childrenNames.Add(GlTF_Node.GetNameFromObject(t));
+			}
+
 
 			GlTF_Writer.nodes.Add (node);
 		}
@@ -590,6 +658,15 @@ public class SceneToGlTFWiz : MonoBehaviour
 		writer.OpenFiles(path);
 		writer.Write ();
 		writer.CloseFiles();
+		if(nbDisabledObjects > 0)
+			Debug.Log(nbDisabledObjects + " disabled object ignored during export");
+
+		if(GlTF_Writer.meshes.Count == 0)
+		{
+			Debug.Log("No visible objects have been exported. Aboring export");
+				yield return false;
+		}
+
 		Debug.Log("Scene has been exported to " + path);
 		if(buildZip)
 		{
@@ -614,6 +691,27 @@ public class SceneToGlTFWiz : MonoBehaviour
 		yield return true;
 	}
 
+	// Check if all the bones referenced by the skin are in the selection
+	public bool checkSkinValidity(SkinnedMeshRenderer skin, List<Transform> selection)
+	{
+		string unselected = "";
+		foreach(Transform t in skin.bones)
+		{
+			if (!selection.Contains(t))
+			{
+				unselected = unselected + "\n" + t.name;
+			}
+		}
+
+		if(unselected.Length > 0)
+		{
+			Debug.LogError("Error while exportin skin for " + skin.name + " (skipping skinning export).\nClick for more details:\n \nThe following bones are used but are not selected" + unselected + "\n");
+			return false;
+		}
+
+		return true;
+	}
+
 	public KeyValuePair<GlTF_Texture, GlTF_Image> exportLightmap(Transform tr, ref GlTF_Primitive primitive, ref GlTF_Material material)
 	{
 		MeshRenderer meshRenderer = tr.GetComponent<MeshRenderer>();
@@ -626,7 +724,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 		//FIXME what if object has no lightmap ?
 		LightmapData lightmap = LightmapSettings.lightmaps[meshRenderer.lightmapIndex];
-		Texture2D lightmapTex = lightmap.lightmapFar;
+		Texture2D lightmapTex = lightmap.lightmapLight;
 
 		// Handle UV lightmaps
 		MeshFilter meshfilter = tr.GetComponent<MeshFilter>();
@@ -754,19 +852,30 @@ public class SceneToGlTFWiz : MonoBehaviour
 	{
 		Shader s = mat.shader;
 		int spCount2 = ShaderUtil.GetPropertyCount(s);
-		if(!mat.shader.name.Contains("Standard"))
-		{
-			Debug.Log("Material is not supported");
-			return;
-		}
-		// Is metal workflow used
-		bool isMetal = mat.shader.name == "Standard";
-		material.materialModel = isMetal? "PBR_metal_roughness" : "PBR_specular_glossiness";
+		Dictionary<string, string> workflowChannelMap = UnityToPBRMetalChannel;
+		bool isMaterialPBR = true;
+		bool hasPBRMap = false;
+		bool usePBRTextureAlpha = false;
+		bool isMetal = true;
 
-		// Is smoothness is defined by diffuse/albedo alpha or metal/specular texture alpha
-		bool usePBRTextureAlpha = mat.GetFloat("_SmoothnessTextureChannel") == 0;
-		Dictionary<string, string> workflowChannelMap = isMetal ? UnityToPBRMetalChannel : UnityToPBRSpecularChannel;
-		bool hasPBRMap = (!isMetal && mat.GetTexture("_SpecGlossMap") != null || isMetal && mat.GetTexture("_MetallicGlossMap") != null);
+		if (!mat.shader.name.Contains("Standard"))
+		{
+			Debug.Log("Material " + mat.shader + " is not fully supported");
+			isMaterialPBR = false;
+		}
+
+		if (isMaterialPBR)
+		{
+			// Is metal workflow used
+			isMetal = mat.shader.name == "Standard";
+			material.materialModel = isMetal ? "PBR_metal_roughness" : "PBR_specular_glossiness";
+
+			// Is smoothness is defined by diffuse/albedo alpha or metal/specular texture alpha
+			usePBRTextureAlpha = mat.GetFloat("_SmoothnessTextureChannel") == 0;
+			workflowChannelMap = isMetal ? UnityToPBRMetalChannel : UnityToPBRSpecularChannel;
+			hasPBRMap = (!isMetal && mat.GetTexture("_SpecGlossMap") != null || isMetal && mat.GetTexture("_MetallicGlossMap") != null);
+		}
+
 		for (var j = 0; j < spCount2; ++j)
 		{
 			var pName = ShaderUtil.GetPropertyName(s, j);
@@ -816,7 +925,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 						// These textures need split
 						// FIXME: Should check and avoid to split two times the same textures
-						if (usePBRTextureAlpha && ((pName.CompareTo("_SpecGlossMap") == 0 || pName.CompareTo("_MetallicGlossMap") == 0)) || !usePBRTextureAlpha && pName.CompareTo("_MainTex") == 0)
+						if (isMaterialPBR && usePBRTextureAlpha && (((pName.CompareTo("_SpecGlossMap") == 0 || pName.CompareTo("_MetallicGlossMap") == 0)) || !usePBRTextureAlpha && pName.CompareTo("_MainTex") == 0))
 						{
 							// Split PBR texture into two textures (RGB => metal/specular and A => roughness)
 							// Output two textures and two images
@@ -872,7 +981,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 						else
 						{
 							bool isBumpTexture = pName.CompareTo("_BumpMap") == 0;
-							bool isNormalMap = true;
+							bool isBumpMap = false;
 							var val = new GlTF_Material.StringValue();
 							val.name = workflowChannelMap[pName];
 							var texName = GlTF_Texture.GetNameFromObject(t);
@@ -889,7 +998,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 							}
 
 							// Handle transparency
-							if (pName.CompareTo("_MainTex") == 0 && mat.GetFloat("_Mode") != 0)
+							if (pName.CompareTo("_MainTex") == 0 && mat.HasProperty("_Mode") && mat.GetFloat("_Mode") != 0)
 							{
 								string mode = mat.GetFloat("_Mode") == 1 ? "alphaMask" : "alphaBlend";
 								material.extraString.Add("blendMode", mode);
@@ -902,13 +1011,13 @@ public class SceneToGlTFWiz : MonoBehaviour
 							if(isBumpTexture)
 							{
 								TextureImporter im = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(t)) as TextureImporter;
-								isNormalMap = im.textureType == TextureImporterType.Bump;
-								val.name = isNormalMap ? "normalTexture" : "bumpTexture";
+								isBumpMap = im.convertToNormalmap;
+								val.name = isBumpMap ? "bumpTexture" : "normalTexture";
 							}
 
-							if (!GlTF_Writer.textures.ContainsKey(texName))
+							if (!GlTF_Writer.textures.ContainsKey(texName) && AssetDatabase.GetAssetPath(t).Length > 0)
 							{
-								if (doConvertImages && isBumpTexture && isNormalMap)
+								if (doConvertImages && isBumpTexture && !isBumpMap)
 								{
 									format = IMAGETYPE.NORMAL_MAP;
 								}
@@ -939,10 +1048,15 @@ public class SceneToGlTFWiz : MonoBehaviour
 								texture.source = img.name;
 								texture.samplerName = samplerName;
 
-								if(pName.CompareTo("_BumpMap") == 0 && isNormalMap)
+								if(pName.CompareTo("_BumpMap") == 0 && !isBumpMap)
 									texture.extraBool.Add("yUp", true);
 
 								GlTF_Writer.textures.Add(texName, texture);
+							}
+
+							if(AssetDatabase.GetAssetPath(t).Length == 0)
+							{
+								Debug.LogWarning("Texture '" + t.name + "' has not been exported (Asset not found)");
 							}
 						}
 					}
@@ -1123,28 +1237,28 @@ public class SceneToGlTFWiz : MonoBehaviour
 		//Make texture readable
 		TextureImporter im = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(texture)) as TextureImporter;
 		bool readable = im.isReadable;
-		TextureImporterFormat format = im.textureFormat;
+		TextureImporterCompression format = im.textureCompression;
 		TextureImporterType type = im.textureType;
 
 		if (!readable)
 			im.isReadable = true;
-		if (type != TextureImporterType.Image)
-			im.textureType = TextureImporterType.Image;
+		if (type != TextureImporterType.Default)
+			im.textureType = TextureImporterType.Default;
 
-		im.textureFormat = TextureImporterFormat.ARGB32;
+		im.textureCompression = TextureImporterCompression.Uncompressed;
 		im.SaveAndReimport();
 
-		if (imageFormat == IMAGETYPE.RGBA)
+		if (imageFormat == IMAGETYPE.RGBA || imageFormat == IMAGETYPE.NORMAL_MAP)
 			pixels = texture.EncodeToPNG();
 		else
-			pixels = texture.EncodeToJPG(imageFormat == IMAGETYPE.NORMAL_MAP ? jpgQualityNormalMap : jpgQuality);
+			pixels = texture.EncodeToJPG(jpgQuality);
 
 		if (!readable)
 			im.isReadable = false;
-		if (type != TextureImporterType.Image)
+		if (type != TextureImporterType.Default)
 			im.textureType = type;
 
-		im.textureFormat = format;
+		im.textureCompression = format;
 		im.SaveAndReimport();
 	}
 
@@ -1192,7 +1306,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		//byte[] outputData = format == IMAGETYPE.RGB ? tex.EncodeToJPG(jpgQuality) : tex.EncodeToPNG();
 		byte[] outputData;
 		getBytesFromTexture(ref inputTexture, out outputData, format);
-		string outputFilename = Path.GetFileNameWithoutExtension(assetPath) + (format == IMAGETYPE.RGB || format == IMAGETYPE.NORMAL_MAP ? ".jpg" : ".png");
+		string outputFilename = Path.GetFileNameWithoutExtension(assetPath) + (format == IMAGETYPE.RGB ? ".jpg" : ".png");
 		string outputPath = Path.Combine(outputDir,outputFilename);
 
 		File.WriteAllBytes(outputPath, outputData);

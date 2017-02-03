@@ -4,6 +4,7 @@ using System.Collections;
 public class GlTF_Attributes : GlTF_Writer {
 	public GlTF_Accessor normalAccessor;
 	public GlTF_Accessor positionAccessor;
+	public GlTF_Accessor colorAccessor;
 	public GlTF_Accessor texCoord0Accessor;
 	public GlTF_Accessor texCoord1Accessor;
 	public GlTF_Accessor texCoord2Accessor;
@@ -38,6 +39,10 @@ public class GlTF_Attributes : GlTF_Writer {
 	public void Populate (Mesh m)
 	{
 		positionAccessor.Populate (m.vertices);
+		if(colorAccessor != null)
+		{
+			colorAccessor.Populate(m.colors);
+		}
 		if (normalAccessor != null)
 		{
 			normalAccessor.Populate (m.normals);
@@ -85,52 +90,57 @@ public class GlTF_Attributes : GlTF_Writer {
 		if (positionAccessor != null)
 		{
 			CommaNL();
-			Indent();	jsonWriter.Write ("\"POSITION\": \"" + positionAccessor.name + "\"");
+			Indent();	jsonWriter.Write ("\"POSITION\": \"" + positionAccessor.id + "\"");
 		}
 		if (normalAccessor != null)
 		{
 			CommaNL();
-			Indent();	jsonWriter.Write ("\"NORMAL\": \"" + normalAccessor.name + "\"");
+			Indent();	jsonWriter.Write ("\"NORMAL\": \"" + normalAccessor.id + "\"");
+		}
+		if (colorAccessor != null)
+		{
+			CommaNL();
+			Indent(); jsonWriter.Write("\"COLOR\": \"" + colorAccessor.id + "\"");
 		}
 		if (texCoord0Accessor != null)
 		{
 			CommaNL();
-			Indent();	jsonWriter.Write ("\"TEXCOORD_0\": \"" + texCoord0Accessor.name + "\"");
+			Indent();	jsonWriter.Write ("\"TEXCOORD_0\": \"" + texCoord0Accessor.id + "\"");
 		}
 		if (texCoord1Accessor != null)
 		{
 			CommaNL();
-			Indent();	jsonWriter.Write ("\"TEXCOORD_1\": \"" + texCoord1Accessor.name + "\"");
+			Indent();	jsonWriter.Write ("\"TEXCOORD_1\": \"" + texCoord1Accessor.id + "\"");
 		}
 		if (texCoord2Accessor != null)
 		{
 			CommaNL();
-			Indent();	jsonWriter.Write ("\"TEXCOORD_2\": \"" + texCoord2Accessor.name + "\"");
+			Indent();	jsonWriter.Write ("\"TEXCOORD_2\": \"" + texCoord2Accessor.id + "\"");
 		}
 		if (texCoord3Accessor != null)
 		{
 			CommaNL();
-			Indent();	jsonWriter.Write ("\"TEXCOORD_3\": \"" + texCoord3Accessor.name + "\"");
+			Indent();	jsonWriter.Write ("\"TEXCOORD_3\": \"" + texCoord3Accessor.id + "\"");
 		}
 		if (lightmapTexCoordAccessor != null)
 		{
 			CommaNL();
-			Indent(); jsonWriter.Write("\"TEXCOORD_4\": \"" + lightmapTexCoordAccessor.name + "\"");
+			Indent(); jsonWriter.Write("\"TEXCOORD_4\": \"" + lightmapTexCoordAccessor.id + "\"");
 		}
 		if (jointAccessor != null)
 		{
 			CommaNL();
-			Indent(); jsonWriter.Write("\"JOINT\": \"" + jointAccessor.name + "\"");
+			Indent(); jsonWriter.Write("\"JOINT\": \"" + jointAccessor.id + "\"");
 		}
 		if (weightAccessor != null)
 		{
 			CommaNL();
-			Indent(); jsonWriter.Write("\"WEIGHT\": \"" + weightAccessor.name + "\"");
+			Indent(); jsonWriter.Write("\"WEIGHT\": \"" + weightAccessor.id + "\"");
 		}
 		if (tangentAccessor != null)
 		{
 			CommaNL();
-			Indent(); jsonWriter.Write("\"TANGENT\": \"" + tangentAccessor.name + "\"");
+			Indent(); jsonWriter.Write("\"TANGENT\": \"" + tangentAccessor.id + "\"");
 		}
 		//CommaNL();
 		jsonWriter.WriteLine();

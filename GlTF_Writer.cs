@@ -34,12 +34,14 @@ public class GlTF_Writer {
 	public static List<GlTF_Shader> shaders = new List<GlTF_Shader>();
 	public static List<GlTF_Skin> skins = new List<GlTF_Skin>();
 	public static List<GlTF_Node> rootNodes = new List<GlTF_Node>();
+	public static Matrix4x4 sceneRootMatrix;
 
 	public static List<string> exportedFiles = new List<string>();
 	// Exporter specifics
 	public static bool bakeAnimation;
 	public static bool exportPBRMaterials;
 	public static bool convertRightHanded = true;
+	public static string exporterVersion = "1.0.0";
 
 	static public string GetNameFromObject(Object o, bool useId = false)
 	{
@@ -72,15 +74,33 @@ public class GlTF_Writer {
 		quat.z = -quat.z;
 	}
 
+	// Decomposes a matrix, converts each component from left to right handed and
+	// rebuilds a matrix
+	// FIXME: there is probably a better way to do that. It doesn't work well with non uniform scales
 	public void convertMatrixLeftToRightHandedness(ref Matrix4x4 mat)
 	{
 		Vector3 position = mat.GetColumn(3);
 		convertVector3LeftToRightHandedness(ref position);
-
 		Quaternion rotation = Quaternion.LookRotation(mat.GetColumn(2), mat.GetColumn(1));
 		convertQuatLeftToRightHandedness(ref rotation);
 
 		Vector3 scale = new Vector3(mat.GetColumn(0).magnitude, mat.GetColumn(1).magnitude, mat.GetColumn(2).magnitude);
+		float epsilon = 0.00001f;
+
+		// Some issues can occurs with non uniform scales
+		if(Mathf.Abs(scale.x - scale.y) > epsilon  || Mathf.Abs(scale.y - scale.z) > epsilon || Mathf.Abs(scale.x - scale.z) > epsilon)
+		{
+			Debug.LogWarning("A matrix with non uniform scale is being converted from left to right handed system. This code is not working correctly in this case");
+		}
+
+		// Handle negative scale component in matrix decomposition
+		if (Matrix4x4.Determinant(mat) < 0)
+		{
+			Quaternion rot = Quaternion.LookRotation(mat.GetColumn(2), mat.GetColumn(1));
+			Matrix4x4 corr = Matrix4x4.TRS(mat.GetColumn(3), rot, Vector3.one).inverse;
+			Matrix4x4 extractedScale = corr * mat;
+			scale = new Vector3(extractedScale.m00, extractedScale.m11, extractedScale.m22);
+		}
 
 		// convert transform values from left handed to right handed
 		mat.SetTRS(position, rotation, scale);
@@ -109,6 +129,8 @@ public class GlTF_Writer {
 		techniques = new Dictionary<string, GlTF_Technique>();
 		programs = new List<GlTF_Program>();
 		shaders = new List<GlTF_Shader>();
+		skins = new List<GlTF_Skin>();
+		rootNodes = new List<GlTF_Node>();
 
 		bakeAnimation = true;
 	}
@@ -242,7 +264,11 @@ public class GlTF_Writer {
 		Indent();	jsonWriter.Write ("\"asset\": {\n");
 		IndentIn();
 		Indent();	jsonWriter.Write ("\"generator\": \"Unity "+ Application.unityVersion + "\",\n");
+
+		writeExtras();
+
 		Indent();	jsonWriter.Write ("\"version\": \"1\"\n");
+
 		IndentOut();
 		Indent();	jsonWriter.Write ("}");
 
@@ -483,22 +509,22 @@ public class GlTF_Writer {
 		IndentOut();
 		Indent();			jsonWriter.Write ("}");
 
-		if (shaders != null && shaders.Count > 0)
-		{
-			CommaNL();
-			Indent();
-			jsonWriter.Write ("\"shaders\": {\n");
-			IndentIn();
-			foreach (var s in shaders)
-			{
-				CommaNL();
-				s.Write();
-			}
-			jsonWriter.WriteLine();
-			IndentOut();
-			Indent();
-			jsonWriter.Write ("}");
-		}
+		//if (shaders != null && shaders.Count > 0)
+		//{
+		//	CommaNL();
+		//	Indent();
+		//	jsonWriter.Write ("\"shaders\": {\n");
+		//	IndentIn();
+		//	foreach (var s in shaders)
+		//	{
+		//		CommaNL();
+		//		s.Write();
+		//	}
+		//	jsonWriter.WriteLine();
+		//	IndentOut();
+		//	Indent();
+		//	jsonWriter.Write ("}");
+		//}
 
 		if(skins.Count > 0)
 		{
@@ -515,22 +541,22 @@ public class GlTF_Writer {
 			Indent(); jsonWriter.Write("}");
 		}
 
-		if (techniques != null && techniques.Count > 0)
-		{
-			CommaNL();
-			Indent();
-			jsonWriter.Write ("\"techniques\": {\n");
-			IndentIn();
-			foreach (KeyValuePair<string, GlTF_Technique> k in techniques)
-			{
-				CommaNL();
-				k.Value.Write();
-			}
-			jsonWriter.WriteLine();
-			IndentOut();
-			Indent();
-			jsonWriter.Write ("}");
-		}
+		//if (techniques != null && techniques.Count > 0)
+		//{
+		//	CommaNL();
+		//	Indent();
+		//	jsonWriter.Write ("\"techniques\": {\n");
+		//	IndentIn();
+		//	foreach (KeyValuePair<string, GlTF_Technique> k in techniques)
+		//	{
+		//		CommaNL();
+		//		k.Value.Write();
+		//	}
+		//	jsonWriter.WriteLine();
+		//	IndentOut();
+		//	Indent();
+		//	jsonWriter.Write ("}");
+		//}
 
 		if (textures.Count > 0)
 		{

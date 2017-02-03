@@ -34,7 +34,7 @@ public class GlTF_Node : GlTF_Writer {
 		IndentIn();
 		Indent();
 		CommaNL();
-		jsonWriter.Write ("\"name\": \""+ name + "\"");
+		jsonWriter.Write ("\"name\": \""+ id + "\"");
 		if (cameraName != null)
 		{
 			CommaNL();
@@ -114,7 +114,12 @@ public class GlTF_Node : GlTF_Writer {
 			Indent(); jsonWriter.Write("\"skeletons\": [\n");
 			IndentIn();
 			if(skeletons.Count > 0)
-				Indent(); jsonWriter.Write("\""+ skeletons[0] + "\"\n");
+			foreach(string s in skeletons)
+			{
+					CommaNL();
+				Indent(); jsonWriter.Write("\"" + s + "\"\n");
+			}
+
 			IndentOut();
 			Indent(); jsonWriter.Write("]");
 		}

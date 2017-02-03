@@ -31,9 +31,9 @@ public class GlTF_Accessor : GlTF_Writer {
 	int minInt;
 	int maxInt;
 
-	public GlTF_Accessor (string n) { name = n; }
+	public GlTF_Accessor (string n) { id = n; }
 	public GlTF_Accessor (string n, Type t, ComponentType c) {
-		name = n;
+		id = n;
 		type = t;
 		switch (t)
 		{
@@ -224,6 +224,36 @@ public class GlTF_Accessor : GlTF_Writer {
 
 	}
 
+	public void Populate(Color[] colors)
+	{
+		if (type != Type.VEC4)
+			throw (new System.Exception());
+
+		byteOffset = bufferView.currentOffset;
+
+		count = colors.Length;
+		if (count > 0)
+		{
+			InitMinMaxFloat();
+			for (int i = 0; i < colors.Length; i++)
+			{
+				bufferView.Populate(colors[i].r);
+				bufferView.Populate(colors[i].g);
+				bufferView.Populate(colors[i].b);
+				bufferView.Populate(colors[i].a);
+				minFloat.x = Mathf.Min(colors[i].r, minFloat.x);
+				minFloat.y = Mathf.Min(colors[i].g, minFloat.y);
+				minFloat.z = Mathf.Min(colors[i].b, minFloat.z);
+				minFloat.w = Mathf.Min(colors[i].a, minFloat.w);
+				maxFloat.x = Mathf.Max(colors[i].r, maxFloat.x);
+				maxFloat.y = Mathf.Max(colors[i].g, maxFloat.y);
+				maxFloat.z = Mathf.Max(colors[i].b, maxFloat.z);
+				maxFloat.w = Mathf.Max(colors[i].a, maxFloat.w);
+			}
+		}
+
+	}
+
 	public void Populate(Matrix4x4[] matrices, Transform m)
 	{
 		if (type != Type.MAT4)
@@ -236,8 +266,10 @@ public class GlTF_Accessor : GlTF_Writer {
 			for(int i = 0; i < matrices.Length; i++)
 			{
 				Matrix4x4 mat = matrices[i];
-				if (convertRightHanded)
-					convertMatrixLeftToRightHandedness(ref mat);
+
+				// This code is buggy, don't use it for now.
+				//if (convertRightHanded)
+				//	convertMatrixLeftToRightHandedness(ref mat);
 
 				for (int j = 0; j < 4; j++)
 				{
@@ -343,7 +375,7 @@ public class GlTF_Accessor : GlTF_Writer {
 
 	public override void Write ()
 	{
-		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
+		Indent();		jsonWriter.Write ("\"" + id + "\": {\n");
 		IndentIn();
 		Indent();		jsonWriter.Write ("\"bufferView\": \"" + bufferView.name+"\",\n");
 		Indent();		jsonWriter.Write ("\"byteOffset\": " + byteOffset + ",\n");

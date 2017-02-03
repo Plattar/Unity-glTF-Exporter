@@ -19,10 +19,7 @@ public class GlTF_Skin : GlTF_Writer {
 
 	public void setBindShapeMatrix(Transform mesh)
 	{
-		Matrix4x4 mat = mesh.worldToLocalMatrix;
-		if (mesh.parent)
-			mat = mat * mesh.parent.localToWorldMatrix;
-
+		Matrix4x4 mat = Matrix4x4.identity;
 		bindShapeMatrix = new GlTF_Matrix(mat);
 		bindShapeMatrix.name = "bindShapeMatrix";
 	}
@@ -38,8 +35,22 @@ public class GlTF_Skin : GlTF_Writer {
 		// In this case we also make this matrix relative to the root
 		// So that we can move the root game object around freely
 		Mesh mesh = skinMesh.sharedMesh;
-		invBindMatricesAccessor.Populate(mesh.bindposes, m);
-		invBindMatricesAccessorName = invBindMatricesAccessor.name;
+		Matrix4x4[] invBindMatrices = new Matrix4x4[skinMesh.sharedMesh.bindposes.Length];
+
+		for(int i=0;i<invBindMatrices.Length;++i)
+		{
+			// Generates inverseWorldMatrix in right-handed coordinate system
+			// Manually converts world translation and rotation from left to right handed coordinates systems
+			Vector3 pos = skinMesh.bones[i].position;
+			Quaternion rot = skinMesh.bones[i].rotation;
+			convertQuatLeftToRightHandedness(ref rot);
+			convertVector3LeftToRightHandedness(ref pos);
+
+			invBindMatrices[i] = Matrix4x4.TRS(pos, rot, skinMesh.bones[i].lossyScale).inverse * sceneRootMatrix.inverse;
+		}
+
+		invBindMatricesAccessor.Populate(invBindMatrices, m);
+		invBindMatricesAccessorName = invBindMatricesAccessor.id;
 
 		// Fill jointNames
 		jointNames = new string[skinMesh.bones.Length];
@@ -47,6 +58,44 @@ public class GlTF_Skin : GlTF_Writer {
 		{
 			jointNames[i] = GlTF_Node.GetNameFromObject(skinMesh.bones[i]);
 		}
+	}
+
+	public static List<string> findRootSkeletons(SkinnedMeshRenderer skin)
+	{
+		List<string> skeletons = new List<string>();
+		List<Transform> tbones = new List<Transform>();
+		// Get bones
+		foreach (Transform bone in skin.bones)
+		{
+			tbones.Add(bone);
+		}
+		Debug.Log("Nb bones " + tbones.Count);
+		List<Transform> haveBParents = new List<Transform>();
+		// Check and list bones that have parents that are bon in this skin
+		foreach (Transform b in tbones)
+		{
+			Transform temp = b.parent;
+			while (temp.parent)
+			{
+				if (tbones.Contains(temp))
+				{
+					haveBParents.Add(b);
+					break;
+				}
+				temp = temp.parent;
+			}
+		}
+
+		Debug.Log("Bones having parents " + haveBParents.Count);
+		// Remove bones having parents from the list
+		foreach (Transform b in haveBParents)
+		{
+			tbones.Remove(b);
+		}
+		foreach (Transform t in tbones)
+			skeletons.Add(GlTF_Node.GetNameFromObject(t));
+
+		return skeletons;
 	}
 
 	public override void Write ()

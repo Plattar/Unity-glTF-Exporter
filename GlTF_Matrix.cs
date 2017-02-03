@@ -3,7 +3,7 @@ using System.Collections;
 
 public class GlTF_Matrix : GlTF_FloatArray {
 	public GlTF_Matrix() { name = "matrix"; minItems = 16; maxItems = 16; items = new float[] { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f }; }
-	public GlTF_Matrix(Matrix4x4 m)
+	public GlTF_Matrix(Matrix4x4 m, bool convertLeftRight=true)
 	{
 		name = "matrix";
 		minItems = 16;
@@ -11,7 +11,7 @@ public class GlTF_Matrix : GlTF_FloatArray {
 
 		// unity: m[row][col]
 		// gltf: column major
-		if(convertRightHanded)
+		if(convertRightHanded && convertLeftRight)
 			convertMatrixLeftToRightHandedness(ref m);
 
 		items = new float[] {

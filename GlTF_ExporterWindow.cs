@@ -20,6 +20,7 @@ public class GlTFExporterWindow : EditorWindow
 	SceneToGlTFWiz exporter;
 	bool buildZip=true;
 	bool convertImages = false;
+	bool exportAnimation = true;
 
 	//EditorPrefs.SetString(KEY_PATH, savedPath);
 	//EditorPrefs.SetString(KEY_FILE, savedFile);
@@ -49,6 +50,7 @@ public class GlTFExporterWindow : EditorWindow
 
 		// Force animation baking for now
 		GlTF_Writer.bakeAnimation = GUILayout.Toggle(true, "Bake animations (forced for now)");
+		exportAnimation = GUILayout.Toggle(exportAnimation, "Export animations");
 		convertImages = GUILayout.Toggle(convertImages, "Convert images");
 		presetAsset = EditorGUILayout.ObjectField("Preset file", presetAsset, typeof(UnityEngine.TextAsset), false) as UnityEngine.TextAsset;
 		if (!exporterGo)
@@ -89,7 +91,7 @@ public class GlTFExporterWindow : EditorWindow
 					preset.Load(psPath);
 				}
 			}
-			exporter.ExportCoroutine(path, preset, buildZip, true, convertImages);
+			exporter.ExportCoroutine(path, preset, buildZip, true, exportAnimation, convertImages);
 		}
 	}
 }
