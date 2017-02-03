@@ -852,19 +852,30 @@ public class SceneToGlTFWiz : MonoBehaviour
 	{
 		Shader s = mat.shader;
 		int spCount2 = ShaderUtil.GetPropertyCount(s);
-		if(!mat.shader.name.Contains("Standard"))
-		{
-			Debug.Log("Material is not supported");
-			return;
-		}
-		// Is metal workflow used
-		bool isMetal = mat.shader.name == "Standard";
-		material.materialModel = isMetal? "PBR_metal_roughness" : "PBR_specular_glossiness";
+		Dictionary<string, string> workflowChannelMap = UnityToPBRMetalChannel;
+		bool isMaterialPBR = true;
+		bool hasPBRMap = false;
+		bool usePBRTextureAlpha = false;
+		bool isMetal = true;
 
-		// Is smoothness is defined by diffuse/albedo alpha or metal/specular texture alpha
-		bool usePBRTextureAlpha = mat.GetFloat("_SmoothnessTextureChannel") == 0;
-		Dictionary<string, string> workflowChannelMap = isMetal ? UnityToPBRMetalChannel : UnityToPBRSpecularChannel;
-		bool hasPBRMap = (!isMetal && mat.GetTexture("_SpecGlossMap") != null || isMetal && mat.GetTexture("_MetallicGlossMap") != null);
+		if (!mat.shader.name.Contains("Standard"))
+		{
+			Debug.Log("Material " + mat.shader + " is not fully supported");
+			isMaterialPBR = false;
+		}
+
+		if (isMaterialPBR)
+		{
+			// Is metal workflow used
+			isMetal = mat.shader.name == "Standard";
+			material.materialModel = isMetal ? "PBR_metal_roughness" : "PBR_specular_glossiness";
+
+			// Is smoothness is defined by diffuse/albedo alpha or metal/specular texture alpha
+			usePBRTextureAlpha = mat.GetFloat("_SmoothnessTextureChannel") == 0;
+			workflowChannelMap = isMetal ? UnityToPBRMetalChannel : UnityToPBRSpecularChannel;
+			hasPBRMap = (!isMetal && mat.GetTexture("_SpecGlossMap") != null || isMetal && mat.GetTexture("_MetallicGlossMap") != null);
+		}
+
 		for (var j = 0; j < spCount2; ++j)
 		{
 			var pName = ShaderUtil.GetPropertyName(s, j);
@@ -914,7 +925,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 						// These textures need split
 						// FIXME: Should check and avoid to split two times the same textures
-						if (usePBRTextureAlpha && ((pName.CompareTo("_SpecGlossMap") == 0 || pName.CompareTo("_MetallicGlossMap") == 0)) || !usePBRTextureAlpha && pName.CompareTo("_MainTex") == 0)
+						if (isMaterialPBR && usePBRTextureAlpha && (((pName.CompareTo("_SpecGlossMap") == 0 || pName.CompareTo("_MetallicGlossMap") == 0)) || !usePBRTextureAlpha && pName.CompareTo("_MainTex") == 0))
 						{
 							// Split PBR texture into two textures (RGB => metal/specular and A => roughness)
 							// Output two textures and two images
@@ -987,7 +998,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 							}
 
 							// Handle transparency
-							if (pName.CompareTo("_MainTex") == 0 && mat.GetFloat("_Mode") != 0)
+							if (pName.CompareTo("_MainTex") == 0 && mat.HasProperty("_Mode") && mat.GetFloat("_Mode") != 0)
 							{
 								string mode = mat.GetFloat("_Mode") == 1 ? "alphaMask" : "alphaBlend";
 								material.extraString.Add("blendMode", mode);
