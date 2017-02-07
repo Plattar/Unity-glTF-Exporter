@@ -24,7 +24,7 @@ public class GlTFExporterWindow : EditorWindow
 
 	//EditorPrefs.SetString(KEY_PATH, savedPath);
 	//EditorPrefs.SetString(KEY_FILE, savedFile);
-	[MenuItem("Tools/Export to glTF")]
+	//[MenuItem("Tools/Export to glTF")]
 	static void CreateWizard()
 	{
 		savedPath = EditorPrefs.GetString(KEY_PATH, "/");

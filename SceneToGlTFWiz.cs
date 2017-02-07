@@ -517,7 +517,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 					Matrix4x4 correction = Matrix4x4.TRS(tr.localPosition, tr.localRotation, tr.lossyScale).inverse * Matrix4x4.TRS(tr.localPosition, tr.localRotation, Vector3.one);
 					if(!correction.isIdentity)
 					{
-						Debug.Log(correction);
 						Vector3[] verts = baked.vertices;
 						Vector3[] norms = baked.normals;
 						Vector4[] tangents = baked.tangents;
