@@ -82,7 +82,7 @@ public class GlTF_Animation : GlTF_Writer {
 				channels.Add(chScale);
 
 				// Bake and populate animation data
-				parameters.bakeAndPopulate(c, bakingFramerate, targetId, targetPath, tr);
+				parameters.bakeAndPopulate(c, bakingFramerate, targetId, targetPath, targetObject);
 			}
 			if(channels.Count == 0)
 			{
