@@ -20,6 +20,7 @@ public enum IMAGETYPE
 	GRAYSCALE,
 	RGB,
 	RGBA,
+	RGBA_OPAQUE,
 	RG, // Metal/Roughness texture
 	NORMAL_MAP,
 	IGNORE
@@ -1053,10 +1054,12 @@ public class SceneToGlTFWiz : MonoBehaviour
 							{
 								val.name = currentDict[pName];
 							}
-
-							if (doConvertImages && pName.CompareTo("_MainTex") == 0 && mat.HasProperty("_Mode") && mat.GetFloat("_Mode") != 0)
+							if (doConvertImages && pName.CompareTo("_MainTex") == 0)
 							{
-								format = IMAGETYPE.RGBA;
+								if (mat.HasProperty("_Mode") && mat.GetFloat("_Mode") != 0)
+									format = IMAGETYPE.RGBA;
+								else
+									format = IMAGETYPE.RGBA_OPAQUE;
 							}
 
 							if (pName.CompareTo("_MetallicGlossMap") == 0)
@@ -1306,6 +1309,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 				else
 				{
 					newTextureColors[i * width + j] = textureColors[(height - i - 1) * width + j];
+					if (format == IMAGETYPE.RGBA_OPAQUE)
+						newTextureColors[i * width + j].a = 1.0f;
 				}
 			}
 		}
