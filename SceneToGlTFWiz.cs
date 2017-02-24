@@ -1013,14 +1013,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 								if(ext == ".psd")
 									format = IMAGETYPE.RGB;
 							}
-
-							// Handle transparency
-							if (pName.CompareTo("_MainTex") == 0 && mat.HasProperty("_Mode") && mat.GetFloat("_Mode") != 0)
-							{
-								if(doConvertImages)
-									format = IMAGETYPE.RGBA;
-							}
 							var val = new GlTF_Material.IntValue();
+
 							if (isBumpTexture)
 							{
 								TextureImporter im = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(t)) as TextureImporter;
@@ -1032,6 +1026,13 @@ public class SceneToGlTFWiz : MonoBehaviour
 								val.name = workflowChannelMap[pName];
 							}
 
+							// Handle transparency
+							if (pName.CompareTo("_MainTex") == 0 && mat.HasProperty("_Mode") && mat.GetFloat("_Mode") != 0)
+							{
+								val.name = "opacityTexture";
+								if (doConvertImages)
+									format = IMAGETYPE.RGBA;
+							}
 
 							if (!GlTF_Writer.textureNames.Contains(texName) && AssetDatabase.GetAssetPath(t).Length > 0)
 							{
