@@ -489,22 +489,22 @@ public class GlTF_Writer {
 			Indent();			jsonWriter.Write ("]");
 		}
 
-		if (programs != null && programs.Count > 0)
-		{
-			CommaNL();
-			Indent();
-			jsonWriter.Write ("\"programs\": [\n");
-			IndentIn();
-			foreach (var p in programs)
-			{
-				CommaNL();
-				p.Write();
-			}
-			jsonWriter.WriteLine();
-			IndentOut();
-			Indent();
-			jsonWriter.Write ("]");
-		}
+		//if (programs != null && programs.Count > 0)
+		//{
+		//	CommaNL();
+		//	Indent();
+		//	jsonWriter.Write ("\"programs\": [\n");
+		//	IndentIn();
+		//	foreach (var p in programs)
+		//	{
+		//		CommaNL();
+		//		p.Write();
+		//	}
+		//	jsonWriter.WriteLine();
+		//	IndentOut();
+		//	Indent();
+		//	jsonWriter.Write ("]");
+		//}
 
 		if (samplers.Count > 0)
 		{
