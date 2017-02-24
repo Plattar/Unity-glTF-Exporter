@@ -348,7 +348,6 @@ public class GlTF_Writer {
 			Indent();	jsonWriter.Write ("{\n");
 			IndentIn();
 			Indent();	jsonWriter.Write ("\"byteLength\": "+ (mat4BufferView.byteOffset+ mat4BufferView.byteLength)+",\n");
-			Indent();	jsonWriter.Write ("\"type\": \"arraybuffer\",\n");
 			Indent();	jsonWriter.Write ("\"uri\": \"" + GlTF_Writer.binFileName + "\"\n");
 
 			IndentOut();
