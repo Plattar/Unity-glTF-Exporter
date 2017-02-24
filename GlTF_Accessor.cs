@@ -11,8 +11,12 @@ public class GlTF_Accessor : GlTF_Writer {
 	}
 
 	public enum ComponentType {
+		BYTE = 5120,
+		UNSIGNED_BYTE = 5121,
+		SHORT = 5122,
 		USHORT = 5123,
-		FLOAT = 5126
+		UNSIGNED_INT = 5125,
+		FLOAT = 5126,
 	}
 
 	public GlTF_BufferView bufferView;//	"bufferView": "bufferView_30",
