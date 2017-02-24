@@ -87,11 +87,8 @@ public class GlTF_Material : GlTF_Writer {
 	}
 
 	public int instanceTechniqueIndex;
-	public GlTF_ColorOrTexture ambient;// = new GlTF_ColorRGBA ("ambient");
-	public GlTF_ColorOrTexture diffuse;
-	public string materialModel = "PBR_metal_roughness";
+	public bool isMetal = false;
 	public float shininess;
-	public GlTF_ColorOrTexture specular;// = new GlTF_ColorRGBA ("specular");
 	public List<Value> values = new List<Value>();
 
 	public static string GetNameFromObject(Object o)
@@ -107,14 +104,18 @@ public class GlTF_Material : GlTF_Writer {
 		//Indent();		jsonWriter.Write ("\"technique\": \"" + instanceTechniqueName + "\",\n");
 		//Indent();		jsonWriter.Write ("\"values\": {\n");
 		//IndentIn();
-
+		string materialModel = isMetal ? "METAL_ROUGHNESS" : "SPECULAR_GLOSSINESS";
 		Indent(); jsonWriter.Write("{\n");
 		IndentIn();
 		//Indent();		jsonWriter.Write ("\"technique\": \"" + instanceTechniqueName + "\",\n");
-		Indent(); jsonWriter.Write("\"extensions\": {\n");
-		IndentIn();
-		Indent(); jsonWriter.Write("\"FRAUNHOFER_materials_pbr\": {\n");
-		IndentIn();
+		if (!isMetal)
+		{
+			Indent(); jsonWriter.Write("\"extensions\": {\n");
+			IndentIn();
+
+			Indent(); jsonWriter.Write("\"FRAUNHOFER_materials_pbr\": {\n");
+			IndentIn();
+		}
 
 		writeExtras();
 
@@ -128,12 +129,17 @@ public class GlTF_Material : GlTF_Writer {
 		}
 
 		jsonWriter.Write ("\n");
-		IndentOut();
-		Indent(); jsonWriter.Write ("}");
-		jsonWriter.Write("\n");
-		IndentOut();
-		Indent(); jsonWriter.Write("}");
-		jsonWriter.Write("\n");
+
+		if (!isMetal)
+		{
+			IndentOut();
+			Indent(); jsonWriter.Write("}");
+			jsonWriter.Write("\n");
+			IndentOut();
+			Indent(); jsonWriter.Write("}");
+			jsonWriter.Write("\n");
+		}
+
 		IndentOut();
 		Indent(); jsonWriter.Write("},\n");
 		CommaNL();

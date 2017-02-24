@@ -368,7 +368,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 						{
 							GlTF_Material material = new GlTF_Material();
 							material.name = mat.name;
-							material.diffuse = new GlTF_MaterialColor ("diffuse", mat.color);
 							GlTF_Writer.materialNames.Add(matName);
 							GlTF_Writer.materials.Add (material);
 
@@ -875,7 +874,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		{
 			// Is metal workflow used
 			isMetal = mat.shader.name == "Standard";
-			material.materialModel = isMetal ? "PBR_metal_roughness" : "PBR_specular_glossiness";
+			material.isMetal = isMetal;
 
 			// Is smoothness is defined by diffuse/albedo alpha or metal/specular texture alpha
 			usePBRTextureAlpha = mat.GetFloat("_SmoothnessTextureChannel") == 0;
