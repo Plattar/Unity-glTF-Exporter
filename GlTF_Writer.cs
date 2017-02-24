@@ -53,6 +53,7 @@ public class GlTF_Writer {
 	// Exporter specifics
 	public static bool bakeAnimation;
 	public static bool exportPBRMaterials;
+	public static bool hasSpecularMaterials = false;
 	public static bool convertRightHanded = true;
 	public static string exporterVersion = "1.0.0";
 
@@ -159,6 +160,7 @@ public class GlTF_Writer {
 		rootNodes = new List<GlTF_Node>();
 
 		bakeAnimation = true;
+		hasSpecularMaterials = false;
 	}
 
 	public void Indent() {
@@ -406,10 +408,23 @@ public class GlTF_Writer {
 			Indent();		jsonWriter.Write ("]");
 		}
 
+		if(hasSpecularMaterials)
+		{
+			CommaNL();
+			Indent(); jsonWriter.Write("\"extensionsRequired\": [\n");
+			IndentIn();
+			Indent(); jsonWriter.Write("\"KHR_materials_pbrSpecularGlossiness\"\n");
+			IndentOut();
+			Indent(); jsonWriter.Write("]");
+		}
+
 		CommaNL();
 		Indent(); jsonWriter.Write("\"extensionsUsed\": [\n");
 		IndentIn();
-		Indent(); jsonWriter.Write("\"FRAUNHOFER_materials_pbr\"\n");
+		if (hasSpecularMaterials)
+		{
+			Indent(); jsonWriter.Write("\"KHR_materials_pbrSpecularGlossiness\"\n");
+		}
 		if (binary)
 		{
 			Indent(); jsonWriter.Write("\"KHR_binary_glTF\"\n");

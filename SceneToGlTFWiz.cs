@@ -28,46 +28,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 {
 	public int jpgQuality = 92;
 
-	public static Dictionary<string, string> UnityToPBRMetalChannel = new Dictionary<string, string>
-	{
-		{"_MainTex", "baseColorTexture" },
-		{ "_MetallicGlossMap", "metallicTexture" },
-		{"_BumpMap","normalTexture" },
-		{"_OcclusionMap","aoTexture" },
-		{"_EmissionMap", "emissiveTexture" },
-
-		// Colors
-		{"_Color","baseColorFactor" },
-		{"_EmissionColor","emissiveFactor" },
-
-		// Factors
-		{"_Metallic", "metallicFactor" },
-		{"_GlossMapScale", "roughnessFactor" },
-		{"_Glossiness", "roughnessFactor" },
-		{"_BumpScale", "normalFactor" },
-		{"_OcclusionStrength", "aoFactor" }
-	};
-
-	public static Dictionary<string, string> UnityToPBRSpecularChannel = new Dictionary<string, string>
-	{
-		{"_MainTex", "diffuseTexture" },
-		{"_SpecGlossMap", "specularTexture" },
-		{"_BumpMap","normalTexture" },
-		{"_OcclusionMap","aoTexture" },
-		{"_EmissionMap", "emissiveTexture" },
-
-		// Colors
-		{"_Color","diffuseFactor" },
-		{"_SpecColor", "specularFactor" },
-		{"_EmissionColor","emissiveFactor" },
-
-		// Factors
-		{"_GlossMapScale", "glossinessFactor" },
-		{"_Glossiness", "glossinessFactor" },
-		{"_BumpScale", "normalFactor" },
-		{"_OcclusionStrength", "aoFactor" }
-	};
-
 	public GlTF_Writer writer;
 	string savedPath = "";
 	bool exportPBRMaterials = true;
@@ -149,7 +109,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		}
 	}
 
-	public void ExportCoroutine(string path, Preset presetAsset, bool buildZip, bool exportPBRMaterials, bool exportAnimation = true, bool doConvertImages = false)
+	public void ExportCoroutine(string path, Preset presetAsset, bool buildZip, bool exportPBRMaterials, bool exportAnimation = true, bool doConvertImages = true)
 	{
 		StartCoroutine(Export(path, presetAsset, buildZip, exportPBRMaterials, exportAnimation, doConvertImages));
 	}
@@ -175,6 +135,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		writer.Init ();
 		done = false;
 		bool debugRightHandedScale = false;
+		bool splitTextures = false;
 		GlTF_Writer.exportedFiles.Clear();
 		if (debugRightHandedScale)
 			GlTF_Writer.convertRightHanded = false;
@@ -463,7 +424,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 								// Populate technique with shader data
 								GlTF_Writer.techniqueNames.Add (techName);
 								GlTF_Writer.techniques.Add (tech);
-								populateTechniqueFromShader(s, tech);
 
 								// create program
 								GlTF_Program program = new GlTF_Program();
@@ -493,7 +453,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 							}
 
-							unityToPBRMaterial(mat, ref material, doConvertImages);
+							unityToPBRMaterial(mat, ref material, doConvertImages, splitTextures);
 							// Handle lightmap
 							if(parseLightmaps && hasLightmap)
 							{
@@ -855,11 +815,42 @@ public class SceneToGlTFWiz : MonoBehaviour
 	}
 
 	// Convert unity Material to glTF PBR Material
-	private void unityToPBRMaterial(Material mat, ref GlTF_Material material, bool doConvertImages = false)
+	private void unityToPBRMaterial(Material mat, ref GlTF_Material material, bool doConvertImages = false, bool splitTextures=false)
 	{
+		Dictionary<string, string> UnityToGltfPBRMetalChannels= new Dictionary<string, string>
+		{
+			{"_MainTex", "baseColorTexture" },
+			{"_Color","baseColorFactor" },
+			{"_MetallicGlossMap", "metallicRoughnessTexture" },
+			{"_Metallic", "metallicFactor" },
+			{"_GlossMapScale", "roughnessFactor" }, // Smoothness factor is given by glossMapScale if there is a MetalGloss/SpecGloss texture, glossiness otherwise
+			{"_Glossiness", "roughnessFactor" },
+		};
+
+		Dictionary<string, string> UnityToGltfPBRSpecularChannels = new Dictionary<string, string>
+		{
+			{"_MainTex", "diffuseTexture" },
+			{"_SpecGlossMap", "specularGlossinessTexture" },
+			{"_Color","diffuseFactor" },
+			{"_SpecColor", "specularFactor" },
+			{"_GlossMapScale", "glossinessFactor" },
+			{"_Glossiness", "glossinessFactor" }, // Smoothness factor is given by glossMapScale if there is a MetalGloss/SpecGloss texture, glossiness otherwise
+		};
+
+		Dictionary<string, string> UnityToGltfAdditionalChannels = new Dictionary<string, string>
+		{
+			{"_BumpMap","normalTexture" },
+			{"_BumpScale", "normalFactor" },
+			{"_OcclusionMap","occlusionTexture" },
+			{"_OcclusionStrength", "occlusionFactor" },
+			{"_EmissionMap", "emissiveTexture" },
+			{"_EmissionColor","emissiveFactor" }
+		};
+
+
 		Shader s = mat.shader;
 		int spCount2 = ShaderUtil.GetPropertyCount(s);
-		Dictionary<string, string> workflowChannelMap = UnityToPBRMetalChannel;
+		Dictionary<string, string> workflowChannelMap = UnityToGltfPBRMetalChannels;
 		bool isMaterialPBR = true;
 		bool hasPBRMap = false;
 		bool usePBRTextureAlpha = false;
@@ -882,52 +873,87 @@ public class SceneToGlTFWiz : MonoBehaviour
 		{
 			// Is metal workflow used
 			isMetal = mat.shader.name == "Standard";
+			GlTF_Writer.hasSpecularMaterials = GlTF_Writer.hasSpecularMaterials || !isMetal;
 			material.isMetal = isMetal;
 
 			// Is smoothness is defined by diffuse/albedo alpha or metal/specular texture alpha
 			usePBRTextureAlpha = mat.GetFloat("_SmoothnessTextureChannel") == 0;
-			workflowChannelMap = isMetal ? UnityToPBRMetalChannel : UnityToPBRSpecularChannel;
+			workflowChannelMap = isMetal ? UnityToGltfPBRMetalChannels : UnityToGltfPBRSpecularChannels;
 			hasPBRMap = (!isMetal && mat.GetTexture("_SpecGlossMap") != null || isMetal && mat.GetTexture("_MetallicGlossMap") != null);
 		}
 
+		Dictionary<string, string> currentDict;
+		bool isPBRChannel = false;
+		string gltfPName;
 		for (var j = 0; j < spCount2; ++j)
 		{
 			var pName = ShaderUtil.GetPropertyName(s, j);
 			var pType = ShaderUtil.GetPropertyType(s, j);
+
+			if(workflowChannelMap.ContainsKey(pName))
+			{
+				isPBRChannel = true;
+				currentDict = workflowChannelMap;
+				gltfPName = workflowChannelMap[pName];
+			}
+			else if(UnityToGltfAdditionalChannels.ContainsKey(pName))
+			{
+				isPBRChannel = false;
+				currentDict = UnityToGltfAdditionalChannels;
+				gltfPName = UnityToGltfAdditionalChannels[pName];
+			}
+			else
+			{
+				//Unknown or unsupported value
+				continue;
+			}
+
 			// Smoothness factor is given by glossMapScale if there is a MetalGloss/SpecGloss texture, glossiness otherwise
 			if (pName == "_Glossiness" && hasPBRMap || pName == "_GlossMapScale" && !hasPBRMap)
 				continue;
 
-			if (pType == ShaderUtil.ShaderPropertyType.Color && workflowChannelMap.ContainsKey(pName))
+			if (pType == ShaderUtil.ShaderPropertyType.Color)
 			{
 				var matCol = new GlTF_Material.ColorValue();
-				matCol.name = workflowChannelMap[pName];
+				matCol.name = gltfPName;
 				matCol.color = mat.GetColor(pName);
 				//FIXME: Unity doesn't use albedo color when there is no specular texture
 				if (pName.CompareTo("_SpecColor") == 0)
 				{
 					matCol.color.a = 1.0f;
 				}
+				if (isPBRChannel)
+					material.pbrValues.Add(matCol);
+				else
+					material.values.Add(matCol);
 
-				material.values.Add(matCol);
 			}
-			else if (pType == ShaderUtil.ShaderPropertyType.Vector && workflowChannelMap.ContainsKey(pName))
+			else if (pType == ShaderUtil.ShaderPropertyType.Vector)
 			{
 				var matVec = new GlTF_Material.VectorValue();
-				matVec.name = workflowChannelMap[pName];
+				matVec.name = gltfPName;
 				matVec.vector = mat.GetVector(pName);
-				material.values.Add(matVec);
+				if(isPBRChannel)
+					material.pbrValues.Add(matVec);
+				else
+					material.values.Add(matVec);
+
 			}
-			else if ((pType == ShaderUtil.ShaderPropertyType.Float ||
-				pType == ShaderUtil.ShaderPropertyType.Range) && workflowChannelMap.ContainsKey(pName))
+			else if (pType == ShaderUtil.ShaderPropertyType.Float || pType == ShaderUtil.ShaderPropertyType.Range)
 			{
 				var matFloat = new GlTF_Material.FloatValue();
-				matFloat.name = workflowChannelMap[pName];
+				matFloat.name = gltfPName;
 				matFloat.value = mat.GetFloat(pName);
-				if (isMetal && (pName.CompareTo("_GlossMapScale") == 0 || pName.CompareTo("_Glossiness") == 0)) matFloat.value = 1 - matFloat.value;
-				material.values.Add(matFloat);
+				// Roughness = 1 - smoothness
+				if (isMetal && (pName.CompareTo("_GlossMapScale") == 0 || pName.CompareTo("_Glossiness") == 0))
+					matFloat.value = 1 - matFloat.value;
+				if (isPBRChannel)
+					material.pbrValues.Add(matFloat);
+				else
+					material.values.Add(matFloat);
+
 			}
-			else if (pType == ShaderUtil.ShaderPropertyType.TexEnv && workflowChannelMap.ContainsKey(pName))
+			else if (pType == ShaderUtil.ShaderPropertyType.TexEnv && (workflowChannelMap.ContainsKey(pName) || UnityToGltfAdditionalChannels.ContainsKey(pName)))
 			{
 				var td = ShaderUtil.GetTexDim(s, j);
 				if (td == UnityEngine.Rendering.TextureDimension.Tex2D)
@@ -941,7 +967,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 						// FIXME: Should check and avoid to split two times the same textures
 
 						//FIXME: two samplers are generated here. Should only have one
-						if (isMaterialPBR && usePBRTextureAlpha && (((pName.CompareTo("_SpecGlossMap") == 0 || pName.CompareTo("_MetallicGlossMap") == 0)) || !usePBRTextureAlpha && pName.CompareTo("_MainTex") == 0))
+						if (splitTextures && (isMaterialPBR && usePBRTextureAlpha && (((pName.CompareTo("_SpecGlossMap") == 0 || pName.CompareTo("_MetallicGlossMap") == 0)) || !usePBRTextureAlpha && pName.CompareTo("_MainTex") == 0)))
 						{
 							// Split PBR texture into two textures (RGB => metal/specular and A => roughness)
 							// Output two textures and two images
@@ -950,7 +976,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 							GlTF_Texture roughnessTex = outputs[1].Key;
 							GlTF_Image pbrImg = outputs[0].Value;
 							GlTF_Image roughnessImage = outputs[1].Value;
-
 
 							// Both images use the same sampler
 							GlTF_Sampler sampler;
@@ -986,17 +1011,19 @@ public class SceneToGlTFWiz : MonoBehaviour
 								GlTF_Writer.images.Add(roughnessImage);
 							}
 
-							var valPBR = new GlTF_Material.IntValue();
-							valPBR.name = workflowChannelMap[pName];
-							valPBR.value = GlTF_Writer.textureNames.IndexOf(pbrTex.name);
+							var valPBR = new GlTF_Material.DictValue();
+							valPBR.name = isMetal ? "metallicTexture" : "specularTexture";
+							valPBR.intValue.Add("index", GlTF_Writer.textureNames.IndexOf(pbrTex.name));
+							valPBR.intValue.Add("texCoord", 0);
 
-							var valRoughness = new GlTF_Material.IntValue();
+							var valRoughness = new GlTF_Material.DictValue();
 							valRoughness.name = isMetal ? "roughnessTexture" : "glossinessTexture";
-							valRoughness.value = GlTF_Writer.textureNames.IndexOf(roughnessTex.name);
+							valRoughness.intValue.Add("index", GlTF_Writer.textureNames.IndexOf(roughnessTex.name));
+							valRoughness.intValue.Add("texCoord", 0);
 
 							// Add images to the collection
-							material.values.Add(valPBR);
-							material.values.Add(valRoughness);
+							material.pbrValues.Add(valPBR);
+							material.pbrValues.Add(valRoughness);
 						}
 						else
 						{
@@ -1013,7 +1040,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 								if(ext == ".psd")
 									format = IMAGETYPE.RGB;
 							}
-							var val = new GlTF_Material.IntValue();
+							var val = new GlTF_Material.DictValue();
 
 							if (isBumpTexture)
 							{
@@ -1023,7 +1050,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 							}
 							else
 							{
-								val.name = workflowChannelMap[pName];
+								val.name = currentDict[pName];
 							}
 
 							// Handle transparency
@@ -1068,15 +1095,24 @@ public class SceneToGlTFWiz : MonoBehaviour
 								if(pName.CompareTo("_BumpMap") == 0 && !isBumpMap)
 									texture.extraBool.Add("yUp", true);
 
-								val.value = GlTF_Writer.textures.Count;
-								material.values.Add(val);
+								val.intValue.Add("index", GlTF_Writer.textures.Count);
+								val.intValue.Add("texCoord", 0);
+								if(isPBRChannel)
+									material.pbrValues.Add(val);
+								else
+									material.values.Add(val);
+
 								GlTF_Writer.textures.Add(texture);
 								GlTF_Writer.textureNames.Add(texName);
 							}
 							else
 							{
-								val.value = GlTF_Writer.textureNames.IndexOf(texName);
-								material.values.Add(val);
+								val.intValue.Add("index", GlTF_Writer.textureNames.IndexOf(texName));
+								val.intValue.Add("texCoord", 0);
+								if (isPBRChannel)
+									material.pbrValues.Add(val);
+								else
+									material.values.Add(val);
 							}
 
 							if (AssetDatabase.GetAssetPath(t).Length == 0)
@@ -1167,71 +1203,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 		outputs.Add(new KeyValuePair<GlTF_Texture, GlTF_Image>(roughnessTex, roughnessImg));
 
 		return outputs;
-	}
-
-	void populateTechniqueFromShader(Shader s, GlTF_Technique tech)
-	{
-		GlTF_Technique.Parameter tParam;
-		int spCount = ShaderUtil.GetPropertyCount(s);
-		bool isMetal = s.name == "Standard";
-		Dictionary<string, string> workflowChannelMap = isMetal ? UnityToPBRMetalChannel : UnityToPBRSpecularChannel;
-
-		for (var j = 0; j < spCount; ++j)
-		{
-			var pName = ShaderUtil.GetPropertyName(s, j);
-			var pType = ShaderUtil.GetPropertyType(s, j);
-
-			GlTF_Technique.Uniform tUni;
-			if (pType == ShaderUtil.ShaderPropertyType.Color && exportPBRMaterials == workflowChannelMap.ContainsKey(pName))
-			{
-				tParam = new GlTF_Technique.Parameter();
-				tParam.name = workflowChannelMap[pName];
-				tParam.type = GlTF_Technique.Type.FLOAT_VEC4;
-				tech.parameters.Add(tParam);
-				tUni = new GlTF_Technique.Uniform();
-				tUni.name = pName;
-				tUni.param = tParam.name;
-				tech.uniforms.Add(tUni);
-			}
-			else if (pType == ShaderUtil.ShaderPropertyType.Vector && exportPBRMaterials == workflowChannelMap.ContainsKey(pName))
-			{
-				tParam = new GlTF_Technique.Parameter();
-				tParam.name = workflowChannelMap[pName];
-				tParam.type = GlTF_Technique.Type.FLOAT_VEC4;
-				tech.parameters.Add(tParam);
-				tUni = new GlTF_Technique.Uniform();
-				tUni.name = pName;
-				tUni.param = tParam.name;
-				tech.uniforms.Add(tUni);
-			}
-			else if ((pType == ShaderUtil.ShaderPropertyType.Float ||
-				pType == ShaderUtil.ShaderPropertyType.Range) && exportPBRMaterials == workflowChannelMap.ContainsKey(pName))
-			{
-				tParam = new GlTF_Technique.Parameter();
-				tParam.name = workflowChannelMap[pName];
-				tParam.type = GlTF_Technique.Type.FLOAT;
-				tech.parameters.Add(tParam);
-				tUni = new GlTF_Technique.Uniform();
-				tUni.name = pName;
-				tUni.param = tParam.name;
-				tech.uniforms.Add(tUni);
-			}
-			else if (pType == ShaderUtil.ShaderPropertyType.TexEnv && exportPBRMaterials == workflowChannelMap.ContainsKey(pName))
-			{
-				var td = ShaderUtil.GetTexDim(s, j);
-				if (td == UnityEngine.Rendering.TextureDimension.Tex2D)
-				{
-					tParam = new GlTF_Technique.Parameter();
-					tParam.name = workflowChannelMap[pName];
-					tParam.type = GlTF_Technique.Type.SAMPLER_2D;
-					tech.parameters.Add(tParam);
-					tUni = new GlTF_Technique.Uniform();
-					tUni.name = pName;
-					tUni.param = tParam.name;
-					tech.uniforms.Add(tUni);
-				}
-			}
-		}
 	}
 
 	private void getPixelsFromTexture(ref Texture2D texture, out Color[] pixels)

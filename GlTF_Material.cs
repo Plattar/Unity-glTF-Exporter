@@ -34,7 +34,7 @@ public class GlTF_Material : GlTF_Writer {
 
 		public override void Write()
 		{
-			jsonWriter.Write ("\"" + name + "\": [" + value + "]");
+			jsonWriter.Write("\"" + name + "\": " + value);
 		}
 	}
 
@@ -44,7 +44,7 @@ public class GlTF_Material : GlTF_Writer {
 
 		public override void Write()
 		{
-			jsonWriter.Write("\"" + name + "\": [" + value + "]");
+			jsonWriter.Write("\"" + name + "\": " + value);
 		}
 	}
 
@@ -53,7 +53,7 @@ public class GlTF_Material : GlTF_Writer {
 
 		public override void Write()
 		{
-			jsonWriter.Write ("\"" + name + "\": [ " + value + " ]");
+			jsonWriter.Write ("\"" + name + "\": " + value);
 		}
 	}
 
@@ -68,21 +68,22 @@ public class GlTF_Material : GlTF_Writer {
 		}
 		public override void Write()
 		{
-			jsonWriter.Write("{\n");
+			jsonWriter.Write("\"" + name + "\" : {\n");
 			IndentIn();
 
 			foreach (string key in intValue.Keys)
 			{
 				CommaNL();
-				Indent();  jsonWriter.Write("\"" + key + "\" : [ " + intValue[key] + " ]");
+				Indent(); jsonWriter.Write("\"" + key + "\" : " + intValue[key]);
 			}
 			foreach (string key in stringValue.Keys)
 			{
 				CommaNL();
-				Indent(); jsonWriter.Write("\"" + key + "\" : [ " + stringValue[key] + " ]");
+				Indent(); jsonWriter.Write("\"" + key + "\" : " + stringValue[key]);
 			}
+			jsonWriter.Write("\n");
 			IndentOut();
-			jsonWriter.Write("}");
+			Indent(); jsonWriter.Write("}");
 		}
 	}
 
@@ -90,6 +91,7 @@ public class GlTF_Material : GlTF_Writer {
 	public bool isMetal = false;
 	public float shininess;
 	public List<Value> values = new List<Value>();
+	public List<Value> pbrValues = new List<Value>();
 
 	public static string GetNameFromObject(Object o)
 	{
@@ -98,50 +100,45 @@ public class GlTF_Material : GlTF_Writer {
 
 	public override void Write()
 	{
-		//Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
-		//IndentIn();
-		//CommaNL();
-		//Indent();		jsonWriter.Write ("\"technique\": \"" + instanceTechniqueName + "\",\n");
-		//Indent();		jsonWriter.Write ("\"values\": {\n");
-		//IndentIn();
-		string materialModel = isMetal ? "METAL_ROUGHNESS" : "SPECULAR_GLOSSINESS";
 		Indent(); jsonWriter.Write("{\n");
 		IndentIn();
-		//Indent();		jsonWriter.Write ("\"technique\": \"" + instanceTechniqueName + "\",\n");
-		if (!isMetal)
+		writeExtras();
+		if (isMetal)
+		{
+			Indent(); jsonWriter.Write("\"pbrMetallicRoughness\": {\n");
+		}
+		else
 		{
 			Indent(); jsonWriter.Write("\"extensions\": {\n");
 			IndentIn();
 
-			Indent(); jsonWriter.Write("\"FRAUNHOFER_materials_pbr\": {\n");
-			IndentIn();
+			Indent(); jsonWriter.Write("\"KHR_materials_pbrSpecularGlossiness\": {\n");
 		}
-
-		writeExtras();
-
-		Indent(); jsonWriter.Write("\"materialModel\": \"" + materialModel + "\",\n");
-		Indent(); jsonWriter.Write("\"values\": {\n");
 		IndentIn();
-		foreach (var v in values)
+		foreach (var v in pbrValues)
 		{
 			CommaNL();
-			Indent();	v.Write();
+			Indent(); v.Write();
 		}
-
-		jsonWriter.Write ("\n");
-
 		if (!isMetal)
 		{
 			IndentOut();
 			Indent(); jsonWriter.Write("}");
 			jsonWriter.Write("\n");
-			IndentOut();
-			Indent(); jsonWriter.Write("}");
-			jsonWriter.Write("\n");
 		}
 
+		jsonWriter.Write("\n");
 		IndentOut();
 		Indent(); jsonWriter.Write("},\n");
+
+		// write common values
+		foreach (var v in values)
+		{
+			CommaNL();
+			Indent(); v.Write();
+		}
+		jsonWriter.Write("\n");
+
 		CommaNL();
 		Indent();		jsonWriter.Write ("\"name\": \"" + name + "\"\n");
 		IndentOut();
