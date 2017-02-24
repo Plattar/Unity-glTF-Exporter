@@ -368,6 +368,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 						{
 							GlTF_Material material = new GlTF_Material();
 							material.name = mat.name;
+							primitive.materialIndex = GlTF_Writer.materials.Count;
 							GlTF_Writer.materialNames.Add(matName);
 							GlTF_Writer.materials.Add (material);
 
@@ -980,11 +981,11 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 							var valPBR = new GlTF_Material.IntValue();
 							valPBR.name = workflowChannelMap[pName];
-							valPBR.value = GlTF_Writer.textures.IndexOf(pbrTex);
+							valPBR.value = GlTF_Writer.textureNames.IndexOf(pbrTex.name);
 
 							var valRoughness = new GlTF_Material.IntValue();
 							valRoughness.name = isMetal ? "roughnessTexture" : "glossinessTexture";
-							valRoughness.value = GlTF_Writer.textures.IndexOf(roughnessTex);
+							valRoughness.value = GlTF_Writer.textureNames.IndexOf(roughnessTex.name);
 
 							// Add images to the collection
 							material.values.Add(valPBR);
@@ -1070,7 +1071,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 							}
 							else
 							{
-								val.value = GlTF_Writer.textures.Count - 1;
+								val.value = GlTF_Writer.textureNames.IndexOf(texName);
 								material.values.Add(val);
 							}
 
