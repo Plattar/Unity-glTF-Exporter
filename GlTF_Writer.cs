@@ -55,7 +55,7 @@ public class GlTF_Writer {
 	public static bool exportPBRMaterials;
 	public static bool hasSpecularMaterials = false;
 	public static bool convertRightHanded = true;
-	public static string exporterVersion = "1.0.0";
+	public static string exporterVersion = "2.0.0";
 
 	static public string GetNameFromObject(Object o, bool useId = false)
 	{
