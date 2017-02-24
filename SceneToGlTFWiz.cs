@@ -865,6 +865,13 @@ public class SceneToGlTFWiz : MonoBehaviour
 		bool usePBRTextureAlpha = false;
 		bool isMetal = true;
 
+		if (mat.HasProperty("_Mode") && mat.GetFloat("_Mode") != 0)
+		{
+			string mode = mat.GetFloat("_Mode") == 1 ? "alphaMask" : "alphaBlend";
+			material.extraString.Add("blendMode", mode);
+			material.extraFloat.Add("cutoff", mat.GetFloat("_Cutoff"));
+		}
+
 		if (!mat.shader.name.Contains("Standard"))
 		{
 			Debug.Log("Material " + mat.shader + " is not fully supported");
@@ -1010,10 +1017,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 							// Handle transparency
 							if (pName.CompareTo("_MainTex") == 0 && mat.HasProperty("_Mode") && mat.GetFloat("_Mode") != 0)
 							{
-								string mode = mat.GetFloat("_Mode") == 1 ? "alphaMask" : "alphaBlend";
-								material.extraString.Add("blendMode", mode);
-								material.extraFloat.Add("cutoff", mat.GetFloat("_Cutoff"));
-
 								if(doConvertImages)
 									format = IMAGETYPE.RGBA;
 							}
