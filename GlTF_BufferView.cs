@@ -4,7 +4,7 @@ using System.IO;
 using System;
 
 public class GlTF_BufferView : GlTF_Writer  {
-	public string buffer;// ": "duck",
+	public int bufferIndex = 0;// ": "duck",
 	public long byteLength;//": 25272,
 	public long byteOffset;//": 0,
 	public int target = 34962;
@@ -77,10 +77,10 @@ public class GlTF_BufferView : GlTF_Writer  {
 			"target": "ARRAY_BUFFER"
 		},
 	*/
-		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
+		Indent();		jsonWriter.Write ("{\n");
 		IndentIn();
-		var binName = binary ? "binary_glTF" : Path.GetFileNameWithoutExtension(GlTF_Writer.binFileName);
-		Indent();		jsonWriter.Write ("\"buffer\": \"" + binName +"\",\n");
+		//var binName = binary ? "binary_glTF" : Path.GetFileNameWithoutExtension(GlTF_Writer.binFileName);
+		Indent();		jsonWriter.Write ("\"buffer\": " + bufferIndex +",\n");
 		Indent();		jsonWriter.Write ("\"byteLength\": " + byteLength + ",\n");
 		Indent();		jsonWriter.Write ("\"byteOffset\": " + byteOffset + ",\n");
 		Indent();		jsonWriter.Write ("\"target\": " + target + "\n");

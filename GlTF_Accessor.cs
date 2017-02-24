@@ -16,6 +16,7 @@ public class GlTF_Accessor : GlTF_Writer {
 	}
 
 	public GlTF_BufferView bufferView;//	"bufferView": "bufferView_30",
+	public int bufferViewIndex;
 	public long byteOffset; //": 0,
 	public int byteStride;// ": 12,
 	public ComponentType componentType; // GL enum vals ": BYTE (5120), UNSIGNED_BYTE (5121), SHORT (5122), UNSIGNED_SHORT (5123), FLOAT (5126)
@@ -375,9 +376,10 @@ public class GlTF_Accessor : GlTF_Writer {
 
 	public override void Write ()
 	{
-		Indent();		jsonWriter.Write ("\"" + id + "\": {\n");
+		Indent();		jsonWriter.Write ("{\n");
 		IndentIn();
-		Indent();		jsonWriter.Write ("\"bufferView\": \"" + bufferView.name+"\",\n");
+		Indent();		jsonWriter.Write("\"name\": \"" + id + "\",\n");
+		Indent();		jsonWriter.Write ("\"bufferView\": " + bufferViews.IndexOf(bufferView) +",\n");
 		Indent();		jsonWriter.Write ("\"byteOffset\": " + byteOffset + ",\n");
 		Indent();		jsonWriter.Write ("\"byteStride\": " + byteStride + ",\n");
 		Indent();		jsonWriter.Write ("\"componentType\": " + (int)componentType + ",\n");
@@ -392,6 +394,6 @@ public class GlTF_Accessor : GlTF_Writer {
 
 		Indent();		jsonWriter.Write ("\"type\": \"" + type + "\"\n");
 		IndentOut();
-		Indent();	jsonWriter.Write (" }");
+		Indent();	jsonWriter.Write ("}");
 	}
 }

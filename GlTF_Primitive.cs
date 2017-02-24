@@ -4,7 +4,7 @@ using System.Collections;
 public class GlTF_Primitive : GlTF_Writer {
 	public GlTF_Attributes attributes = new GlTF_Attributes();
 	public GlTF_Accessor indices;
-	public string materialName;
+	public int materialIndex;
 	public int primitive =  4;
 	public int semantics = 4;
 	public int index = 0;
@@ -27,8 +27,8 @@ public class GlTF_Primitive : GlTF_Writer {
 		if (attributes != null)
 			attributes.Write();
 		CommaNL();
-		Indent();	jsonWriter.Write ("\"indices\": \"" + indices.id + "\",\n");
-		Indent();	jsonWriter.Write ("\"material\": \"" + materialName + "\",\n");
+		Indent();	jsonWriter.Write ("\"indices\": " + GlTF_Writer.accessors.IndexOf(indices) + ",\n");
+		Indent();	jsonWriter.Write ("\"material\": " + materialIndex + ",\n");
 		Indent();	jsonWriter.Write ("\"mode\": " + primitive + "\n");
 		// semantics
 		IndentOut();

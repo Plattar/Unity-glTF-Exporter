@@ -38,6 +38,16 @@ public class GlTF_Material : GlTF_Writer {
 		}
 	}
 
+	public class IntValue : Value
+	{
+		public int value;
+
+		public override void Write()
+		{
+			jsonWriter.Write("\"" + name + "\": " + value + "");
+		}
+	}
+
 	public class StringValue : Value {
 		public string value;
 
@@ -49,27 +59,34 @@ public class GlTF_Material : GlTF_Writer {
 
 	public class DictValue: Value
 	{
-		public Dictionary<string, string> value;
+		public Dictionary<string, int> intValue;
+		public Dictionary<string, string> stringValue;
 		public DictValue()
 		{
-			value = new Dictionary<string, string>();
+			intValue = new Dictionary<string, int>();
+			stringValue = new Dictionary<string, string>();
 		}
 		public override void Write()
 		{
-			jsonWriter.Write("\""+ name + "\": {\n");
+			jsonWriter.Write("{\n");
 			IndentIn();
 
-			foreach (string key in value.Keys)
+			foreach (string key in intValue.Keys)
 			{
 				CommaNL();
-				Indent();  jsonWriter.Write("\"" + key + "\" : \"" + value[key] + "\"");
+				Indent();  jsonWriter.Write("\"" + key + "\" : \"" + intValue[key] + "\"");
+			}
+			foreach (string key in stringValue.Keys)
+			{
+				CommaNL();
+				Indent(); jsonWriter.Write("\"" + key + "\" : \"" + stringValue[key] + "\"");
 			}
 			IndentOut();
 			jsonWriter.Write("}");
 		}
 	}
 
-	public string instanceTechniqueName = "technique1";
+	public int instanceTechniqueIndex;
 	public GlTF_ColorOrTexture ambient;// = new GlTF_ColorRGBA ("ambient");
 	public GlTF_ColorOrTexture diffuse;
 	public string materialModel = "PBR_metal_roughness";
@@ -91,7 +108,7 @@ public class GlTF_Material : GlTF_Writer {
 		//Indent();		jsonWriter.Write ("\"values\": {\n");
 		//IndentIn();
 
-		Indent(); jsonWriter.Write("\"" + id + "\": {\n");
+		Indent(); jsonWriter.Write("{\n");
 		IndentIn();
 		//Indent();		jsonWriter.Write ("\"technique\": \"" + instanceTechniqueName + "\",\n");
 		Indent(); jsonWriter.Write("\"extensions\": {\n");

@@ -10,7 +10,7 @@ public class GlTF_AnimSampler : GlTF_Writer {
 	public GlTF_AnimSampler(string n, string i, string o) { name = n; input = i;  output = o; }
 	public override void Write()
 	{
-		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
+		Indent();		jsonWriter.Write ("{\n");
 		IndentIn();
 		Indent();		jsonWriter.Write ("\"input\": \"" + input + "\",\n");
 		Indent();		jsonWriter.Write ("\"interpolation\": \"" + interpolation + "\",\n");

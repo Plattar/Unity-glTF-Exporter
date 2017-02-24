@@ -117,7 +117,7 @@ public class GlTF_Sampler : GlTF_Writer {
 
 	public override void Write()
 	{
-		Indent();	jsonWriter.Write ("\"" + name + "\": {\n");
+		Indent();	jsonWriter.Write ("{\n");
 		IndentIn();
 		Indent();	jsonWriter.Write ("\"magFilter\": " + (int)magFilter + ",\n");
 		Indent();	jsonWriter.Write ("\"minFilter\": " + (int)minFilter + ",\n");

@@ -163,7 +163,7 @@ public class GlTF_Animation : GlTF_Writer {
 		if (channels.Count == 0)
 			return;
 
-		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
+		Indent();		jsonWriter.Write ("{\n");
 		IndentIn();
 		Indent();		jsonWriter.Write ("\"channels\": [\n");
 		foreach (GlTF_Channel c in channels)
@@ -172,13 +172,9 @@ public class GlTF_Animation : GlTF_Writer {
 			c.Write ();
 		}
 		jsonWriter.WriteLine();
-		Indent();		jsonWriter.Write ("]");
-		CommaNL();
+		Indent();		jsonWriter.Write ("],\n");
 
-		parameters.Write ();
-		CommaNL();
-
-		Indent();		jsonWriter.Write ("\"samplers\": {\n");
+		Indent();		jsonWriter.Write ("\"samplers\": [\n");
 		IndentIn();
 		foreach (GlTF_AnimSampler s in animSamplers)
 		{
@@ -187,7 +183,7 @@ public class GlTF_Animation : GlTF_Writer {
 		}
 		IndentOut();
 		jsonWriter.WriteLine();
-		Indent();		jsonWriter.Write ("}\n");
+		Indent();		jsonWriter.Write ("]\n");
 
 		IndentOut();
 		Indent();		jsonWriter.Write ("}");

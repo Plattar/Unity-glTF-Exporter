@@ -193,6 +193,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		GlTF_Writer.sceneRootMatrix = correctionMat;
 		correctionNode.matrix = new GlTF_Matrix(correctionMat, false);
 		GlTF_Writer.nodes.Add(correctionNode);
+		GlTF_Writer.nodeNames.Add(correctionNode.name);
 		GlTF_Writer.rootNodes.Add(correctionNode);
 
 
@@ -240,6 +241,11 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 			currentTransformName = tr.name;
 			currentObjectIndex++;
+
+			// Initialize the node
+			GlTF_Node node = new GlTF_Node();
+			node.id = GlTF_Node.GetNameFromObject(tr);
+			node.name = tr.name;
 
 			if (tr.GetComponent<Camera>() != null)
 				parseUnityCamera(tr);
@@ -354,20 +360,26 @@ public class SceneToGlTFWiz : MonoBehaviour
 					if (i < sm.Length) {
 						var mat = sm[i];
 						var matName = GlTF_Material.GetNameFromObject(mat);
-						primitive.materialName = matName;
-						if (!GlTF_Writer.materials.ContainsKey (matName))
+						if(GlTF_Writer.materialNames.Contains(matName))
+						{
+							primitive.materialIndex = GlTF_Writer.materialNames.IndexOf(matName); // THIS INDIRECTION CAN BE REMOVED!
+						}
+						else
 						{
 							GlTF_Material material = new GlTF_Material();
-							material.id = matName;
 							material.name = mat.name;
 							material.diffuse = new GlTF_MaterialColor ("diffuse", mat.color);
-							GlTF_Writer.materials.Add (material.id, material);
+							GlTF_Writer.materialNames.Add(matName);
+							GlTF_Writer.materials.Add (material);
 
 							//technique
 							var s = mat.shader;
 							var techName = GlTF_Technique.GetNameFromObject(s);
-							material.instanceTechniqueName = techName;
-							if (!GlTF_Writer.techniques.ContainsKey(techName))
+							if(GlTF_Writer.techniqueNames.Contains(techName))
+							{
+								material.instanceTechniqueIndex = GlTF_Writer.techniqueNames.IndexOf(techName);// THIS INDIRECTION CAN BE REMOVED!
+							}
+							else
 							{
 								GlTF_Technique tech = new GlTF_Technique();
 								tech.name = techName;
@@ -449,7 +461,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 								tech.AddDefaultUniforms();
 
 								// Populate technique with shader data
-								GlTF_Writer.techniques.Add (techName, tech);
+								GlTF_Writer.techniqueNames.Add (techName);
+								GlTF_Writer.techniques.Add (tech);
 								populateTechniqueFromShader(s, tech);
 
 								// create program
@@ -487,7 +500,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 								KeyValuePair<GlTF_Texture,GlTF_Image> lightmapdata = exportLightmap(tr, ref primitive, ref material);
 								if(lightmapdata.Key != null)
 								{
-									GlTF_Writer.textures.Add(lightmapdata.Key.name, lightmapdata.Key);
+									GlTF_Writer.textureNames.Add(lightmapdata.Key.name);
+									GlTF_Writer.textures.Add(lightmapdata.Key);
 									GlTF_Writer.images.Add(lightmapdata.Value);
 								}
 							}
@@ -534,13 +548,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 				mesh.Populate(baked);
 				GlTF_Writer.meshes.Add(mesh);
+				node.meshIndexes.Add(GlTF_Writer.meshes.IndexOf(mesh));
 			}
-
-
-			// next, build hierarchy of nodes
-			GlTF_Node node = new GlTF_Node();
-			node.id = GlTF_Node.GetNameFromObject(tr);
-			node.name = tr.name;
 
 			// Parse animations
 			if (exportAnimation)
@@ -610,10 +619,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 			}
 			else if (tr.GetComponent<Light>() != null)
 				node.lightName = tr.name;
-			else if (m != null)
-			{
-				node.meshNames.Add (GlTF_Mesh.GetNameFromObject(m) + tr.name);
-			}
 
 			// Parse node's skin data
 			GlTF_Accessor invBindMatrixAccessor = null;
@@ -631,9 +636,9 @@ public class SceneToGlTFWiz : MonoBehaviour
 				GlTF_Writer.accessors.Add(invBindMatrixAccessor);
 
 				// Generate skin data
-				skin.Populate(tr, ref invBindMatrixAccessor);
+				skin.Populate(tr, ref invBindMatrixAccessor, GlTF_Writer.accessors.Count -1);
 				GlTF_Writer.skins.Add(skin);
-				node.skinID = skin.name;
+				node.skinIndex = GlTF_Writer.skins.IndexOf(skin);
 			}
 
 			// The node is a bone?
@@ -646,7 +651,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 					node.childrenNames.Add(GlTF_Node.GetNameFromObject(t));
 			}
 
-
+			GlTF_Writer.nodeNames.Add(node.id);
 			GlTF_Writer.nodes.Add (node);
 		}
 
@@ -739,7 +744,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		}
 
 		string lightmapTexName = GlTF_Texture.GetNameFromObject(lightmapTex);
-		if(!GlTF_Writer.textures.ContainsKey(lightmapTexName))
+		if(!GlTF_Writer.textureNames.Contains(lightmapTexName))
 		{
 			//Generate lightmap
 			Texture2D convertedLightmap = new Texture2D(lightmapTex.width, lightmapTex.height, TextureFormat.RGB24, false);
@@ -759,28 +764,31 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 			GlTF_Texture lmTex = new GlTF_Texture();
 			lmTex.name = lightmapTexName;
-			lmTex.source = lightmapImg.name;
 
 			var valLightmap = new GlTF_Material.DictValue();
 			valLightmap.name = "aoTexture";
-			valLightmap.value.Add("texture", lmTex.name);
-			valLightmap.value.Add("semantic", "TEXCOORD_4");
+			valLightmap.intValue.Add("texture", GlTF_Writer.textures.IndexOf(lmTex));
+			valLightmap.stringValue.Add("semantic", "TEXCOORD_4");
 			material.values.Add(valLightmap);
 
 			// Both images use the same sampler
 			GlTF_Sampler sampler;
 			var samplerName = GlTF_Sampler.GetNameFromObject(lightmapTex);
-			if (GlTF_Writer.samplers.ContainsKey(samplerName))
-			{
-				sampler = GlTF_Writer.samplers[samplerName];
-			}
-			else
+			if (!GlTF_Writer.samplerNames.Contains(samplerName))
 			{
 				sampler = new GlTF_Sampler(lightmapTex);
 				sampler.name = samplerName;
-				GlTF_Writer.samplers[samplerName] = sampler;
+				GlTF_Writer.samplers.Add(sampler);
+				GlTF_Writer.samplerNames.Add(samplerName);
 			}
-			lmTex.samplerName = samplerName;
+
+			lmTex.samplerIndex = GlTF_Writer.samplerNames.IndexOf(samplerName);
+			GlTF_Writer.textureNames.Add(lmTex.name);
+			GlTF_Writer.textures.Add(lmTex);
+
+			lmTex.source = GlTF_Writer.imageNames.Count;
+			GlTF_Writer.imageNames.Add(lightmapImg.name);
+			GlTF_Writer.images.Add(lightmapImg);
 
 			return new KeyValuePair<GlTF_Texture, GlTF_Image>(lmTex, lightmapImg);
 		}
@@ -788,8 +796,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 		{
 			var valLightmap = new GlTF_Material.DictValue();
 			valLightmap.name = "aoTexture";
-			valLightmap.value.Add("texture", GlTF_Writer.textures[lightmapTexName].name);
-			valLightmap.value.Add("semantic", "TEXCOORD_4");
+			valLightmap.intValue.Add("texture", GlTF_Writer.textureNames.IndexOf(lightmapTexName));
+			valLightmap.stringValue.Add("semantic", "TEXCOORD_4");
 			material.values.Add(valLightmap);
 		}
 		return lightmapKV;
@@ -924,6 +932,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 						// These textures need split
 						// FIXME: Should check and avoid to split two times the same textures
+
+						//FIXME: two samplers are generated here. Should only have one
 						if (isMaterialPBR && usePBRTextureAlpha && (((pName.CompareTo("_SpecGlossMap") == 0 || pName.CompareTo("_MetallicGlossMap") == 0)) || !usePBRTextureAlpha && pName.CompareTo("_MainTex") == 0))
 						{
 							// Split PBR texture into two textures (RGB => metal/specular and A => roughness)
@@ -934,44 +944,48 @@ public class SceneToGlTFWiz : MonoBehaviour
 							GlTF_Image pbrImg = outputs[0].Value;
 							GlTF_Image roughnessImage = outputs[1].Value;
 
-							var valPBR = new GlTF_Material.StringValue();
-							valPBR.name = workflowChannelMap[pName];
-							valPBR.value = pbrTex.name;
-
-							var valRoughness = new GlTF_Material.StringValue();
-							valRoughness.name = isMetal ? "roughnessTexture" : "glossinessTexture";
-							valRoughness.value = roughnessTex.name;
 
 							// Both images use the same sampler
 							GlTF_Sampler sampler;
 							var samplerName = GlTF_Sampler.GetNameFromObject(t);
-							if (GlTF_Writer.samplers.ContainsKey(samplerName))
-							{
-								sampler = GlTF_Writer.samplers[samplerName];
-							}
-							else
+							if (!GlTF_Writer.samplerNames.Contains(samplerName))
 							{
 								sampler = new GlTF_Sampler(t);
 								sampler.name = samplerName;
-								GlTF_Writer.samplers[samplerName] = sampler;
+								GlTF_Writer.samplers.Add(sampler);
+								GlTF_Writer.samplerNames.Add(samplerName);
 							}
 
-							// Set the samplers
-							pbrTex.samplerName = samplerName;
-							roughnessTex.samplerName = samplerName;
+							// Set the samplers (WHY ?!)
+							pbrTex.samplerIndex = GlTF_Writer.samplerNames.IndexOf(samplerName);
+							roughnessTex.samplerIndex = pbrTex.samplerIndex;
 
 							// Add textures
-							if (!GlTF_Writer.textures.ContainsKey(pbrTex.name))
+							if (!GlTF_Writer.textureNames.Contains(pbrTex.name))
 							{
-								GlTF_Writer.textures.Add(pbrTex.name, pbrTex);
+								GlTF_Writer.textures.Add(pbrTex);
+								GlTF_Writer.textureNames.Add(pbrTex.name);
+								pbrTex.source = GlTF_Writer.images.Count;
+								GlTF_Writer.imageNames.Add(pbrImg.name);
 								GlTF_Writer.images.Add(pbrImg);
 							}
 
-							if (!GlTF_Writer.textures.ContainsKey(roughnessTex.name))
+							if (!GlTF_Writer.textureNames.Contains(roughnessTex.name))
 							{
-								GlTF_Writer.textures.Add(roughnessTex.name, roughnessTex);
+								GlTF_Writer.textures.Add(roughnessTex);
+								GlTF_Writer.textureNames.Add(roughnessTex.name);
+								roughnessTex.source = GlTF_Writer.images.Count;
+								GlTF_Writer.imageNames.Add(roughnessImage.name);
 								GlTF_Writer.images.Add(roughnessImage);
 							}
+
+							var valPBR = new GlTF_Material.IntValue();
+							valPBR.name = workflowChannelMap[pName];
+							valPBR.value = GlTF_Writer.textures.IndexOf(pbrTex);
+
+							var valRoughness = new GlTF_Material.IntValue();
+							valRoughness.name = isMetal ? "roughnessTexture" : "glossinessTexture";
+							valRoughness.value = GlTF_Writer.textures.IndexOf(roughnessTex);
 
 							// Add images to the collection
 							material.values.Add(valPBR);
@@ -981,11 +995,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 						{
 							bool isBumpTexture = pName.CompareTo("_BumpMap") == 0;
 							bool isBumpMap = false;
-							var val = new GlTF_Material.StringValue();
-							val.name = workflowChannelMap[pName];
 							var texName = GlTF_Texture.GetNameFromObject(t);
-							val.value = texName;
-							material.values.Add(val);
+
 							IMAGETYPE format = doConvertImages ? IMAGETYPE.RGB : IMAGETYPE.IGNORE;
 
 							// Force psd conversion
@@ -1006,15 +1017,20 @@ public class SceneToGlTFWiz : MonoBehaviour
 								if(doConvertImages)
 									format = IMAGETYPE.RGBA;
 							}
-
-							if(isBumpTexture)
+							var val = new GlTF_Material.IntValue();
+							if (isBumpTexture)
 							{
 								TextureImporter im = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(t)) as TextureImporter;
 								isBumpMap = im.convertToNormalmap;
 								val.name = isBumpMap ? "bumpTexture" : "normalTexture";
 							}
+							else
+							{
+								val.name = workflowChannelMap[pName];
+							}
 
-							if (!GlTF_Writer.textures.ContainsKey(texName) && AssetDatabase.GetAssetPath(t).Length > 0)
+
+							if (!GlTF_Writer.textureNames.Contains(texName) && AssetDatabase.GetAssetPath(t).Length > 0)
 							{
 								if (doConvertImages && isBumpTexture && !isBumpMap)
 								{
@@ -1023,37 +1039,43 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 								var texPath = ExportTexture(t, savedPath, false, format);
 
+								GlTF_Texture texture = new GlTF_Texture();
+								texture.name = texName;
+
 								GlTF_Image img = new GlTF_Image();
 								img.name = GlTF_Image.GetNameFromObject(t);
-
 								img.uri = texPath;
+								texture.source = GlTF_Writer.imageNames.Count;
+								GlTF_Writer.imageNames.Add(img.name);
 								GlTF_Writer.images.Add(img);
 
 								GlTF_Sampler sampler;
 								var samplerName = GlTF_Sampler.GetNameFromObject(t);
-								if (GlTF_Writer.samplers.ContainsKey(samplerName))
-								{
-									sampler = GlTF_Writer.samplers[samplerName];
-								}
-								else
+								if (!GlTF_Writer.samplerNames.Contains(samplerName))
 								{
 									sampler = new GlTF_Sampler(t);
 									sampler.name = samplerName;
-									GlTF_Writer.samplers[samplerName] = sampler;
+									GlTF_Writer.samplers.Add(sampler);
+									GlTF_Writer.samplerNames.Add(samplerName);
 								}
 
-								GlTF_Texture texture = new GlTF_Texture();
-								texture.name = texName;
-								texture.source = img.name;
-								texture.samplerName = samplerName;
+								texture.samplerIndex = GlTF_Writer.samplerNames.IndexOf(samplerName);
 
 								if(pName.CompareTo("_BumpMap") == 0 && !isBumpMap)
 									texture.extraBool.Add("yUp", true);
 
-								GlTF_Writer.textures.Add(texName, texture);
+								val.value = GlTF_Writer.textures.Count;
+								material.values.Add(val);
+								GlTF_Writer.textures.Add(texture);
+								GlTF_Writer.textureNames.Add(texName);
+							}
+							else
+							{
+								val.value = GlTF_Writer.textures.Count - 1;
+								material.values.Add(val);
 							}
 
-							if(AssetDatabase.GetAssetPath(t).Length == 0)
+							if (AssetDatabase.GetAssetPath(t).Length == 0)
 							{
 								Debug.LogWarning("Texture '" + t.name + "' has not been exported (Asset not found)");
 							}
@@ -1136,9 +1158,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 		pbrImg.uri = fileNamePbr;
 		roughnessImg.name = GlTF_Image.GetNameFromObject(texture) + smoothSuffix;
 		roughnessImg.uri = filenameRough;
-
-		pbrTex.source = pbrImg.name;
-		roughnessTex.source = roughnessImg.name;
 
 		outputs.Add(new KeyValuePair<GlTF_Texture, GlTF_Image>(pbrTex, pbrImg));
 		outputs.Add(new KeyValuePair<GlTF_Texture, GlTF_Image>(roughnessTex, roughnessImg));
