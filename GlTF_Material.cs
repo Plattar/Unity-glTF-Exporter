@@ -34,7 +34,7 @@ public class GlTF_Material : GlTF_Writer {
 
 		public override void Write()
 		{
-			jsonWriter.Write ("\"" + name + "\": " + value + "");
+			jsonWriter.Write ("\"" + name + "\": [" + value + "]");
 		}
 	}
 
@@ -44,7 +44,7 @@ public class GlTF_Material : GlTF_Writer {
 
 		public override void Write()
 		{
-			jsonWriter.Write("\"" + name + "\": " + value + "");
+			jsonWriter.Write("\"" + name + "\": [" + value + "]");
 		}
 	}
 
@@ -53,7 +53,7 @@ public class GlTF_Material : GlTF_Writer {
 
 		public override void Write()
 		{
-			jsonWriter.Write ("\"" + name + "\": \"" + value + "\"");
+			jsonWriter.Write ("\"" + name + "\": [ " + value + " ]");
 		}
 	}
 
@@ -74,12 +74,12 @@ public class GlTF_Material : GlTF_Writer {
 			foreach (string key in intValue.Keys)
 			{
 				CommaNL();
-				Indent();  jsonWriter.Write("\"" + key + "\" : \"" + intValue[key] + "\"");
+				Indent();  jsonWriter.Write("\"" + key + "\" : [ " + intValue[key] + " ]");
 			}
 			foreach (string key in stringValue.Keys)
 			{
 				CommaNL();
-				Indent(); jsonWriter.Write("\"" + key + "\" : \"" + stringValue[key] + "\"");
+				Indent(); jsonWriter.Write("\"" + key + "\" : [ " + stringValue[key] + " ]");
 			}
 			IndentOut();
 			jsonWriter.Write("}");
