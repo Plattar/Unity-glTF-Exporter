@@ -2,28 +2,25 @@
 using System.Collections;
 
 public class GlTF_Channel : GlTF_Writer {
-	public GlTF_AnimSampler sampler;
+	public int samplerIndex = -1;
 	public GlTF_Target target;
 
-	public GlTF_Channel (string ch, GlTF_AnimSampler s) {
-		sampler = s;
-		switch (ch)
-		{
-		case "translation":
-			break;
-		case "rotation":
-			break;
-		case "scale":
-			break;
-		}
+	public GlTF_Channel (string ch, int sIndex) {
+		samplerIndex = sIndex;
 	}
 
 	public override void Write()
 	{
+		if(samplerIndex == -1)
+		{
+			Debug.LogError("Error when serializing gltf Channel for target: " + target.id);
+			return;
+		}
+
 		IndentIn();
 		Indent();		jsonWriter.Write ("{\n");
 		IndentIn();
-		Indent();		jsonWriter.Write ("\"sampler\": \"" + sampler.name + "\",\n");
+		Indent();		jsonWriter.Write ("\"sampler\": " + samplerIndex + ",\n");
 		target.Write ();
 		jsonWriter.WriteLine();
 		IndentOut();

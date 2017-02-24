@@ -11,13 +11,13 @@ public class GlTF_Node : GlTF_Writer {
 	public List<string>bufferViewNames = new List<string>();
 	public List<string>indexNames = new List<string>();
 	public List<string>accessorNames = new List<string>();
-	public List<string> meshNames = new List<string>();
+	public List<int> meshIndexes = new List<int>();
 	public GlTF_Matrix matrix;
 	//	public GlTF_Mesh mesh;
 	public GlTF_Rotation rotation;
 	public GlTF_Scale scale;
 	public GlTF_Translation translation;
-	public string skinID = "";
+	public int skinIndex = -1;
 	public List<string> skeletons = new List<string>();
 	public string jointName = "";
 	public bool additionalProperties = false;
@@ -30,7 +30,7 @@ public class GlTF_Node : GlTF_Writer {
 	public override void Write ()
 	{
 		Indent();
-		jsonWriter.Write ("\""+id+"\": {\n");
+		jsonWriter.Write ("{\n");
 		IndentIn();
 		Indent();
 		CommaNL();
@@ -47,16 +47,16 @@ public class GlTF_Node : GlTF_Writer {
 			Indent();
 			jsonWriter.Write ("\"light\": \""+lightName+"\"");
 		}
-		else if (meshNames.Count > 0)
+		else if (meshIndexes.Count > 0)
 		{
 			CommaNL();
 			Indent();
 			jsonWriter.Write ("\"meshes\": [\n");
 			IndentIn();
-			foreach (string m in meshNames)
+			foreach (int m in meshIndexes)
 			{
 				CommaNL();
-				Indent();	jsonWriter.Write ("\"" + m + "\"");
+				Indent();	jsonWriter.Write (m);
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
@@ -71,7 +71,7 @@ public class GlTF_Node : GlTF_Writer {
 			foreach (string ch in childrenNames)
 			{
 				CommaNL();
-				Indent();		jsonWriter.Write ("\""+ch+"\"");
+				Indent();		jsonWriter.Write (GlTF_Writer.nodeNames.IndexOf(ch));
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
@@ -117,17 +117,17 @@ public class GlTF_Node : GlTF_Writer {
 			foreach(string s in skeletons)
 			{
 					CommaNL();
-				Indent(); jsonWriter.Write("\"" + s + "\"\n");
+				Indent(); jsonWriter.Write("" + GlTF_Writer.nodeNames.IndexOf(s) + "\n");
 			}
 
 			IndentOut();
 			Indent(); jsonWriter.Write("]");
 		}
 
-		if(skinID.Length > 0)
+		if(skinIndex > -1)
 		{
 			CommaNL();
-			Indent(); jsonWriter.Write("\"skin\": \"" + skinID + "\"\n");
+			Indent(); jsonWriter.Write("\"skin\": " + skinIndex + "\n");
 		}
 
 		IndentOut();

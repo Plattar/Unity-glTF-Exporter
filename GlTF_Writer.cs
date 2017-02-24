@@ -18,18 +18,31 @@ public class GlTF_Writer {
 	public static GlTF_BufferView vec3BufferView = new GlTF_BufferView("vec3BufferView");
 	public static GlTF_BufferView vec4BufferView = new GlTF_BufferView("vec4BufferView");
 	public static GlTF_BufferView mat4BufferView = new GlTF_BufferView("mat4BufferView");
+
 	public static List<GlTF_BufferView> bufferViews = new List<GlTF_BufferView>();
 	public static List<GlTF_Camera> cameras = new List<GlTF_Camera>();
 	public static List<GlTF_Light> lights = new List<GlTF_Light>();
 	public static List<GlTF_Mesh> meshes = new List<GlTF_Mesh>();
 	public static List<GlTF_Accessor> accessors = new List<GlTF_Accessor>();
+
+	public static List<string> nodeNames = new List<string>();
 	public static List<GlTF_Node> nodes = new List<GlTF_Node>();
-	public static Dictionary<string, GlTF_Material> materials = new Dictionary<string, GlTF_Material>();
-	public static Dictionary<string, GlTF_Sampler> samplers = new Dictionary<string, GlTF_Sampler>();
-	public static Dictionary<string, GlTF_Texture> textures = new Dictionary<string, GlTF_Texture>();
+
+	public static List<string> materialNames = new List<string>();
+	public static List<GlTF_Material> materials = new List<GlTF_Material>();
+	public static List<string> samplerNames = new List<string>();
+	public static List<GlTF_Sampler> samplers = new List<GlTF_Sampler>();
+
+	public static List<string> textureNames = new List<string>();
+	public static List<GlTF_Texture> textures = new List<GlTF_Texture>();
+
+	public static List<string> imageNames = new List<string>();
 	public static List<GlTF_Image> images = new List<GlTF_Image>();
 	public static List<GlTF_Animation> animations = new List<GlTF_Animation>();
-	public static Dictionary<string, GlTF_Technique> techniques = new Dictionary<string, GlTF_Technique>();
+
+	public static List<string> techniqueNames = new List<string>();
+	public static List<GlTF_Technique> techniques = new List<GlTF_Technique>();
+
 	public static List<GlTF_Program> programs = new List<GlTF_Program>();
 	public static List<GlTF_Shader> shaders = new List<GlTF_Shader>();
 	public static List<GlTF_Skin> skins = new List<GlTF_Skin>();
@@ -40,8 +53,9 @@ public class GlTF_Writer {
 	// Exporter specifics
 	public static bool bakeAnimation;
 	public static bool exportPBRMaterials;
+	public static bool hasSpecularMaterials = false;
 	public static bool convertRightHanded = true;
-	public static string exporterVersion = "1.0.0";
+	public static string exporterVersion = "2.0.0";
 
 	static public string GetNameFromObject(Object o, bool useId = false)
 	{
@@ -120,19 +134,33 @@ public class GlTF_Writer {
 		lights = new List<GlTF_Light>();
 		meshes = new List<GlTF_Mesh>();
 		accessors = new List<GlTF_Accessor>();
+
 		nodes = new List<GlTF_Node>();
-		materials = new Dictionary<string, GlTF_Material>();
-		samplers = new Dictionary<string, GlTF_Sampler>();
-		textures = new Dictionary<string, GlTF_Texture>();
+		nodeNames = new List<string>();
+
+		materialNames = new List<string>();
+		materials = new List<GlTF_Material>();
+
+		samplerNames = new List<string>();
+		samplers = new List<GlTF_Sampler>();
+
+		textureNames = new List<string>();
+		textures = new List<GlTF_Texture>();
+
+		imageNames = new List<string>();
 		images = new List<GlTF_Image>();
 		animations = new List<GlTF_Animation>();
-		techniques = new Dictionary<string, GlTF_Technique>();
+
+		techniqueNames = new List<string>();
+		techniques = new List<GlTF_Technique>();
+
 		programs = new List<GlTF_Program>();
 		shaders = new List<GlTF_Shader>();
 		skins = new List<GlTF_Skin>();
 		rootNodes = new List<GlTF_Node>();
 
 		bakeAnimation = true;
+		hasSpecularMaterials = false;
 	}
 
 	public void Indent() {
@@ -234,12 +262,23 @@ public class GlTF_Writer {
 
 	public virtual void Write () {
 
-		bufferViews.Add (ushortBufferView);
-		bufferViews.Add (floatBufferView);
-		bufferViews.Add (vec2BufferView);
-		bufferViews.Add (vec3BufferView);
-		bufferViews.Add (vec4BufferView);
-		bufferViews.Add (mat4BufferView);
+		if(ushortBufferView.byteLength > 0)
+			bufferViews.Add (ushortBufferView);
+
+		if (floatBufferView.byteLength > 0)
+			bufferViews.Add (floatBufferView);
+
+		if (vec2BufferView.byteLength > 0)
+			bufferViews.Add (vec2BufferView);
+
+		if (vec3BufferView.byteLength > 0)
+			bufferViews.Add (vec3BufferView);
+
+		if (vec4BufferView.byteLength > 0)
+			bufferViews.Add (vec4BufferView);
+
+		if (mat4BufferView.byteLength > 0)
+			bufferViews.Add (mat4BufferView);
 
 		ushortBufferView.bin = binary;
 		floatBufferView.bin = binary;
@@ -267,7 +306,7 @@ public class GlTF_Writer {
 
 		writeExtras();
 
-		Indent();	jsonWriter.Write ("\"version\": \"1\"\n");
+		Indent();	jsonWriter.Write ("\"version\": \"2.0\"\n");
 
 		IndentOut();
 		Indent();	jsonWriter.Write ("}");
@@ -275,7 +314,7 @@ public class GlTF_Writer {
 		if (accessors != null && accessors.Count > 0)
 		{
 			CommaNL();
-			Indent();	jsonWriter.Write ("\"accessors\": {\n");
+			Indent();	jsonWriter.Write ("\"accessors\": [\n");
 			IndentIn();
 			foreach (GlTF_Accessor a in accessors)
 			{
@@ -284,13 +323,13 @@ public class GlTF_Writer {
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
-			Indent();	jsonWriter.Write ("}");
+			Indent();	jsonWriter.Write ("]");
 		}
 
 		if (animations.Count > 0)
 		{
 			CommaNL();
-			Indent();	jsonWriter.Write ("\"animations\": {\n");
+			Indent();	jsonWriter.Write ("\"animations\": [\n");
 			IndentIn();
 			foreach (GlTF_Animation a in animations)
 			{
@@ -299,26 +338,25 @@ public class GlTF_Writer {
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
-			Indent();	jsonWriter.Write ("}");
+			Indent();	jsonWriter.Write ("]");
 		}
 
 		if (!binary)
 		{
 			// FIX: Should support multiple buffers
 			CommaNL();
-			Indent();	jsonWriter.Write ("\"buffers\": {\n");
+			Indent();	jsonWriter.Write ("\"buffers\": [\n");
 			IndentIn();
-			Indent();	jsonWriter.Write ("\"" + Path.GetFileNameWithoutExtension(GlTF_Writer.binFileName) +"\": {\n");
+			Indent();	jsonWriter.Write ("{\n");
 			IndentIn();
 			Indent();	jsonWriter.Write ("\"byteLength\": "+ (mat4BufferView.byteOffset+ mat4BufferView.byteLength)+",\n");
-			Indent();	jsonWriter.Write ("\"type\": \"arraybuffer\",\n");
 			Indent();	jsonWriter.Write ("\"uri\": \"" + GlTF_Writer.binFileName + "\"\n");
 
 			IndentOut();
 			Indent();	jsonWriter.Write ("}\n");
 
 			IndentOut();
-			Indent();	jsonWriter.Write ("}");
+			Indent();	jsonWriter.Write ("]");
 		}
 		else
 		{
@@ -340,7 +378,7 @@ public class GlTF_Writer {
 		if (bufferViews != null && bufferViews.Count > 0)
 		{
 			CommaNL();
-			Indent();	jsonWriter.Write ("\"bufferViews\": {\n");
+			Indent();	jsonWriter.Write ("\"bufferViews\": [\n");
 			IndentIn();
 			foreach (GlTF_BufferView bv in bufferViews)
 			{
@@ -352,13 +390,13 @@ public class GlTF_Writer {
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
-			Indent();	jsonWriter.Write ("}");
+			Indent();	jsonWriter.Write ("]");
 		}
 
 		if (cameras != null && cameras.Count > 0)
 		{
 			CommaNL();
-			Indent();		jsonWriter.Write ("\"cameras\": {\n");
+			Indent();		jsonWriter.Write ("\"cameras\": [\n");
 			IndentIn();
 			foreach (GlTF_Camera c in cameras)
 			{
@@ -367,13 +405,26 @@ public class GlTF_Writer {
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
-			Indent();		jsonWriter.Write ("}");
+			Indent();		jsonWriter.Write ("]");
+		}
+
+		if(hasSpecularMaterials)
+		{
+			CommaNL();
+			Indent(); jsonWriter.Write("\"extensionsRequired\": [\n");
+			IndentIn();
+			Indent(); jsonWriter.Write("\"KHR_materials_pbrSpecularGlossiness\"\n");
+			IndentOut();
+			Indent(); jsonWriter.Write("]");
 		}
 
 		CommaNL();
 		Indent(); jsonWriter.Write("\"extensionsUsed\": [\n");
 		IndentIn();
-		Indent(); jsonWriter.Write("\"FRAUNHOFER_materials_pbr\"\n");
+		if (hasSpecularMaterials)
+		{
+			Indent(); jsonWriter.Write("\"KHR_materials_pbrSpecularGlossiness\"\n");
+		}
 		if (binary)
 		{
 			Indent(); jsonWriter.Write("\"KHR_binary_glTF\"\n");
@@ -384,7 +435,7 @@ public class GlTF_Writer {
 		if (images.Count > 0)
 		{
 			CommaNL();
-			Indent();	jsonWriter.Write ("\"images\": {\n");
+			Indent();	jsonWriter.Write ("\"images\": [\n");
 			IndentIn();
 			foreach (var i in images)
 			{
@@ -393,29 +444,29 @@ public class GlTF_Writer {
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
-			Indent();	jsonWriter.Write ("}");
+			Indent();	jsonWriter.Write ("]");
 		}
 
 		if (materials.Count > 0)
 		{
 			CommaNL();
-			Indent();	jsonWriter.Write ("\"materials\": {\n");
+			Indent();	jsonWriter.Write ("\"materials\": [\n");
 			IndentIn();
-			foreach (KeyValuePair<string,GlTF_Material> m in materials)
+			foreach (GlTF_Material m in materials)
 			{
 				CommaNL();
-				m.Value.Write ();
+				m.Write ();
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
-			Indent();	jsonWriter.Write ("}");
+			Indent();	jsonWriter.Write ("]");
 		}
 
 		if (meshes != null && meshes.Count > 0)
 		{
 			CommaNL();
 			Indent();
-			jsonWriter.Write ("\"meshes\": {\n");
+			jsonWriter.Write ("\"meshes\": [\n");
 			IndentIn();
 			foreach (GlTF_Mesh m in meshes)
 			{
@@ -425,7 +476,7 @@ public class GlTF_Writer {
 			jsonWriter.WriteLine();
 			IndentOut();
 			Indent();
-			jsonWriter.Write ("}");
+			jsonWriter.Write ("]");
 		}
 
 		if (nodes != null && nodes.Count > 0)
@@ -437,7 +488,7 @@ public class GlTF_Writer {
 			"children": [],
 			"matrix": [
 */
-			Indent();			jsonWriter.Write ("\"nodes\": {\n");
+			Indent();			jsonWriter.Write ("\"nodes\": [\n");
 			IndentIn();
 			//			bool first = true;
 			foreach (GlTF_Node n in nodes)
@@ -450,47 +501,47 @@ public class GlTF_Writer {
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
-			Indent();			jsonWriter.Write ("}");
+			Indent();			jsonWriter.Write ("]");
 		}
 
-		if (programs != null && programs.Count > 0)
-		{
-			CommaNL();
-			Indent();
-			jsonWriter.Write ("\"programs\": {\n");
-			IndentIn();
-			foreach (var p in programs)
-			{
-				CommaNL();
-				p.Write();
-			}
-			jsonWriter.WriteLine();
-			IndentOut();
-			Indent();
-			jsonWriter.Write ("}");
-		}
+		//if (programs != null && programs.Count > 0)
+		//{
+		//	CommaNL();
+		//	Indent();
+		//	jsonWriter.Write ("\"programs\": [\n");
+		//	IndentIn();
+		//	foreach (var p in programs)
+		//	{
+		//		CommaNL();
+		//		p.Write();
+		//	}
+		//	jsonWriter.WriteLine();
+		//	IndentOut();
+		//	Indent();
+		//	jsonWriter.Write ("]");
+		//}
 
 		if (samplers.Count > 0)
 		{
 			CommaNL();
-			Indent();	jsonWriter.Write ("\"samplers\": {\n");
+			Indent();	jsonWriter.Write ("\"samplers\": [\n");
 			IndentIn();
-			foreach (KeyValuePair<string, GlTF_Sampler> s in samplers)
+			foreach (GlTF_Sampler s in samplers)
 			{
 				CommaNL();
-				s.Value.Write ();
+				s.Write ();
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
-			Indent();	jsonWriter.Write ("}");
+			Indent();	jsonWriter.Write ("]");
 		}
 		CommaNL();
-		Indent();			jsonWriter.Write ("\"scene\": \"defaultScene\",\n");
-		Indent();			jsonWriter.Write ("\"scenes\": {\n");
+		Indent();			jsonWriter.Write ("\"scenes\": [\n");
 		IndentIn();
-		Indent();			jsonWriter.Write ("\"defaultScene\": {\n");
+		Indent();			jsonWriter.Write ("{\n");
 		IndentIn();
 		CommaNL();
+		Indent(); jsonWriter.Write("\"name\":\"defaultScene\",\n");
 		Indent();			jsonWriter.Write ("\"nodes\": [\n");
 		IndentIn();
 		foreach (GlTF_Node n in rootNodes)
@@ -498,7 +549,7 @@ public class GlTF_Writer {
 			//if (!n.hasParent)
 			//{
 				CommaNL();
-				Indent();		jsonWriter.Write ("\"" + n.id + "\"");
+				Indent();		jsonWriter.Write(nodes.IndexOf(n));
 			//}
 		}
 		jsonWriter.WriteLine();
@@ -507,7 +558,9 @@ public class GlTF_Writer {
 		IndentOut();
 		Indent();			jsonWriter.Write ("}\n");
 		IndentOut();
-		Indent();			jsonWriter.Write ("}");
+		Indent();			jsonWriter.Write ("],\n");
+
+		Indent(); jsonWriter.Write("\"scene\": 0");
 
 		//if (shaders != null && shaders.Count > 0)
 		//{
@@ -529,7 +582,7 @@ public class GlTF_Writer {
 		if(skins.Count > 0)
 		{
 			CommaNL();
-			Indent(); jsonWriter.Write("\"skins\": {\n");
+			Indent(); jsonWriter.Write("\"skins\": [\n");
 			IndentIn();
 			foreach(GlTF_Skin skin in skins)
 			{
@@ -538,7 +591,7 @@ public class GlTF_Writer {
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
-			Indent(); jsonWriter.Write("}");
+			Indent(); jsonWriter.Write("]");
 		}
 
 		//if (techniques != null && techniques.Count > 0)
@@ -561,16 +614,16 @@ public class GlTF_Writer {
 		if (textures.Count > 0)
 		{
 			CommaNL();
-			Indent();	jsonWriter.Write ("\"textures\": {\n");
+			Indent();	jsonWriter.Write ("\"textures\": [\n");
 			IndentIn();
-			foreach (KeyValuePair<string,GlTF_Texture> t in textures)
+			foreach (GlTF_Texture t in textures)
 			{
 				CommaNL();
-				t.Value.Write ();
+				t.Write ();
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
-			Indent();	jsonWriter.Write ("}");
+			Indent();	jsonWriter.Write ("]");
 		}
 
 		IndentOut();

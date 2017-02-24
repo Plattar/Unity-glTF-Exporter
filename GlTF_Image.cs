@@ -11,7 +11,7 @@ public class GlTF_Image : GlTF_Writer {
 
 	public override void Write()
 	{
-		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
+		Indent();		jsonWriter.Write ("{\n");
 		IndentIn();
 		Indent();		jsonWriter.Write ("\"uri\": \"" + uri + "\"\n");
 		IndentOut();

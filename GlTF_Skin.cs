@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class GlTF_Skin : GlTF_Writer {
 	public GlTF_Matrix bindShapeMatrix;
 	public Matrix4x4[] invBindMatrices;
-	public string invBindMatricesAccessorName;
+	public int invBindMatricesAccessorIndex;
 	public Transform node;
 	public string[] jointNames;
 	public Transform mesh;
@@ -24,7 +24,7 @@ public class GlTF_Skin : GlTF_Writer {
 		bindShapeMatrix.name = "bindShapeMatrix";
 	}
 
-	public void Populate (Transform m, ref GlTF_Accessor invBindMatricesAccessor)
+	public void Populate (Transform m, ref GlTF_Accessor invBindMatricesAccessor, int invBindAccessorIndex)
 	{
 		SkinnedMeshRenderer skinMesh = m.GetComponent<SkinnedMeshRenderer>();
 		if (!skinMesh)
@@ -50,7 +50,7 @@ public class GlTF_Skin : GlTF_Writer {
 		}
 
 		invBindMatricesAccessor.Populate(invBindMatrices, m);
-		invBindMatricesAccessorName = invBindMatricesAccessor.id;
+		invBindMatricesAccessorIndex = invBindAccessorIndex;
 
 		// Fill jointNames
 		jointNames = new string[skinMesh.bones.Length];
@@ -69,7 +69,6 @@ public class GlTF_Skin : GlTF_Writer {
 		{
 			tbones.Add(bone);
 		}
-		Debug.Log("Nb bones " + tbones.Count);
 		List<Transform> haveBParents = new List<Transform>();
 		// Check and list bones that have parents that are bon in this skin
 		foreach (Transform b in tbones)
@@ -86,7 +85,6 @@ public class GlTF_Skin : GlTF_Writer {
 			}
 		}
 
-		Debug.Log("Bones having parents " + haveBParents.Count);
 		// Remove bones having parents from the list
 		foreach (Transform b in haveBParents)
 		{
@@ -100,7 +98,7 @@ public class GlTF_Skin : GlTF_Writer {
 
 	public override void Write ()
 	{
-		Indent();	jsonWriter.Write ("\"" + name + "\": {\n");
+		Indent();	jsonWriter.Write ("{\n");
 		IndentIn();
 
 		if (bindShapeMatrix != null)
@@ -110,7 +108,7 @@ public class GlTF_Skin : GlTF_Writer {
 		}
 
 		Indent(); jsonWriter.Write(",\n");
-		Indent(); jsonWriter.Write("\"inverseBindMatrices\": \""+ invBindMatricesAccessorName + "\",\n");
+		Indent(); jsonWriter.Write("\"inverseBindMatrices\": "+ invBindMatricesAccessorIndex + ",\n");
 		Indent(); jsonWriter.Write ("\"jointNames\": [\n");
 
 		IndentIn();

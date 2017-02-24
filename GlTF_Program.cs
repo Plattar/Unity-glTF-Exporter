@@ -14,7 +14,7 @@ public class GlTF_Program : GlTF_Writer {
 
 	public override void Write()
 	{
-		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
+		Indent();		jsonWriter.Write ("{\n");
 		IndentIn();
 		Indent();		jsonWriter.Write ("\"attributes\": [\n");
 		IndentIn();

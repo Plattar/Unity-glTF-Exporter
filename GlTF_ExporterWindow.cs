@@ -18,7 +18,7 @@ public class GlTFExporterWindow : EditorWindow
 	static UnityEngine.TextAsset presetAsset;
 	GameObject exporterGo;
 	SceneToGlTFWiz exporter;
-	bool buildZip=true;
+	bool buildZip = false;
 	bool convertImages = false;
 	bool exportAnimation = true;
 

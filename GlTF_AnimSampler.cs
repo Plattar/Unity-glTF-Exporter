@@ -2,19 +2,18 @@
 using System.Collections;
 
 public class GlTF_AnimSampler : GlTF_Writer {
-	public string input = "TIME";
-	public string interpolation = "LINEAR"; // only things in glTF as of today
-	public string output = "translation"; // or whatever
+	public int input = -1; // accessor index
+	public string interpolation = "LINEAR"; // Can also be STEP in glTF 2.0
+	public int output = -1; // accessor index
 
-	public GlTF_AnimSampler (string n, string o) { name = n; output = o; }
-	public GlTF_AnimSampler(string n, string i, string o) { name = n; input = i;  output = o; }
+	public GlTF_AnimSampler(int i, int o) { input = i;  output = o; }
 	public override void Write()
 	{
-		Indent();		jsonWriter.Write ("\"" + name + "\": {\n");
+		Indent();		jsonWriter.Write ("{\n");
 		IndentIn();
-		Indent();		jsonWriter.Write ("\"input\": \"" + input + "\",\n");
+		Indent();		jsonWriter.Write ("\"input\": " + input + ",\n");
 		Indent();		jsonWriter.Write ("\"interpolation\": \"" + interpolation + "\",\n");
-		Indent();		jsonWriter.Write ("\"output\": \"" + output + "\"\n");
+		Indent();		jsonWriter.Write ("\"output\": " + output + "\n");
 		IndentOut();
 		Indent();		jsonWriter.Write ("}");
 	}

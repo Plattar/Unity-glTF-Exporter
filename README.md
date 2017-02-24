@@ -1,96 +1,135 @@
-# Unity-glTF-Exporter
-Unity editor wizard that exports to glTF Format
+# Unity to Sketchfab exporter
 
-The exporter contains two EditorWindows that are set in `Tools` menu:
-* **Publish to Sketchfab**: export and publish Unity scene data to Sketchfab through glTF data.
-* **Export to glTF**: export Unity scene data locally into glTF files.
+Unity editor wizard that exports Unity object to Sketchfab using **glTF 2.0** Format
 
-[Get samples](#samples)
+Plugin based on Unity-glTF-Exporter from https://github.com/tparisi/Unity-glTF-Exporter
+
+## How to use it
+
+Once the plugin is imported (from the Unity package provided in [the last release here](https://github.com/sketchfab/Unity-glTF-Exporter/releases), or after having checked out this repo),
+a new item should appear in the *Tools* menu. You can access the exporter by going through **Tools/Publish to Sketchfab** as shown in the following screenshot:
+
+
+![alt tag](https://github.com/sketchfab/Unity-glTF-Exporter/blob/feature/gltf-update-2-0_D3D-2812/Resources/dropdown_menu.JPG)
+
+
+The exporter uses OAuth authentication with *username/password* workflow.
+You need to log in with your Sketchfab account before continuing.
+If you don't have a Sketchfab account, you can click on the helpers to be redirected to the [sign up page](https://sketchfab.com/signup).
+
+When successfuly logged in, you will be able to use the exporter.
+Select the objects you want to export, fill the forms with model info and then click the upload button.
+The exporter will pack up everything and upload it on Sketchfab. You will be redirected to the model page when it's done.
+
+If you have any issue, please use the [Report an issue](https://help.sketchfab.com/hc/en-us/requests/new?type=exporters&subject=Unity+Exporter) link to be redirected to the support form.
+
+Supported Unity objects and features so far:
+- Scene objects such as transforms and meshes
+- PBR materials (both *Standard* and *Standard (Specular setup)* for metal/smoothness and specular/smoothness respectively). Other materials may also be exported but not with all their channels.
+- Solid and skinning animation (note that custom scripts or *humanoid* skeletal animation are not exported yet)
+
+Please note that camera, lights, custom scripts, shaders and post processes are not exported.
 
 ## Features
 * [PBR Materials](#pbrmaterials)
 * [Transparency type](#transparency)
-* [Multi-uvs support](#multiuvs)
-* [FlipY (texture flag)](#flipyflag)
-* [Normal map +/-Y flag](#normalmapflag)
+* [Texture conversion](#texture)
+* [Samples](#samples)
 
 <a name="pbrmaterials"></a>
 ##PBR materials
-The PBR material schema used here is an extended version of [FRAUNHOFER materials pbr extension](https://github.com/tsturm/glTF/tree/master/extensions/Vendor/FRAUNHOFER_materials_pbr) that includes
-a few update for completion purpose:
-
-- Split pbr workflow textures:
-	- `metallicRoughnessTexture` => `metallicTexture` + `roughnessTexture`
-	- `specularGlossinessTexture` => `specularTexture` + `glossinessTexture`
-
-- Added channels:
-	- `opacityTexture`
-	- `normalTexture` and `bumpTexture` with their respective factors `normalFactor` and `bumpFactor`. Channels are exclusive
-	- `emissiveTexture` and `emissiveFactor`
-	- `aoTexture` and `aoFactor`
+glTF 2.0 core specification includes metal/roughness PBR material declaration. Specular/glossiness workflow is also available but kept under an extensions for now.
+Note that it's still not merged in glTF core, so the info is only accessible from this PR: https://github.com/KhronosGroup/glTF/pull/830
+(It will be updated when everything will be packed up in main glTF specification)
 
 Examples:
 
-*Specular workflow:*
+The following example describes a Metallic-Roughness material:
 ```json
-"material_specularPBR": {
-    "extensions": {
-        "FRAUNHOFER_materials_pbr": {
-            "materialModel": "PBR_specular_glossiness",
-            "values": {
-                "diffuseFactor": [1, 1, 1, 1],
-                "diffuseTexture": "plane_diffuse_textureid",
-                "specularFactor": [0.2, 0.2, 0.2, 1],
-
-				"glossinessFactor": 0.443,
-                "opacityTexture": "plane_opacity_textureid",
-                "specularTexture": "plane_spec_textureid",
-                "glossinessTexture": "plane_gloss_textureid",
-                "normalFactor": 1,
-                "normalTexture": "plane_normal_textureid",
-                "aoFactor": 1,
-                "emissiveFactor": [1.0, 0.5, 0.5, 1],
-                "emissiveTexture": "plane_emissive_textureid"
+    "materials": [
+        {
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [1, 1, 1, 1],
+                "baseColorTexture" : {
+                    "index" : 0,
+                    "texCoord" : 0
+                },
+                "roughnessFactor": 0,
+                "metallicFactor": 0,
+                "metallicRoughnessTexture" : {
+                    "index" : 1,
+                    "texCoord" : 0
                 }
-            }
+            },
+            "normalFactor": 1,
+            "normalTexture" : {
+                "index" : 2,
+                "texCoord" : 0
+            },
+            "occlusionFactor": 1,
+            "occlusionTexture" : {
+                "index" : 3,
+                "texCoord" : 0
+            },
+            "emissiveFactor": [0, 0, 0, 1],
+            "name": "Skin"
         },
-        "name": "specularPBR"
-    }
-},
-
 ```
 
-*Metallic workflow:*
+It's composed of a set of PBR textures, under `pbrMetallicRoughness`, and a set of additionnal maps.
+For specular/glossiness workflow, it's still kept under an extension
+*Specular workflow:*
 ```json
-"material_metallicPBR": {
+{
     "extensions": {
-        "FRAUNHOFER_materials_pbr": {
-            "materialModel": "PBR_metal_roughness",
-            "values": {
-                    "baseColorFactor" : [0.9117647, 0.9117647, 0.9117647, 1],
-                    "baseColorTexture" : "plane_albedo_textureid",
-                    "roughnessFactor" : 0.754,
-                    "metallicTexture" : "plane_metallic_textureid",
-                    "metallicFactor" :"1.0",
-                    "roughnessTexture" : "plane_specular_textureid",
-                    "bumpFactor": 1,
-                    "bumpTexture": "plane_normal_textureid",
-                    "aoFactor": 1,
-                    "aoTexture": "plane_ao_textureid",
-                    "emissiveFactor": [0, 0, 0, 1]
+        "KHR_materials_pbrSpecularGlossiness": {
+            "diffuseFactor": [1, 1, 1, 1],
+            "diffuseTexture" : {
+                "index" : 1,
+                "texCoord" : 0
+            },
+            "glossinessFactor": 1,
+            "specularFactor": [0.2, 0.2, 0.2, 1],
+            "specularGlossinessTexture" : {
+                "index" : 2,
+                "texCoord" : 0
             }
         }
     },
-    "name": "metallicPBR"
-}
+    "normalFactor": 1,
+    "normalTexture" : {
+        "index" : 3,
+        "texCoord" : 0
+    },
+    "occlusionFactor": 1,
+    "occlusionTexture" : {
+        "index" : 4,
+        "texCoord" : 0
+    },
+    "emissiveFactor": [0, 0, 0, 1],
+    "name": "Character material"
+
 ```
+
+<a name="texture"></a>
+##Texture conversion
+
+glTF specification considers OpenGL flipY flag being disabled for images (see this [implementation note](https://github.com/KhronosGroup/glTF/tree/master/specification/1.0#images)).
+
+(For more details about Flip Y flag in WebGL, see [gl.UNPACK_FLIP_Y_WEBGL parameter](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/pixelStorei)).
+
+This flag is enabled for most software, including Unity, so textures need to be flipped along Y axis in order to match glTF specification.
+The exporter applies this operation on all the exported textures.
+
+Moreover, Unity uses smoothness and not roughness, so *alpha channel is inverted for RGBA Metallic/Smoothness textures*, also to match glTF specification.
+
 
 <a name="transparency"></a>
 ##Transparency
 
 In order to differenciate between transparency types in Unity, an `extra` metadata is added to the material.
 
-It allows to know which `blendMode` is used and the `cutoff` value.
+It allows Sketchfab to know which `blendMode` is used and the `cutoff` value.
 
 For now, `blendMode` valid values are `alphaMask` and `alphaBlend`.
 ```json
@@ -100,86 +139,7 @@ For now, `blendMode` valid values are `alphaMask` and `alphaBlend`.
 },
 ```
 
-<a name="multiuvs"></a>
-##Multi-uvs support
-
-At the moment, glTF specification doesn't provide any way to declare which UV set in the geometry is used by a given texture.
-See [this issue](https://github.com/KhronosGroup/glTF/issues/742) on glTF repository.
-
-In Unity exports, this data is added to the material channels under the `semantic`field.
-```json
-"aoTexture": {
-    "texture" : "texture_Lightmap-0_comp_light_9514",
-    "semantic" : "TEXCOORD_4"
-}
-```
-
-The value of `semantic` corresponds to the attributes key of the UV set used, in the mesh:
-```json
-"mesh_Plane001_9690": {
-    "name": "mesh_Plane001_9690",
-    "primitives": [ {
-        "attributes": {
-            "POSITION": "accessor_position_Plane001_9690",
-            "NORMAL": "accessor_normal_Plane001_9690",
-            "TEXCOORD_0": "accessor_uv0_Plane001_9690",
-            "TEXCOORD_1": "accessor_uv1_Plane001_9690",
-            "TEXCOORD_4": "accessor_uv4_Plane001_9690"
-        },
-        "indices": "accessor_indices_0_Plane001_9690",
-        "material": "material_cube_1_11974",
-        "mode": 4
-    } ]
-}
-
-```
-
-<a name="flipyflag"></a>
-##FlipY (texture flag)
-
-glTF specification considers OpenGL flipY flag being disabled for images (see [this implementation note](https://github.com/KhronosGroup/glTF/tree/master/specification/1.0#images)).
-
-(For more details about Flip Y flag in WebGL, see [gl.UNPACK_FLIP_Y_WEBGL parameter](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/pixelStorei) )
-
-This flag is enabled for most softwares including Unity, so texture would be read upside down, so to keep this data in the exported glTF, the flag is added in texture data (see [this issue](https://github.com/KhronosGroup/glTF/issues/736) )
-
-```json
-"texture_plane_diffuse_jpg": {
-    "format": 6408,
-    "internalFormat": 6408,
-    "flipY": true,
-    "sampler": "sampler_0",
-    "source": "monster_jpg",
-    "target": 3553,
-    "type": 5121
-}
-```
-
-<a name="normalmapflag"></a>
-## DirectX vs OpenGL (normal map yUp flag)
-
-OpenGL and DirectX have two different ways to use *normal maps*.
-
-In order to dissociate those case and know in which space the normal map is, the flag yUp is added as `extra` (that is the common way to add application specific metadata on glTF objects)
-
-```json
-"texture_01_-_Default_normal_23668": {
-    "extras": {
-        "yUp" : true
-    },
-    "format": 6408,
-    "internalFormat": 6408,
-    "flipY": true,
-    "sampler": "sampler_1_0_m",
-    "source": "image_01_-_Default_normal_23668",
-    "target": 3553,
-    "type": 5121
-},
-```
-
 <a name="samples"></a>
 ## Samples
 
 Some samples exported using this plugin are available (and downloadable) on Sketchfab https://sketchfab.com/features/gltf.
-
-These glTF files contain all the additional features listed above.

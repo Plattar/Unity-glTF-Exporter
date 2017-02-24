@@ -14,8 +14,8 @@ public class GlTF_Texture : GlTF_Writer {
 */
 	public int format = 6408;
 	public int internalFormat = 6408;
-	public string samplerName;
-	public string source;
+	public int samplerIndex;
+	public int source;
 	public int target = 3553;
 	public int tType = 5121;
 	public bool flipy = true;
@@ -27,16 +27,15 @@ public class GlTF_Texture : GlTF_Writer {
 
 	public override void Write()
 	{
-		Indent();	jsonWriter.Write ("\"" + name + "\": {\n");
+		Indent();	jsonWriter.Write ("{\n");
 		IndentIn();
 
 		writeExtras();
 
 		Indent();	jsonWriter.Write ("\"format\": " + format + ",\n");
 		Indent();	jsonWriter.Write ("\"internalFormat\": " + internalFormat + ",\n");
-		Indent();	jsonWriter.Write ("\"flipY\": " + flipy.ToString().ToLower() + ",\n");
-		Indent();	jsonWriter.Write ("\"sampler\": \"" + samplerName + "\",\n");
-		Indent();	jsonWriter.Write ("\"source\": \"" + source + "\",\n");
+		Indent();	jsonWriter.Write ("\"sampler\": " + samplerIndex + ",\n");
+		Indent();	jsonWriter.Write ("\"source\": " + source + ",\n");
 		Indent();	jsonWriter.Write ("\"target\": " + target + ",\n");
 		Indent();	jsonWriter.Write ("\"type\": " + tType + "\n");
 		IndentOut();
