@@ -1319,7 +1319,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		newtex.SetPixels(newTextureColors);
 		newtex.Apply();
 
-		string outputFilename = Path.GetFileNameWithoutExtension(assetPath) + (format == IMAGETYPE.RGBA ? ".png" : ".jpg");
+		string outputFilename = Path.GetFileNameWithoutExtension(assetPath) + (format ==IMAGETYPE.RG ? "_converted_metalRoughness" :"") + (format == IMAGETYPE.RGBA ? ".png" : ".jpg");
 		string outputPath = Path.Combine(outputDir, outputFilename);
 
 		File.WriteAllBytes(outputPath, (format == IMAGETYPE.RGBA ? newtex.EncodeToPNG() : newtex.EncodeToJPG( format== IMAGETYPE.NORMAL_MAP ? 95 : jpgQuality)));
