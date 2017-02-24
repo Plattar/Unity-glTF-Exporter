@@ -522,7 +522,6 @@ public class GlTF_Writer {
 			Indent();	jsonWriter.Write ("]");
 		}
 		CommaNL();
-		Indent();			jsonWriter.Write ("\"scene\": \"defaultScene\",\n");
 		Indent();			jsonWriter.Write ("\"scenes\": [\n");
 		IndentIn();
 		Indent();			jsonWriter.Write ("{\n");
@@ -545,7 +544,9 @@ public class GlTF_Writer {
 		IndentOut();
 		Indent();			jsonWriter.Write ("}\n");
 		IndentOut();
-		Indent();			jsonWriter.Write ("]");
+		Indent();			jsonWriter.Write ("],\n");
+
+		Indent(); jsonWriter.Write("\"scene\": 0");
 
 		//if (shaders != null && shaders.Count > 0)
 		//{
