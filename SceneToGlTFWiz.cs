@@ -20,6 +20,7 @@ public enum IMAGETYPE
 	GRAYSCALE,
 	RGB,
 	RGBA,
+	RGBA_INVERT_A,
 	NORMAL_MAP,
 	IGNORE
 }
@@ -1061,6 +1062,11 @@ public class SceneToGlTFWiz : MonoBehaviour
 									format = IMAGETYPE.RGBA;
 							}
 
+							if(pName.CompareTo("_MetallicGlossMap") == 0)
+							{
+								format = IMAGETYPE.RGBA_INVERT_A;
+							}
+
 							if (!GlTF_Writer.textureNames.Contains(texName) && AssetDatabase.GetAssetPath(t).Length > 0)
 							{
 								if (doConvertImages && isBumpTexture && !isBumpMap)
@@ -1225,6 +1231,33 @@ public class SceneToGlTFWiz : MonoBehaviour
 		}
 	}
 
+	private void getPixelsFromTexture(ref Texture2D texture, out Color[] pixels, IMAGETYPE imageFormat)
+	{
+		//Make texture readable
+		TextureImporter im = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(texture)) as TextureImporter;
+		bool readable = im.isReadable;
+		TextureImporterCompression format = im.textureCompression;
+		TextureImporterType type = im.textureType;
+
+		if (!readable)
+			im.isReadable = true;
+		if (type != TextureImporterType.Default)
+			im.textureType = TextureImporterType.Default;
+
+		im.textureCompression = TextureImporterCompression.Uncompressed;
+		im.SaveAndReimport();
+
+		pixels = texture.GetPixels();
+
+		if (!readable)
+			im.isReadable = false;
+		if (type != TextureImporterType.Default)
+			im.textureType = type;
+
+		im.textureCompression = format;
+		im.SaveAndReimport();
+	}
+
 	private void getBytesFromTexture(ref Texture2D texture, out byte[] pixels, IMAGETYPE imageFormat)
 	{
 		//Make texture readable
@@ -1291,6 +1324,37 @@ public class SceneToGlTFWiz : MonoBehaviour
 	//	return filename;
 	//}
 
+	public string flipTextureY(ref Texture2D inputTexture, string assetPath, string outputDir, IMAGETYPE format)
+	{
+		int height = inputTexture.height;
+		int width = inputTexture.width;
+		Color[] textureColors = new Color[inputTexture.height * inputTexture.width];
+		getPixelsFromTexture(ref inputTexture, out textureColors, format);
+		Color[] newTextureColors = new Color[inputTexture.height * inputTexture.width];
+
+		for (int i = 0; i < height; ++i)
+		{
+			for (int j = 0; j < width; ++j)
+			{
+				newTextureColors[i * width + j] = textureColors[(height - i - 1) * width + j];
+				if(format == IMAGETYPE.RGBA_INVERT_A)
+					newTextureColors[i * width + j].a = 1.0f - textureColors[(height - i - 1) * width + j].a;
+			}
+		}
+
+		Texture2D newtex = new Texture2D(inputTexture.width, inputTexture.height);
+		newtex.SetPixels(newTextureColors);
+		newtex.Apply();
+
+		string outputFilename = Path.GetFileNameWithoutExtension(assetPath) + (format == IMAGETYPE.RGB ? ".jpg" : ".png");
+		string outputPath = Path.Combine(outputDir, outputFilename);
+
+		File.WriteAllBytes(outputPath, (format == IMAGETYPE.RGB ? newtex.EncodeToJPG() : newtex.EncodeToPNG()));
+		GlTF_Writer.exportedFiles.Add(outputPath);
+
+		return outputFilename;
+	}
+
 	public string convertTexture(Texture2D inputTexture, string assetPath, string outputDir, IMAGETYPE format)
 	{
 		Color[] pixels;
@@ -1333,7 +1397,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			//}
 			else if (format != IMAGETYPE.IGNORE)
 			{
-				return convertTexture(t, assetPath, path, format);
+				return flipTextureY(ref t, assetPath, path, format);
 			}
 			else
 			{
