@@ -1319,10 +1319,10 @@ public class SceneToGlTFWiz : MonoBehaviour
 		newtex.SetPixels(newTextureColors);
 		newtex.Apply();
 
-		string outputFilename = Path.GetFileNameWithoutExtension(assetPath) + (format == IMAGETYPE.RGBA || format == IMAGETYPE.NORMAL_MAP ? ".png" : ".jpg");
+		string outputFilename = Path.GetFileNameWithoutExtension(assetPath) + (format == IMAGETYPE.RGBA ? ".png" : ".jpg");
 		string outputPath = Path.Combine(outputDir, outputFilename);
 
-		File.WriteAllBytes(outputPath, (format == IMAGETYPE.RGBA || format == IMAGETYPE.NORMAL_MAP ? newtex.EncodeToPNG() : newtex.EncodeToJPG(jpgQuality)));
+		File.WriteAllBytes(outputPath, (format == IMAGETYPE.RGBA ? newtex.EncodeToPNG() : newtex.EncodeToJPG( format== IMAGETYPE.NORMAL_MAP ? 95 : jpgQuality)));
 		GlTF_Writer.exportedFiles.Add(outputPath);
 
 		return outputFilename;
