@@ -100,7 +100,7 @@ public class GlTF_Attributes : GlTF_Writer {
 		if (colorAccessor != null)
 		{
 			CommaNL();
-			Indent(); jsonWriter.Write("\"COLOR\": " + GlTF_Writer.accessors.IndexOf(colorAccessor));
+			Indent(); jsonWriter.Write("\"COLOR_0\": " + GlTF_Writer.accessors.IndexOf(colorAccessor));
 		}
 		if (texCoord0Accessor != null)
 		{
