@@ -1,27 +1,27 @@
 # Unity to Sketchfab exporter
 
-Unity editor wizard that exports unity object to Sketchfab using **glTF 2.0** Format
+Unity editor wizard that exports Unity object to Sketchfab using **glTF 2.0** Format
 
-Exporter based on Unity-glTF-Exporter from https://github.com/tparisi/Unity-glTF-Exporter
+Plugin based on Unity-glTF-Exporter from https://github.com/tparisi/Unity-glTF-Exporter
 
 ## How to use it
 
-Once the plugin is imported (from the unity package provided in [the last release here](https://github.com/sketchfab/Unity-glTF-Exporter/releases), or after having checked out this repo),
+Once the plugin is imported (from the Unity package provided in [the last release here](https://github.com/sketchfab/Unity-glTF-Exporter/releases), or after having checked out this repo),
 a new item should appear in the *Tools* menu. You can access the exporter by going through **Tools/Publish to Sketchfab** as shown in the following screenshot:
 
 
 ![alt tag](https://github.com/sketchfab/Unity-glTF-Exporter/blob/feature/gltf-update-2-0_D3D-2812/Resources/dropdown_menu.JPG)
 
 
-The exporter uses oauth authentication with *username/password* workflow.
+The exporter uses OAuth authentication with *username/password* workflow.
 You need to log in with your Sketchfab account before continuing.
 If you don't have a Sketchfab account, you can click on the helpers to be redirected to the [sign up page](https://sketchfab.com/signup).
 
-When successfuly logged, you will be able to use the exporter.
-Select the objects you want to export, fill the forms with model infos and then click the upload button.
+When successfuly logged in, you will be able to use the exporter.
+Select the objects you want to export, fill the forms with model info and then click the upload button.
 The exporter will pack up everything and upload it on Sketchfab. You will be redirected to the model page when it's done.
 
-If you have any issue, please use the [Report an issue](https://help.sketchfab.com/hc/en-us/requests/new?type=exporters&subject=Unity+Exporter) link to be redirected to an appropriate report form.
+If you have any issue, please use the [Report an issue](https://help.sketchfab.com/hc/en-us/requests/new?type=exporters&subject=Unity+Exporter) link to be redirected to the support form.
 
 Supported Unity objects and features so far:
 - Scene objects such as transforms and meshes
@@ -39,7 +39,7 @@ Please note that camera, lights, custom scripts, shaders and post processes are 
 <a name="pbrmaterials"></a>
 ##PBR materials
 glTF 2.0 core specification includes metal/roughness PBR material declaration. Specular/glossiness workflow is also available but kept under an extensions for now.
-Note that it's still not merged in glTF core, so the info are only accessible from this PR: https://github.com/KhronosGroup/glTF/pull/830
+Note that it's still not merged in glTF core, so the info is only accessible from this PR: https://github.com/KhronosGroup/glTF/pull/830
 (It will be updated when everything will be packed up in main glTF specification)
 
 Examples:
@@ -118,10 +118,10 @@ glTF specification considers OpenGL flipY flag being disabled for images (see th
 
 (For more details about Flip Y flag in WebGL, see [gl.UNPACK_FLIP_Y_WEBGL parameter](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/pixelStorei)).
 
-This flag is enabled for most softwares including Unity, so textures need to be flipped along Y axis in order to match glTF specification.
+This flag is enabled for most software, including Unity, so textures need to be flipped along Y axis in order to match glTF specification.
 The exporter applies this operation on all the exported textures.
 
-Moreover, unity uses smoothness and not roughness, so *alpha channel is inverted for RGBA Metallic/Smoothness textures*, also to match glTF specification.
+Moreover, Unity uses smoothness and not roughness, so *alpha channel is inverted for RGBA Metallic/Smoothness textures*, also to match glTF specification.
 
 
 <a name="transparency"></a>
@@ -129,7 +129,7 @@ Moreover, unity uses smoothness and not roughness, so *alpha channel is inverted
 
 In order to differenciate between transparency types in Unity, an `extra` metadata is added to the material.
 
-It allows to know which `blendMode` is used and the `cutoff` value.
+It allows Sketchfab to know which `blendMode` is used and the `cutoff` value.
 
 For now, `blendMode` valid values are `alphaMask` and `alphaBlend`.
 ```json
