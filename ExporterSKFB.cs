@@ -26,7 +26,7 @@ public class ExporterSKFB : EditorWindow {
 	{
 #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX // edit: added Platform Dependent Compilation - win or osx standalone
 		ExporterSKFB window = (ExporterSKFB)EditorWindow.GetWindow(typeof(ExporterSKFB));
-		window.title = "Sketchfab";
+		window.titleContent.text = "Sketchfab";
 		window.Show();
 #else // and error dialog if not standalone
 		EditorUtility.DisplayDialog("Error", "Your build target must be set to standalone", "Okay");
@@ -45,10 +45,8 @@ public class ExporterSKFB : EditorWindow {
 	// UI dimensions (to be cleaned)
 	[SerializeField]
 	Vector2 loginSize = new Vector2(603, 190);
-	Vector2 loginSizeOutDate = new Vector2(603, 190);
 	[SerializeField]
 	Vector2 fullSize = new Vector2(603, 690);
-	Vector2 fullSizeOutDate = new Vector2(603, 690);
 	[SerializeField]
 	Vector2 descSize = new Vector2(603, 175);
 
@@ -98,8 +96,6 @@ public class ExporterSKFB : EditorWindow {
 	private bool param_autopublish = true;
 	private bool param_private = false;
 	private string param_password = "";
-	private string param_token = "";
-	private bool convertTextures = false;
 
 	// Exporter UI: dynamic elements
 	private string status = "";
@@ -110,7 +106,7 @@ public class ExporterSKFB : EditorWindow {
 	private string userDisplayName = "";
 	Dictionary<string, string> categories = new Dictionary<string, string>();
 	List<string> categoriesNames = new List<string>();
-	int categoryIndex = 0;
+	//int categoryIndex = 0;
 	Rect windowRect;
 
 	// Oauth stuff

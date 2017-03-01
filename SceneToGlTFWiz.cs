@@ -32,7 +32,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 	public GlTF_Writer writer;
 	string savedPath = "";
-	bool exportPBRMaterials = true;
 	string currentTransformName = "";
 	int currentObjectIndex = 0;
 	int nbSelectedObjects = 0;
