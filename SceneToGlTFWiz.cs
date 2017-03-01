@@ -711,7 +711,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			//Generate lightmap
 			Texture2D convertedLightmap = new Texture2D(lightmapTex.width, lightmapTex.height, TextureFormat.RGB24, false);
 			Color[] lightmapPixels;
-			getPixelsFromTexture(ref lightmapTex, out lightmapPixels);
+			getPixelsFromTexture(ref lightmapTex, out lightmapPixels, IMAGETYPE.RGB);
 
 			convertedLightmap.SetPixels(lightmapPixels);
 			convertedLightmap.Apply();
@@ -1150,7 +1150,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 		// Need to make texture readable
 		Color[] pixels;
-		getPixelsFromTexture(ref texture, out pixels);
+		getPixelsFromTexture(ref texture, out pixels, IMAGETYPE.RGBA);
 
 		//FIXME should not be done like this..
 		if(pbr==null)
@@ -1212,26 +1212,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 		return outputs;
 	}
 
-	private void getPixelsFromTexture(ref Texture2D texture, out Color[] pixels)
-	{
-		//Make texture readable
-		TextureImporter im = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(texture)) as TextureImporter;
-		bool readable = im.isReadable;
-		if (!readable)
-		{
-			im.isReadable = true;
-			im.SaveAndReimport();
-		}
-
-		pixels = texture.GetPixels();
-
-		if (!readable)
-		{
-			im.isReadable = false;
-			im.SaveAndReimport();
-		}
-	}
-
 	private void getPixelsFromTexture(ref Texture2D texture, out Color[] pixels, IMAGETYPE imageFormat)
 	{
 		//Make texture readable
@@ -1239,6 +1219,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		bool readable = im.isReadable;
 		TextureImporterCompression format = im.textureCompression;
 		TextureImporterType type = im.textureType;
+		bool isConvertedBump = im.convertToNormalmap;
 
 		if (!readable)
 			im.isReadable = true;
@@ -1254,6 +1235,9 @@ public class SceneToGlTFWiz : MonoBehaviour
 			im.isReadable = false;
 		if (type != TextureImporterType.Default)
 			im.textureType = type;
+
+		if (isConvertedBump)
+			im.convertToNormalmap = true;
 
 		im.textureCompression = format;
 		im.SaveAndReimport();
