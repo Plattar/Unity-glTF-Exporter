@@ -805,6 +805,11 @@ public class SceneToGlTFWiz : MonoBehaviour
 			if (t == typeof(MeshRenderer))
 			{
 				MeshFilter mf = tr.GetComponent<MeshFilter>();
+				if(!mf)
+				{
+					Debug.Log("The gameObject " + tr.name + " will be exported as Transform (object has no MeshFilter component attached)");
+					return null;
+				}
 				m = mf.sharedMesh;
 			} else if (t == typeof(SkinnedMeshRenderer))
 			{
