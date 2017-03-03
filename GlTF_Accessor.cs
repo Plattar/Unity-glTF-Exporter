@@ -382,7 +382,6 @@ public class GlTF_Accessor : GlTF_Writer {
 	{
 		Indent();		jsonWriter.Write ("{\n");
 		IndentIn();
-		Indent();		jsonWriter.Write("\"name\": \"" + id + "\",\n");
 		Indent();		jsonWriter.Write ("\"bufferView\": " + bufferViews.IndexOf(bufferView) +",\n");
 		Indent();		jsonWriter.Write ("\"byteOffset\": " + byteOffset + ",\n");
 		Indent();		jsonWriter.Write ("\"byteStride\": " + byteStride + ",\n");
