@@ -209,7 +209,7 @@ public class ExporterSKFB : EditorWindow {
 						latestVersion = githubResponse[0]["tag_name"];
 						if (exporterVersion != latestVersion)
 						{
-							bool update = EditorUtility.DisplayDialog("Exporter update", "A new version is available \n(you have version " + exporterVersion + ")\nIt's strongly recommended  that you update now. The latest version may include important bug fixes and improvements", "Update", "Skip");
+							bool update = EditorUtility.DisplayDialog("Exporter update", "A new version is available \n(you have version " + exporterVersion + ")\nIt's strongly rsecommended that you update now. The latest version may include important bug fixes and improvements", "Update", "Skip");
 							if (update)
 							{
 								Application.OpenURL(latestReleaseUrl);
