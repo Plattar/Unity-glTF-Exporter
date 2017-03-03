@@ -616,21 +616,18 @@ public class SceneToGlTFWiz : MonoBehaviour
 			GlTF_Writer.nodes.Add (node);
 		}
 
-		// Other texture conversion method
-		//if (doConvertImages)
-		//    convertImages(ref GlTF_Writer.images, ref GlTF_Writer.exportedFiles, savedPath);
+		if (GlTF_Writer.meshes.Count == 0)
+		{
+			Debug.Log("No visible objects have been exported. Aboring export");
+			yield return false;
+		}
 
 		writer.OpenFiles(path);
 		writer.Write ();
 		writer.CloseFiles();
+
 		if(nbDisabledObjects > 0)
 			Debug.Log(nbDisabledObjects + " disabled object ignored during export");
-
-		if(GlTF_Writer.meshes.Count == 0)
-		{
-			Debug.Log("No visible objects have been exported. Aboring export");
-				yield return false;
-		}
 
 		Debug.Log("Scene has been exported to " + path);
 		if(buildZip)
@@ -799,7 +796,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 	{
 		var mr = GetRenderer(tr);
 		Mesh m = null;
-		if (mr != null)
+		if (mr != null && mr.enabled)
 		{
 			var t = mr.GetType();
 			if (t == typeof(MeshRenderer))
