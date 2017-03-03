@@ -9,13 +9,11 @@ public class GlTF_Animation : GlTF_Writer {
 	//bool gotTranslation = false;
 	//bool gotRotation = false;
 	//bool gotScale = false;
-	string targetName;
 
 	int bakingFramerate = 30; // FPS
 
 	public GlTF_Animation (string n, string target) {
 		name = n;
-		targetName = target;
 	}
 
 	private struct TargetCurveSet
