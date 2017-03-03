@@ -509,7 +509,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 				mesh.Populate(baked);
 				GlTF_Writer.meshes.Add(mesh);
-				node.meshIndexes.Add(GlTF_Writer.meshes.IndexOf(mesh));
+				node.meshIndex = GlTF_Writer.meshes.IndexOf(mesh);
 			}
 
 			// Parse animations
