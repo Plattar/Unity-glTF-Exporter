@@ -561,7 +561,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			{
 				node.skeletons = GlTF_Skin.findRootSkeletons(skinMesh);
 				GlTF_Skin skin = new GlTF_Skin();
-				skin.setBindShapeMatrix(tr);
+
 				skin.name = GlTF_Writer.cleanNonAlphanumeric(skinMesh.rootBone.name) + "_skeleton_" + GlTF_Writer.cleanNonAlphanumeric(node.name) + tr.GetInstanceID();
 
 				// Create invBindMatrices accessor
@@ -662,7 +662,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 		//FIXME what if object has no lightmap ?
 		LightmapData lightmap = LightmapSettings.lightmaps[meshRenderer.lightmapIndex];
-		Texture2D lightmapTex = lightmap.lightmapLight;
+		Texture2D lightmapTex = lightmap.lightmapColor;
 
 		// Handle UV lightmaps
 		MeshFilter meshfilter = tr.GetComponent<MeshFilter>();

@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class GlTF_Skin : GlTF_Writer {
-	public GlTF_Matrix bindShapeMatrix;
 	public Matrix4x4[] invBindMatrices;
 	public int invBindMatricesAccessorIndex;
 	public Transform node;
@@ -16,13 +15,6 @@ public class GlTF_Skin : GlTF_Writer {
 	public static string GetNameFromObject(Object o)
 	{
 		return "skin_" + GlTF_Writer.GetNameFromObject(o, true);
-	}
-
-	public void setBindShapeMatrix(Transform mesh)
-	{
-		Matrix4x4 mat = Matrix4x4.identity;
-		bindShapeMatrix = new GlTF_Matrix(mat);
-		bindShapeMatrix.name = "bindShapeMatrix";
 	}
 
 	public void Populate (Transform m, ref GlTF_Accessor invBindMatricesAccessor, int invBindAccessorIndex)
@@ -101,12 +93,6 @@ public class GlTF_Skin : GlTF_Writer {
 	{
 		Indent();	jsonWriter.Write ("{\n");
 		IndentIn();
-
-		if (bindShapeMatrix != null)
-		{
-			CommaNL();
-			bindShapeMatrix.Write();
-		}
 
 		Indent(); jsonWriter.Write(",\n");
 		Indent(); jsonWriter.Write("\"inverseBindMatrices\": "+ invBindMatricesAccessorIndex + ",\n");
