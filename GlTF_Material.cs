@@ -9,11 +9,12 @@ public class GlTF_Material : GlTF_Writer {
 
 	public class ColorValue : Value {
 		public Color color;
+		public bool isRGB = false;
 
 		public override void Write()
 		{
 			jsonWriter.Write ("\"" + name + "\": [");
-			jsonWriter.Write (color.r.ToString() + ", " + color.g.ToString() + ", " +color.b.ToString() + ", " + color.a.ToString());
+			jsonWriter.Write (color.r.ToString() + ", " + color.g.ToString() + ", " +color.b.ToString() + (isRGB ? "" : ", " + color.a.ToString()));
 			jsonWriter.Write ("]");
 		}
 	}

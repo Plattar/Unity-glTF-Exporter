@@ -923,6 +923,12 @@ public class SceneToGlTFWiz : MonoBehaviour
 				{
 					matCol.color.a = 1.0f;
 				}
+
+				if (pName.CompareTo("_EmissionColor") == 0)
+				{
+					matCol.isRGB = true;
+				}
+
 				if (isPBRChannel)
 					material.pbrValues.Add(matCol);
 				else
@@ -934,7 +940,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 				var matVec = new GlTF_Material.VectorValue();
 				matVec.name = gltfPName;
 				matVec.vector = mat.GetVector(pName);
-				if(isPBRChannel)
+
+				if (isPBRChannel)
 					material.pbrValues.Add(matVec);
 				else
 					material.values.Add(matVec);
