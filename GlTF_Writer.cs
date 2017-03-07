@@ -418,19 +418,22 @@ public class GlTF_Writer {
 			Indent(); jsonWriter.Write("]");
 		}
 
-		CommaNL();
-		Indent(); jsonWriter.Write("\"extensionsUsed\": [\n");
-		IndentIn();
-		if (hasSpecularMaterials)
+		if(hasSpecularMaterials || binary)
 		{
-			Indent(); jsonWriter.Write("\"KHR_materials_pbrSpecularGlossiness\"\n");
+			CommaNL();
+			Indent(); jsonWriter.Write("\"extensionsUsed\": [\n");
+			IndentIn();
+			if (hasSpecularMaterials)
+			{
+				Indent(); jsonWriter.Write("\"KHR_materials_pbrSpecularGlossiness\"\n");
+			}
+			if (binary)
+			{
+				Indent(); jsonWriter.Write("\"KHR_binary_glTF\"\n");
+			}
+			IndentOut();
+			Indent(); jsonWriter.Write("]");
 		}
-		if (binary)
-		{
-			Indent(); jsonWriter.Write("\"KHR_binary_glTF\"\n");
-		}
-		IndentOut();
-		Indent(); jsonWriter.Write("]");
 
 		if (images.Count > 0)
 		{
