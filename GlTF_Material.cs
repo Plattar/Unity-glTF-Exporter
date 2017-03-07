@@ -60,10 +60,12 @@ public class GlTF_Material : GlTF_Writer {
 	public class DictValue: Value
 	{
 		public Dictionary<string, int> intValue;
+		public Dictionary<string, float> floatValue;
 		public Dictionary<string, string> stringValue;
 		public DictValue()
 		{
 			intValue = new Dictionary<string, int>();
+			floatValue = new Dictionary<string, float>();
 			stringValue = new Dictionary<string, string>();
 		}
 		public override void Write()
@@ -75,6 +77,11 @@ public class GlTF_Material : GlTF_Writer {
 			{
 				CommaNL();
 				Indent(); jsonWriter.Write("\"" + key + "\" : " + intValue[key]);
+			}
+			foreach (string key in floatValue.Keys)
+			{
+				CommaNL();
+				Indent(); jsonWriter.Write("\"" + key + "\" : " + floatValue[key]);
 			}
 			foreach (string key in stringValue.Keys)
 			{

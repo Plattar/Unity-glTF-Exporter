@@ -843,9 +843,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		Dictionary<string, string> UnityToGltfAdditionalChannels = new Dictionary<string, string>
 		{
 			{"_BumpMap","normalTexture" },
-			{"_BumpScale", "normalFactor" },
 			{"_OcclusionMap","occlusionTexture" },
-			{"_OcclusionStrength", "occlusionFactor" },
 			{"_EmissionMap", "emissiveTexture" },
 			{"_EmissionColor","emissiveFactor" }
 		};
@@ -1105,6 +1103,15 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 								val.intValue.Add("index", GlTF_Writer.textures.Count);
 								val.intValue.Add("texCoord", 0);
+								if(isBumpTexture && !isBumpMap && mat.HasProperty("_BumpScale"))
+								{
+									val.floatValue.Add("scale", mat.GetFloat("_BumpScale"));
+								}
+								if(pName.CompareTo("_OcclusionMap") == 0 && mat.HasProperty("_OcclusionStrength"))
+								{
+									val.floatValue.Add("strength", mat.GetFloat("_OcclusionStrength"));
+								}
+
 								if(isPBRChannel)
 									material.pbrValues.Add(val);
 								else
