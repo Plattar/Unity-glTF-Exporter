@@ -12,12 +12,12 @@ public class GlTF_Writer {
 	public static string binFileName;
 	public static bool binary;
 	static bool[] firsts = new bool[100];
-	public static GlTF_BufferView ushortBufferView = new GlTF_BufferView("ushortBufferView", 34963);
-	public static GlTF_BufferView floatBufferView = new GlTF_BufferView("floatBufferView");
-	public static GlTF_BufferView vec2BufferView = new GlTF_BufferView("vec2BufferView");
-	public static GlTF_BufferView vec3BufferView = new GlTF_BufferView("vec3BufferView");
-	public static GlTF_BufferView vec4BufferView = new GlTF_BufferView("vec4BufferView");
-	public static GlTF_BufferView mat4BufferView = new GlTF_BufferView("mat4BufferView");
+	public static GlTF_BufferView ushortBufferView = new GlTF_BufferView("ushortBufferView", 0, 34963);
+	public static GlTF_BufferView floatBufferView = new GlTF_BufferView("floatBufferView", 0);
+	public static GlTF_BufferView vec2BufferView = new GlTF_BufferView("vec2BufferView", 8);
+	public static GlTF_BufferView vec3BufferView = new GlTF_BufferView("vec3BufferView", 12);
+	public static GlTF_BufferView vec4BufferView = new GlTF_BufferView("vec4BufferView", 16);
+	public static GlTF_BufferView mat4BufferView = new GlTF_BufferView("mat4BufferView", 64);
 
 	public static List<GlTF_BufferView> bufferViews = new List<GlTF_BufferView>();
 	public static List<GlTF_Camera> cameras = new List<GlTF_Camera>();
@@ -123,12 +123,12 @@ public class GlTF_Writer {
 	public void Init()
 	{
 		firsts = new bool[100];
-		ushortBufferView = new GlTF_BufferView("ushortBufferView", 34963);
-		floatBufferView = new GlTF_BufferView("floatBufferView");
-		vec2BufferView = new GlTF_BufferView("vec2BufferView");
-		vec3BufferView = new GlTF_BufferView("vec3BufferView");
-		vec4BufferView = new GlTF_BufferView("vec4BufferView");
-		mat4BufferView = new GlTF_BufferView("mat4BufferView");
+		ushortBufferView = new GlTF_BufferView("ushortBufferView", 0, 34963);
+		floatBufferView = new GlTF_BufferView("floatBufferView", 0);
+		vec2BufferView = new GlTF_BufferView("vec2BufferView", 8);
+		vec3BufferView = new GlTF_BufferView("vec3BufferView", 12);
+		vec4BufferView = new GlTF_BufferView("vec4BufferView", 16);
+		mat4BufferView = new GlTF_BufferView("mat4BufferView", 64);
 		bufferViews = new List<GlTF_BufferView>();
 		cameras = new List<GlTF_Camera>();
 		lights = new List<GlTF_Light>();
