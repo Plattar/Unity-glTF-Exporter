@@ -4,6 +4,7 @@ GlamExport
 
 
 ****************************************************************************/
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
 using System;
@@ -1360,3 +1361,4 @@ public class SceneToGlTFWiz : MonoBehaviour
 		return fn;
 	}
 }
+#endif

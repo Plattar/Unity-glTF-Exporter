@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 
 public class GlTF_Primitive : GlTF_Writer {
@@ -34,3 +35,4 @@ public class GlTF_Primitive : GlTF_Writer {
 		IndentOut();
 	}
 }
+#endif

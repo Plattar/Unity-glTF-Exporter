@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 using System.IO;
 using System.Collections.Generic;
@@ -797,3 +798,4 @@ public class GlTF_Writer {
 //	}";
 //		tqs = tqs.Replace ("'", "\"");
 //		jsonWriter.Write (tqs);
+#endif

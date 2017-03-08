@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 
 public class GlTF_AmbientLight : GlTF_Light {
@@ -7,3 +8,4 @@ public class GlTF_AmbientLight : GlTF_Light {
 		color.Write();
 	}
 }
+#endif

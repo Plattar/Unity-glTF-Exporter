@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 
 public class GlTF_Texture : GlTF_Writer {
@@ -42,3 +43,4 @@ public class GlTF_Texture : GlTF_Writer {
 		Indent();	jsonWriter.Write ("}");
 	}
 }
+#endif

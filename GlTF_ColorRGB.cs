@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 
 public class GlTF_ColorRGB : GlTF_Writer {
@@ -16,3 +17,4 @@ public class GlTF_ColorRGB : GlTF_Writer {
 		jsonWriter.Write (color.r.ToString() + ", " + color.g.ToString() + ", " +color.b.ToString()+"]");
 	}
 }
+#endif

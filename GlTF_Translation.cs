@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 
 public class GlTF_Translation : GlTF_Vector3 {
@@ -16,3 +17,4 @@ public class GlTF_Translation : GlTF_Vector3 {
 		jsonWriter.Write ("]");
 	}
 }
+#endif

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 using System.IO;
 using System;
@@ -90,3 +91,4 @@ public class GlTF_BufferView : GlTF_Writer  {
 		Indent();		jsonWriter.Write ("}");
 	}
 }
+#endif

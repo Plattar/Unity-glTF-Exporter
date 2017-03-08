@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 
 public class GlTF_Shader : GlTF_Writer {
@@ -41,3 +42,4 @@ public class GlTF_Shader : GlTF_Writer {
 		return 0;
 	}
 }
+#endif

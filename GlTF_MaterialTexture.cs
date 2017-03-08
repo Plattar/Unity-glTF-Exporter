@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 
 public class GlTF_MaterialTexture : GlTF_ColorOrTexture {
@@ -9,3 +10,4 @@ public class GlTF_MaterialTexture : GlTF_ColorOrTexture {
 		Indent();		jsonWriter.Write ("\"" + name + "\": \""+texture.name+"\"");
 	}
 }
+#endif
