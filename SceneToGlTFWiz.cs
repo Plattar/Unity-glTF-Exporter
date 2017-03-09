@@ -636,12 +636,15 @@ public class SceneToGlTFWiz : MonoBehaviour
 			ZipFile zip = new ZipFile();
 			Debug.Log(GlTF_Writer.exportedFiles.Count + " files generated");
 			string zipName = Path.GetFileNameWithoutExtension(path) + ".zip";
-
-			zip.AddFiles(GlTF_Writer.exportedFiles, "");
+			foreach(string originFilePath in GlTF_Writer.exportedFiles.Keys)
+			{
+				zip.AddFile(originFilePath, GlTF_Writer.exportedFiles[originFilePath]);
+			}
+			
 			zip.Save(savedPath + "/" + zipName);
 
 			// Remove all files
-			foreach (string pa in GlTF_Writer.exportedFiles)
+			foreach (string pa in GlTF_Writer.exportedFiles.Keys)
 			{
 				if (System.IO.File.Exists(pa))
 					System.IO.File.Delete(pa);
@@ -716,7 +719,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			string filepath = savedPath + "/" + filename;
 			byte[] lightmapData = convertedLightmap.EncodeToJPG();
 			File.WriteAllBytes(filepath, lightmapData);
-			GlTF_Writer.exportedFiles.Add(filepath);
+			GlTF_Writer.exportedFiles.Add(filepath, "");
 			GlTF_Image lightmapImg = new GlTF_Image();
 			lightmapImg.name = GlTF_Image.GetNameFromObject(lightmapTex);
 			lightmapImg.uri = filename;
@@ -1217,11 +1220,11 @@ public class SceneToGlTFWiz : MonoBehaviour
 		File.WriteAllBytes(pbrPath, pbrData);
 		File.WriteAllBytes(roughPath, roughnessData);
 
-		if (GlTF_Writer.exportedFiles.Contains(pbrPath) == false)
-			GlTF_Writer.exportedFiles.Add(pbrPath);
+		if (GlTF_Writer.exportedFiles.ContainsKey(pbrPath) == false)
+			GlTF_Writer.exportedFiles.Add(pbrPath, "");
 
-		if (GlTF_Writer.exportedFiles.Contains(roughPath) == false)
-			GlTF_Writer.exportedFiles.Add(roughPath);
+		if (GlTF_Writer.exportedFiles.ContainsKey(roughPath) == false)
+			GlTF_Writer.exportedFiles.Add(roughPath, "");
 
 		GlTF_Image pbrImg = new GlTF_Image();
 		GlTF_Image roughnessImg = new GlTF_Image();
@@ -1327,13 +1330,23 @@ public class SceneToGlTFWiz : MonoBehaviour
 		newtex.SetPixels(newTextureColors);
 		newtex.Apply();
 
-		string outputFilename = Path.GetFileNameWithoutExtension(assetPath) + (format ==IMAGETYPE.RG ? "_converted_metalRoughness" :"") + (format == IMAGETYPE.RGBA ? ".png" : ".jpg");
-		string outputPath = Path.Combine(outputDir, outputFilename);
+		string pathInArchive = Path.GetDirectoryName(assetPath);
+		string exportDir = Path.Combine(outputDir, pathInArchive);
 
-		File.WriteAllBytes(outputPath, (format == IMAGETYPE.RGBA ? newtex.EncodeToPNG() : newtex.EncodeToJPG( format== IMAGETYPE.NORMAL_MAP ? 95 : jpgQuality)));
-		GlTF_Writer.exportedFiles.Add(outputPath);
+		if (!Directory.Exists(exportDir))
+			Directory.CreateDirectory(exportDir);
 
-		return outputFilename;
+		string outputFilename = Path.GetFileNameWithoutExtension(assetPath) + (format == IMAGETYPE.RG ? "_converted_metalRoughness" : "") + (format == IMAGETYPE.RGBA ? ".png" : ".jpg");
+        string exportPath = exportDir + "/" + outputFilename;  // relative path inside the .zip
+		string pathInGltfFile = pathInArchive + "/" + outputFilename;
+		File.WriteAllBytes(exportPath, (format == IMAGETYPE.RGBA ? newtex.EncodeToPNG() : newtex.EncodeToJPG( format== IMAGETYPE.NORMAL_MAP ? 95 : jpgQuality)));
+
+		if (!GlTF_Writer.exportedFiles.ContainsKey(exportPath))
+			GlTF_Writer.exportedFiles.Add(exportPath, pathInArchive);
+		else
+			Debug.LogError("Texture '" + inputTexture + "' already exists");
+
+		return pathInGltfFile;
 	}
 
 	private string ExportTexture(Texture texture, string path, bool forceRGBA32=false, IMAGETYPE format=IMAGETYPE.IGNORE)
@@ -1343,28 +1356,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 		var t = texture as Texture2D;
 		if (t != null)
 		{
-			if (forceRGBA32 && t.format != TextureFormat.RGBA32)
-			{
-				fn = Path.GetFileNameWithoutExtension(assetPath) + ".png";
-				var dstPath = Path.Combine(path, fn);
-				//dstPath = toGlTFname(dstPath);
-				Texture2D t2 = new Texture2D(t.width, t.height, TextureFormat.RGBA32, false);
-				t2.SetPixels(t.GetPixels());
-				t2.Apply();
-				var b = t2.EncodeToPNG();
-				File.WriteAllBytes(dstPath, b);
-				GlTF_Writer.exportedFiles.Add(dstPath);
-			}
-			else if (format != IMAGETYPE.IGNORE)
-			{
-				return convertTexture(ref t, assetPath, path, format);
-			}
-			else
-			{
-				string dstPath = Path.Combine(path,fn);
-				File.Copy(assetPath, dstPath, true);
-				GlTF_Writer.exportedFiles.Add(dstPath);
-			}
+			// All the textures need to be converted and flipped in Y
+			return convertTexture(ref t, assetPath, path, format);
 		}
 		return fn;
 	}

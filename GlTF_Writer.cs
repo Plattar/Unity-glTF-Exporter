@@ -50,7 +50,8 @@ public class GlTF_Writer {
 	public static List<GlTF_Node> rootNodes = new List<GlTF_Node>();
 	public static Matrix4x4 sceneRootMatrix;
 
-	public static List<string> exportedFiles = new List<string>();
+	// Keys are original file path, values correspond to the directory in the output zip file
+	public static Dictionary<string, string> exportedFiles = new Dictionary<string, string>();
 	// Exporter specifics
 	public static bool bakeAnimation;
 	public static bool exportPBRMaterials;
@@ -200,7 +201,7 @@ public class GlTF_Writer {
 
 	public void OpenFiles (string filepath) {
 		fs = File.Open(filepath, FileMode.Create);
-		exportedFiles.Add(filepath);
+		exportedFiles.Add(filepath, "");  // Value is an empty string since we want the file at the root of the .zip file
 		if (binary)
 		{
 			binWriter = new BinaryWriter(fs);
@@ -212,7 +213,7 @@ public class GlTF_Writer {
 			// separate bin file
 			binFileName = Path.GetFileNameWithoutExtension(filepath) + ".bin";
 			var binPath = Path.Combine(Path.GetDirectoryName(filepath), binFileName);
-			exportedFiles.Add(binPath);
+			exportedFiles.Add(binPath, "");  // Value is an empty string since we want the file at the root of the .zip file
 			binFile = File.Open(binPath, FileMode.Create);
 		}
 
