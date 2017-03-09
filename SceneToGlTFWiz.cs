@@ -860,9 +860,17 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 		if (mat.HasProperty("_Mode") && mat.GetFloat("_Mode") != 0)
 		{
-			string mode = mat.GetFloat("_Mode") == 1 ? "alphaMask" : "alphaBlend";
-			material.extraString.Add("blendMode", mode);
-			material.extraFloat.Add("cutoff", mat.GetFloat("_Cutoff"));
+			string mode = mat.GetFloat("_Mode") == 1 ? "MASK" : "BLEND";
+			GlTF_Material.StringValue alphaMode = new GlTF_Material.StringValue();
+			alphaMode.name = "alphaMode";
+			alphaMode.value = mode;
+
+			GlTF_Material.FloatValue alphaCutoff = new GlTF_Material.FloatValue();
+			alphaCutoff.name = "alphaCutoff";
+			alphaCutoff.value = mat.GetFloat("_Cutoff");
+
+			material.values.Add(alphaMode);
+			material.values.Add(alphaCutoff);
 		}
 
 		if (!mat.shader.name.Contains("Standard"))
