@@ -55,7 +55,7 @@ public class GlTF_Material : GlTF_Writer {
 
 		public override void Write()
 		{
-			jsonWriter.Write ("\"" + name + "\": " + value);
+			jsonWriter.Write ("\"" + name + "\": \"" + value +"\"");
 		}
 	}
 
