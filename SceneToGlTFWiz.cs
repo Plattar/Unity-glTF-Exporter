@@ -559,7 +559,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 			SkinnedMeshRenderer skinMesh = tr.GetComponent<SkinnedMeshRenderer>();
 			if (exportAnimation && skinMesh != null && skinMesh.enabled && checkSkinValidity(skinMesh, trs) && skinMesh.rootBone != null)
 			{
-				node.skeletons = GlTF_Skin.findRootSkeletons(skinMesh);
 				GlTF_Skin skin = new GlTF_Skin();
 
 				skin.name = GlTF_Writer.cleanNonAlphanumeric(skinMesh.rootBone.name) + "_skeleton_" + GlTF_Writer.cleanNonAlphanumeric(node.name) + tr.GetInstanceID();
@@ -574,10 +573,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 				GlTF_Writer.skins.Add(skin);
 				node.skinIndex = GlTF_Writer.skins.IndexOf(skin);
 			}
-
-			// The node is a bone?
-			if (exportAnimation && bones.Contains(tr))
-				node.jointName = GlTF_Node.GetNameFromObject(tr);
 
 			foreach (Transform t in tr.transform)
 			{

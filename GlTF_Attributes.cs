@@ -131,12 +131,12 @@ public class GlTF_Attributes : GlTF_Writer {
 		if (jointAccessor != null)
 		{
 			CommaNL();
-			Indent(); jsonWriter.Write("\"JOINT\": " + GlTF_Writer.accessors.IndexOf(jointAccessor));
+			Indent(); jsonWriter.Write("\"JOINTS_0\": " + GlTF_Writer.accessors.IndexOf(jointAccessor));
 		}
 		if (weightAccessor != null)
 		{
 			CommaNL();
-			Indent(); jsonWriter.Write("\"WEIGHT\": " + GlTF_Writer.accessors.IndexOf(weightAccessor));
+			Indent(); jsonWriter.Write("\"WEIGHTS_0\": " + GlTF_Writer.accessors.IndexOf(weightAccessor));
 		}
 		if (tangentAccessor != null)
 		{

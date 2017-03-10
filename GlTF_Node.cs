@@ -20,7 +20,6 @@ public class GlTF_Node : GlTF_Writer {
 	public GlTF_Translation translation;
 	public int skinIndex = -1;
 	public List<string> skeletons = new List<string>();
-	public string jointName = "";
 	public bool additionalProperties = false;
 
 	public static string GetNameFromObject(Object o)
@@ -35,7 +34,7 @@ public class GlTF_Node : GlTF_Writer {
 		IndentIn();
 		Indent();
 		CommaNL();
-		jsonWriter.Write ("\"name\": \""+ id + "\"");
+		jsonWriter.Write ("\"name\": \"" + id + "\"");
 		if (cameraName != null)
 		{
 			CommaNL();
@@ -70,12 +69,6 @@ public class GlTF_Node : GlTF_Writer {
 			Indent();	jsonWriter.Write ("]");
 		}
 
-		if (jointName.Length > 0)
-		{
-			CommaNL();
-			Indent(); jsonWriter.Write("\"jointName\": \"" + jointName + "\"");
-		}
-
 		if (matrix != null)
 		{
 			CommaNL();
@@ -100,23 +93,8 @@ public class GlTF_Node : GlTF_Writer {
 			}
 		}
 		jsonWriter.Write("\n");
-		if(skeletons.Count > 0)
-		{
-			CommaNL();
-			Indent(); jsonWriter.Write("\"skeletons\": [\n");
-			IndentIn();
-			if(skeletons.Count > 0)
-			foreach(string s in skeletons)
-			{
-					CommaNL();
-				Indent(); jsonWriter.Write("" + GlTF_Writer.nodeNames.IndexOf(s) + "\n");
-			}
 
-			IndentOut();
-			Indent(); jsonWriter.Write("]");
-		}
-
-		if(skinIndex > -1)
+		if (skinIndex > -1)
 		{
 			CommaNL();
 			Indent(); jsonWriter.Write("\"skin\": " + skinIndex + "\n");
