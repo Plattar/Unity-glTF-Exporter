@@ -262,8 +262,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 				GlTF_Accessor jointAccessor = null;
 				if (exportAnimation && m.boneWeights.Length > 0)
 				{
-					jointAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "joints"), GlTF_Accessor.Type.VEC4, GlTF_Accessor.ComponentType.FLOAT);
-					jointAccessor.bufferView = GlTF_Writer.vec4BufferView;
+					jointAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(m, "joints"), GlTF_Accessor.Type.VEC4, GlTF_Accessor.ComponentType.UNSIGNED_INT);
+					jointAccessor.bufferView = GlTF_Writer.vec4UintBufferView;
 					GlTF_Writer.accessors.Add(jointAccessor);
 				}
 

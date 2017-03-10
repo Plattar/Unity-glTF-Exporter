@@ -71,7 +71,7 @@ public class GlTF_Attributes : GlTF_Writer {
 		if(jointAccessor != null)
 		{
 			Vector4[] bones = boneWeightToBoneVec4(m.boneWeights);
-			jointAccessor.Populate(bones);
+			jointAccessor.Populate(bones, true, true);
 		}
 		if(weightAccessor != null)
 		{

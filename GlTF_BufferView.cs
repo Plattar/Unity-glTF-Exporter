@@ -62,6 +62,13 @@ public class GlTF_BufferView : GlTF_Writer  {
 		byteLength = currentOffset;
 	}
 
+	public void Populate(uint v)
+	{
+		memoryStream.Write(BitConverter.GetBytes(v), 0, BitConverter.GetBytes(v).Length);
+		currentOffset += 4;
+		byteLength = currentOffset;
+	}
+
 	public void Populate (float v)
 	{
 		memoryStream.Write (BitConverter.GetBytes(v), 0, BitConverter.GetBytes(v).Length);

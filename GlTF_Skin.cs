@@ -94,7 +94,6 @@ public class GlTF_Skin : GlTF_Writer {
 		Indent();	jsonWriter.Write ("{\n");
 		IndentIn();
 
-		Indent(); jsonWriter.Write(",\n");
 		Indent(); jsonWriter.Write("\"inverseBindMatrices\": "+ invBindMatricesAccessorIndex + ",\n");
 		Indent(); jsonWriter.Write ("\"jointNames\": [\n");
 
