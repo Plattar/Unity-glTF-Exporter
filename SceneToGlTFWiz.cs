@@ -796,6 +796,14 @@ public class SceneToGlTFWiz : MonoBehaviour
 		return mr;
 	}
 
+	private void clampColor(ref Color c)
+	{
+		c.r = c.r > 1.0f ? 1.0f : c.r;
+		c.g = c.g > 1.0f ? 1.0f : c.g;
+		c.b = c.b > 1.0f ? 1.0f : c.b;
+		//c.a = c.a > 1.0f ? 1.0f : c.a;
+	}
+
 	private Mesh GetMesh(Transform tr)
 	{
 		var mr = GetRenderer(tr);
@@ -936,6 +944,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 				var matCol = new GlTF_Material.ColorValue();
 				matCol.name = gltfPName;
 				matCol.color = mat.GetColor(pName);
+				clampColor(ref matCol.color);
 				//FIXME: Unity doesn't use albedo color when there is no specular texture
 				if (pName.CompareTo("_SpecColor") == 0)
 				{
