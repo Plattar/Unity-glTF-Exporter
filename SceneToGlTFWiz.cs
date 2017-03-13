@@ -797,6 +797,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 	}
 
 	// Convert unity Material to glTF PBR Material
+	// FIXME: this function became messy with all the updates. It needs to be refactored and cleaned
 	private void unityToPBRMaterial(Material mat, ref GlTF_Material material, bool doConvertImages = false, bool splitTextures=false)
 	{
 		Dictionary<string, string> UnityToGltfPBRMetalChannels= new Dictionary<string, string>
@@ -946,9 +947,17 @@ public class SceneToGlTFWiz : MonoBehaviour
 				var matFloat = new GlTF_Material.FloatValue();
 				matFloat.name = gltfPName;
 				matFloat.value = mat.GetFloat(pName);
-				// Roughness = 1 - smoothness
-				if (isMetal && (pName.CompareTo("_GlossMapScale") == 0 || pName.CompareTo("_Glossiness") == 0))
+
+				// Roughness = 1 - smoothness. Gloss map scale is not supported for now.
+				if (isMetal && !hasPBRMap && pName.CompareTo("_Glossiness") == 0)
 					matFloat.value = 1 - matFloat.value;
+
+				// If metallic texture, set the factor to 1.0
+				if(hasPBRMap && pName.CompareTo("_Metallic") == 0)
+				{
+					matFloat.value = 1.0f;
+				}
+
 				if (isPBRChannel)
 					material.pbrValues.Add(matFloat);
 				else
