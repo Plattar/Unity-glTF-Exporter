@@ -834,7 +834,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		Dictionary<string, string> workflowChannelMap = UnityToGltfPBRMetalChannels;
 		bool isMaterialPBR = true;
 		bool hasPBRMap = false;
-		bool usePBRTextureAlpha = false;
+		bool usesPBRTextureAlpha = false;
 		bool isMetal = true;
 
 		// Unity materials are single sided by default
@@ -872,7 +872,10 @@ public class SceneToGlTFWiz : MonoBehaviour
 			material.isMetal = isMetal;
 
 			// Is smoothness is defined by diffuse/albedo alpha or metal/specular texture alpha
-			usePBRTextureAlpha = mat.GetFloat("_SmoothnessTextureChannel") == 0;
+			usesPBRTextureAlpha = mat.GetFloat("_SmoothnessTextureChannel") == 0;
+			if (!usesPBRTextureAlpha)
+				Debug.LogWarning("Smoothness from Albedo texture's alpha is not supported yet");
+
 			workflowChannelMap = isMetal ? UnityToGltfPBRMetalChannels : UnityToGltfPBRSpecularChannels;
 			hasPBRMap = (!isMetal && mat.GetTexture("_SpecGlossMap") != null || isMetal && mat.GetTexture("_MetallicGlossMap") != null);
 		}
