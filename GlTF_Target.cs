@@ -8,7 +8,7 @@ public class GlTF_Target : GlTF_Writer {
 	{
 		Indent();		jsonWriter.Write ("\"" + "target" + "\": {\n");
 		IndentIn();
-		Indent();		jsonWriter.Write ("\"id\": " + GlTF_Writer.nodeNames.IndexOf(id) + ",\n");
+		Indent();		jsonWriter.Write ("\"node\": " + GlTF_Writer.nodeNames.IndexOf(id) + ",\n");
 		Indent();		jsonWriter.Write ("\"path\": \"" + path + "\"\n");
 		IndentOut();
 		Indent();		jsonWriter.Write ("}");
