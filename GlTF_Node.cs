@@ -52,7 +52,7 @@ public class GlTF_Node : GlTF_Writer {
 		{
 			CommaNL();
 			Indent();
-			jsonWriter.Write ("\"mesh\":" + meshIndex);
+			jsonWriter.Write ("\"mesh\": " + meshIndex);
 		}
 
 		if (childrenNames != null && childrenNames.Count > 0)
