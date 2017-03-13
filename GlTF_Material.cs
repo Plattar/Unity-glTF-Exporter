@@ -50,6 +50,16 @@ public class GlTF_Material : GlTF_Writer {
 		}
 	}
 
+	public class BoolValue : Value
+	{
+		public bool value;
+
+		public override void Write()
+		{
+			jsonWriter.Write("\"" + name + "\": " + (value ? "true" : "false"));
+		}
+	}
+
 	public class StringValue : Value {
 		public string value;
 

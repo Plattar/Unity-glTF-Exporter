@@ -861,6 +861,12 @@ public class SceneToGlTFWiz : MonoBehaviour
 		bool usePBRTextureAlpha = false;
 		bool isMetal = true;
 
+		// Unity materials are single sided by default
+		GlTF_Material.BoolValue doubleSided = new GlTF_Material.BoolValue();
+		doubleSided.name = "doubleSided";
+		doubleSided.value = false;
+		material.values.Add(doubleSided);
+
 		if (mat.HasProperty("_Mode") && mat.GetFloat("_Mode") != 0)
 		{
 			string mode = mat.GetFloat("_Mode") == 1 ? "MASK" : "BLEND";
