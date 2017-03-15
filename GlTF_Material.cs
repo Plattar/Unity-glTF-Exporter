@@ -156,8 +156,6 @@ public class GlTF_Material : GlTF_Writer {
 			CommaNL();
 			Indent(); v.Write();
 		}
-		jsonWriter.Write("\n");
-
 		CommaNL();
 		Indent();		jsonWriter.Write ("\"name\": \"" + name + "\"\n");
 		IndentOut();

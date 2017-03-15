@@ -186,8 +186,7 @@ public class GlTF_Writer {
 	public void CommaNL() {
 		if (!firsts[indent])
 			jsonWriter.Write (",\n");
-		//		else
-		//			jsonWriter.Write ("\n");
+
 		firsts[indent] = false;
 	}
 
@@ -487,44 +486,17 @@ public class GlTF_Writer {
 		if (nodes != null && nodes.Count > 0)
 		{
 			CommaNL();
-			/*
-			"nodes": {
-		"node-Alien": {
-			"children": [],
-			"matrix": [
-*/
 			Indent();			jsonWriter.Write ("\"nodes\": [\n");
 			IndentIn();
-			//			bool first = true;
 			foreach (GlTF_Node n in nodes)
 			{
 				CommaNL();
-				//				if (!first)
-				//					jsonWriter.Write (",\n");
-				n.Write ();
-				//				first = false;
+				n.Write();
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
 			Indent();			jsonWriter.Write ("]");
 		}
-
-		//if (programs != null && programs.Count > 0)
-		//{
-		//	CommaNL();
-		//	Indent();
-		//	jsonWriter.Write ("\"programs\": [\n");
-		//	IndentIn();
-		//	foreach (var p in programs)
-		//	{
-		//		CommaNL();
-		//		p.Write();
-		//	}
-		//	jsonWriter.WriteLine();
-		//	IndentOut();
-		//	Indent();
-		//	jsonWriter.Write ("]");
-		//}
 
 		if (samplers.Count > 0)
 		{
@@ -551,11 +523,8 @@ public class GlTF_Writer {
 		IndentIn();
 		foreach (GlTF_Node n in rootNodes)
 		{
-			//if (!n.hasParent)
-			//{
-				CommaNL();
-				Indent();		jsonWriter.Write(nodes.IndexOf(n));
-			//}
+			CommaNL();
+			Indent();		jsonWriter.Write(nodes.IndexOf(n));
 		}
 		jsonWriter.WriteLine();
 		IndentOut();
@@ -566,23 +535,6 @@ public class GlTF_Writer {
 		Indent();			jsonWriter.Write ("],\n");
 
 		Indent(); jsonWriter.Write("\"scene\": 0");
-
-		//if (shaders != null && shaders.Count > 0)
-		//{
-		//	CommaNL();
-		//	Indent();
-		//	jsonWriter.Write ("\"shaders\": {\n");
-		//	IndentIn();
-		//	foreach (var s in shaders)
-		//	{
-		//		CommaNL();
-		//		s.Write();
-		//	}
-		//	jsonWriter.WriteLine();
-		//	IndentOut();
-		//	Indent();
-		//	jsonWriter.Write ("}");
-		//}
 
 		if(skins.Count > 0)
 		{
@@ -598,23 +550,6 @@ public class GlTF_Writer {
 			IndentOut();
 			Indent(); jsonWriter.Write("]");
 		}
-
-		//if (techniques != null && techniques.Count > 0)
-		//{
-		//	CommaNL();
-		//	Indent();
-		//	jsonWriter.Write ("\"techniques\": {\n");
-		//	IndentIn();
-		//	foreach (KeyValuePair<string, GlTF_Technique> k in techniques)
-		//	{
-		//		CommaNL();
-		//		k.Value.Write();
-		//	}
-		//	jsonWriter.WriteLine();
-		//	IndentOut();
-		//	Indent();
-		//	jsonWriter.Write ("}");
-		//}
 
 		if (textures.Count > 0)
 		{
@@ -656,7 +591,6 @@ public class GlTF_Writer {
 			contentLength = (uint)(fs.Position - 20);
 		}
 
-
 		ushortBufferView.memoryStream.WriteTo(binFile);
 		floatBufferView.memoryStream.WriteTo(binFile);
 		vec2BufferView.memoryStream.WriteTo (binFile);
@@ -681,122 +615,4 @@ public class GlTF_Writer {
 		}
 	}
 }
-
-//		CommaNL();
-//		string tqs = @"
-//	'techniques': {
-//		'technique1': {
-//			'parameters': {
-//				'ambient': {
-//					'type': 35666
-//				},
-//				'diffuse': {
-//					'type': 35678
-//				},
-//				'emission': {
-//					'type': 35666
-//				},
-//				'light0Color': {
-//					'type': 35665,
-//					'value': [
-//					    1,
-//					    1,
-//					    1
-//					    ]
-//				},
-//				'light0Transform': {
-//					'semantic': 'MODELVIEW',
-//					'source': 'directionalLight1',
-//					'type': 35676
-//				},
-//				'modelViewMatrix': {
-//					'semantic': 'MODELVIEW',
-//					'type': 35676
-//				},
-//				'normal': {
-//					'semantic': 'NORMAL',
-//					'type': 35665
-//				},
-//				'normalMatrix': {
-//					'semantic': 'MODELVIEWINVERSETRANSPOSE',
-//					'type': 35675
-//				},
-//				'position': {
-//					'semantic': 'POSITION',
-//					'type': 35665
-//				},
-//				'projectionMatrix': {
-//					'semantic': 'PROJECTION',
-//					'type': 35676
-//				},
-//				'shininess': {
-//					'type': 5126
-//				},
-//				'specular': {
-//					'type': 35666
-//				},
-//				'texcoord0': {
-//					'semantic': 'TEXCOORD_0',
-//					'type': 35664
-//				}
-//			},
-//			'pass': 'defaultPass',
-//			'passes': {
-//				'defaultPass': {
-//					'details': {
-//						'commonProfile': {
-//							'extras': {
-//								'doubleSided': false
-//							},
-//							'lightingModel': 'Blinn',
-//							'parameters': [
-//							    'ambient',
-//							    'diffuse',
-//							    'emission',
-//							    'light0Color',
-//							    'light0Transform',
-//							    'modelViewMatrix',
-//							    'normalMatrix',
-//							    'projectionMatrix',
-//							    'shininess',
-//							    'specular'
-//							    ],
-//							'texcoordBindings': {
-//								'diffuse': 'TEXCOORD_0'
-//							}
-//						},
-//						'type': 'COLLADA-1.4.1/commonProfile'
-//					},
-//					'instanceProgram': {
-//						'attributes': {
-//							'a_normal': 'normal',
-//							'a_position': 'position',
-//							'a_texcoord0': 'texcoord0'
-//						},
-//						'program': 'program_0',
-//						'uniforms': {
-//							'u_ambient': 'ambient',
-//							'u_diffuse': 'diffuse',
-//							'u_emission': 'emission',
-//							'u_light0Color': 'light0Color',
-//							'u_light0Transform': 'light0Transform',
-//							'u_modelViewMatrix': 'modelViewMatrix',
-//							'u_normalMatrix': 'normalMatrix',
-//							'u_projectionMatrix': 'projectionMatrix',
-//							'u_shininess': 'shininess',
-//							'u_specular': 'specular'
-//						}
-//					},
-//					'states': {
-//						'enable': [
-//						    2884,
-//						    2929
-//						    ]
-//					}
-//				}
-//			}
-//		}
-//	}";
-//		tqs = tqs.Replace ("'", "\"");
-//		jsonWriter.Write (tqs);
 #endif

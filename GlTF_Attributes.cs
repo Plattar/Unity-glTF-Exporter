@@ -143,7 +143,7 @@ public class GlTF_Attributes : GlTF_Writer {
 			CommaNL();
 			Indent(); jsonWriter.Write("\"TANGENT4\": " + GlTF_Writer.accessors.IndexOf(tangentAccessor));
 		}
-		//CommaNL();
+
 		jsonWriter.WriteLine();
 		IndentOut();
 		Indent();	jsonWriter.Write ("}");
