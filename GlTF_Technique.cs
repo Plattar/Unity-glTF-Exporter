@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -137,3 +138,4 @@ public class GlTF_Technique : GlTF_Writer {
 		Indent();		jsonWriter.Write ("}");
 	}
 }
+#endif

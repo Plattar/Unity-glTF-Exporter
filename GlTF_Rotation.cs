@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 
 public class GlTF_Rotation : GlTF_FloatArray4 {
@@ -21,3 +22,4 @@ public class GlTF_Rotation : GlTF_FloatArray4 {
 	}
 */
 }
+#endif

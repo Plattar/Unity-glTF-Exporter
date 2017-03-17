@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 
 public class GlTF_MaterialColor : GlTF_ColorOrTexture {
@@ -10,3 +11,4 @@ public class GlTF_MaterialColor : GlTF_ColorOrTexture {
 		color.Write ();
 	}
 }
+#endif

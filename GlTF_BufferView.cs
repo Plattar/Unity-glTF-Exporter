@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 using System.IO;
 using System;
@@ -7,14 +8,15 @@ public class GlTF_BufferView : GlTF_Writer  {
 	public int bufferIndex = 0;// ": "duck",
 	public long byteLength;//": 25272,
 	public long byteOffset;//": 0,
+	public long byteStride;
 	public int target = 34962;
 	//	public string target = "ARRAY_BUFFER";
 	public int currentOffset = 0;
 	public MemoryStream memoryStream = new MemoryStream();
 	public bool bin = false;
 
-	public GlTF_BufferView (string n) { name = n; }
-	public GlTF_BufferView (string n, int t) { name = n; target = t; }
+	public GlTF_BufferView (string n, int s) { name = n; byteStride = s; }
+	public GlTF_BufferView (string n, int s, int t) { name = n; byteStride = s; target = t; }
 
 	public void Populate (int[] vs, bool flippedTriangle)
 	{
@@ -83,8 +85,10 @@ public class GlTF_BufferView : GlTF_Writer  {
 		Indent();		jsonWriter.Write ("\"buffer\": " + bufferIndex +",\n");
 		Indent();		jsonWriter.Write ("\"byteLength\": " + byteLength + ",\n");
 		Indent();		jsonWriter.Write ("\"byteOffset\": " + byteOffset + ",\n");
+		Indent();		jsonWriter.Write ("\"byteStride\": " + byteStride + ",\n");
 		Indent();		jsonWriter.Write ("\"target\": " + target + "\n");
 		IndentOut();
 		Indent();		jsonWriter.Write ("}");
 	}
 }
+#endif

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 
 public class GlTF_PointLight : GlTF_Light {
@@ -17,3 +18,4 @@ public class GlTF_PointLight : GlTF_Light {
 		jsonWriter.Write ("}");
 	}
 }
+#endif

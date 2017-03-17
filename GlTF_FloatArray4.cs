@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 
 public class GlTF_FloatArray4 : GlTF_FloatArray {
@@ -12,3 +13,4 @@ public class GlTF_FloatArray4 : GlTF_FloatArray {
 	}
 */
 }
+#endif

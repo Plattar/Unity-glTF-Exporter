@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 using System.IO;
 using System.Collections.Generic;
@@ -12,12 +13,12 @@ public class GlTF_Writer {
 	public static string binFileName;
 	public static bool binary;
 	static bool[] firsts = new bool[100];
-	public static GlTF_BufferView ushortBufferView = new GlTF_BufferView("ushortBufferView", 34963);
-	public static GlTF_BufferView floatBufferView = new GlTF_BufferView("floatBufferView");
-	public static GlTF_BufferView vec2BufferView = new GlTF_BufferView("vec2BufferView");
-	public static GlTF_BufferView vec3BufferView = new GlTF_BufferView("vec3BufferView");
-	public static GlTF_BufferView vec4BufferView = new GlTF_BufferView("vec4BufferView");
-	public static GlTF_BufferView mat4BufferView = new GlTF_BufferView("mat4BufferView");
+	public static GlTF_BufferView ushortBufferView = new GlTF_BufferView("ushortBufferView", 0, 34963);
+	public static GlTF_BufferView floatBufferView = new GlTF_BufferView("floatBufferView", 0);
+	public static GlTF_BufferView vec2BufferView = new GlTF_BufferView("vec2BufferView", 8);
+	public static GlTF_BufferView vec3BufferView = new GlTF_BufferView("vec3BufferView", 12);
+	public static GlTF_BufferView vec4BufferView = new GlTF_BufferView("vec4BufferView", 16);
+	public static GlTF_BufferView mat4BufferView = new GlTF_BufferView("mat4BufferView", 64);
 
 	public static List<GlTF_BufferView> bufferViews = new List<GlTF_BufferView>();
 	public static List<GlTF_Camera> cameras = new List<GlTF_Camera>();
@@ -49,13 +50,14 @@ public class GlTF_Writer {
 	public static List<GlTF_Node> rootNodes = new List<GlTF_Node>();
 	public static Matrix4x4 sceneRootMatrix;
 
-	public static List<string> exportedFiles = new List<string>();
+	// Keys are original file path, values correspond to the directory in the output zip file
+	public static Dictionary<string, string> exportedFiles = new Dictionary<string, string>();
 	// Exporter specifics
 	public static bool bakeAnimation;
 	public static bool exportPBRMaterials;
 	public static bool hasSpecularMaterials = false;
 	public static bool convertRightHanded = true;
-	public static string exporterVersion = "2.0.1";
+	public static string exporterVersion = "2.0.5";
 
 	static public string GetNameFromObject(Object o, bool useId = false)
 	{
@@ -123,12 +125,12 @@ public class GlTF_Writer {
 	public void Init()
 	{
 		firsts = new bool[100];
-		ushortBufferView = new GlTF_BufferView("ushortBufferView", 34963);
-		floatBufferView = new GlTF_BufferView("floatBufferView");
-		vec2BufferView = new GlTF_BufferView("vec2BufferView");
-		vec3BufferView = new GlTF_BufferView("vec3BufferView");
-		vec4BufferView = new GlTF_BufferView("vec4BufferView");
-		mat4BufferView = new GlTF_BufferView("mat4BufferView");
+		ushortBufferView = new GlTF_BufferView("ushortBufferView", 0, 34963);
+		floatBufferView = new GlTF_BufferView("floatBufferView", 0);
+		vec2BufferView = new GlTF_BufferView("vec2BufferView", 8);
+		vec3BufferView = new GlTF_BufferView("vec3BufferView", 12);
+		vec4BufferView = new GlTF_BufferView("vec4BufferView", 16);
+		mat4BufferView = new GlTF_BufferView("mat4BufferView", 64);
 		bufferViews = new List<GlTF_BufferView>();
 		cameras = new List<GlTF_Camera>();
 		lights = new List<GlTF_Light>();
@@ -184,8 +186,7 @@ public class GlTF_Writer {
 	public void CommaNL() {
 		if (!firsts[indent])
 			jsonWriter.Write (",\n");
-		//		else
-		//			jsonWriter.Write ("\n");
+
 		firsts[indent] = false;
 	}
 
@@ -199,7 +200,7 @@ public class GlTF_Writer {
 
 	public void OpenFiles (string filepath) {
 		fs = File.Open(filepath, FileMode.Create);
-		exportedFiles.Add(filepath);
+		exportedFiles.Add(filepath, "");  // Value is an empty string since we want the file at the root of the .zip file
 		if (binary)
 		{
 			binWriter = new BinaryWriter(fs);
@@ -211,7 +212,7 @@ public class GlTF_Writer {
 			// separate bin file
 			binFileName = Path.GetFileNameWithoutExtension(filepath) + ".bin";
 			var binPath = Path.Combine(Path.GetDirectoryName(filepath), binFileName);
-			exportedFiles.Add(binPath);
+			exportedFiles.Add(binPath, "");  // Value is an empty string since we want the file at the root of the .zip file
 			binFile = File.Open(binPath, FileMode.Create);
 		}
 
@@ -418,19 +419,22 @@ public class GlTF_Writer {
 			Indent(); jsonWriter.Write("]");
 		}
 
-		CommaNL();
-		Indent(); jsonWriter.Write("\"extensionsUsed\": [\n");
-		IndentIn();
-		if (hasSpecularMaterials)
+		if(hasSpecularMaterials || binary)
 		{
-			Indent(); jsonWriter.Write("\"KHR_materials_pbrSpecularGlossiness\"\n");
+			CommaNL();
+			Indent(); jsonWriter.Write("\"extensionsUsed\": [\n");
+			IndentIn();
+			if (hasSpecularMaterials)
+			{
+				Indent(); jsonWriter.Write("\"KHR_materials_pbrSpecularGlossiness\"\n");
+			}
+			if (binary)
+			{
+				Indent(); jsonWriter.Write("\"KHR_binary_glTF\"\n");
+			}
+			IndentOut();
+			Indent(); jsonWriter.Write("]");
 		}
-		if (binary)
-		{
-			Indent(); jsonWriter.Write("\"KHR_binary_glTF\"\n");
-		}
-		IndentOut();
-		Indent(); jsonWriter.Write("]");
 
 		if (images.Count > 0)
 		{
@@ -482,44 +486,17 @@ public class GlTF_Writer {
 		if (nodes != null && nodes.Count > 0)
 		{
 			CommaNL();
-			/*
-			"nodes": {
-		"node-Alien": {
-			"children": [],
-			"matrix": [
-*/
 			Indent();			jsonWriter.Write ("\"nodes\": [\n");
 			IndentIn();
-			//			bool first = true;
 			foreach (GlTF_Node n in nodes)
 			{
 				CommaNL();
-				//				if (!first)
-				//					jsonWriter.Write (",\n");
-				n.Write ();
-				//				first = false;
+				n.Write();
 			}
 			jsonWriter.WriteLine();
 			IndentOut();
 			Indent();			jsonWriter.Write ("]");
 		}
-
-		//if (programs != null && programs.Count > 0)
-		//{
-		//	CommaNL();
-		//	Indent();
-		//	jsonWriter.Write ("\"programs\": [\n");
-		//	IndentIn();
-		//	foreach (var p in programs)
-		//	{
-		//		CommaNL();
-		//		p.Write();
-		//	}
-		//	jsonWriter.WriteLine();
-		//	IndentOut();
-		//	Indent();
-		//	jsonWriter.Write ("]");
-		//}
 
 		if (samplers.Count > 0)
 		{
@@ -546,11 +523,8 @@ public class GlTF_Writer {
 		IndentIn();
 		foreach (GlTF_Node n in rootNodes)
 		{
-			//if (!n.hasParent)
-			//{
-				CommaNL();
-				Indent();		jsonWriter.Write(nodes.IndexOf(n));
-			//}
+			CommaNL();
+			Indent();		jsonWriter.Write(nodes.IndexOf(n));
 		}
 		jsonWriter.WriteLine();
 		IndentOut();
@@ -561,23 +535,6 @@ public class GlTF_Writer {
 		Indent();			jsonWriter.Write ("],\n");
 
 		Indent(); jsonWriter.Write("\"scene\": 0");
-
-		//if (shaders != null && shaders.Count > 0)
-		//{
-		//	CommaNL();
-		//	Indent();
-		//	jsonWriter.Write ("\"shaders\": {\n");
-		//	IndentIn();
-		//	foreach (var s in shaders)
-		//	{
-		//		CommaNL();
-		//		s.Write();
-		//	}
-		//	jsonWriter.WriteLine();
-		//	IndentOut();
-		//	Indent();
-		//	jsonWriter.Write ("}");
-		//}
 
 		if(skins.Count > 0)
 		{
@@ -593,23 +550,6 @@ public class GlTF_Writer {
 			IndentOut();
 			Indent(); jsonWriter.Write("]");
 		}
-
-		//if (techniques != null && techniques.Count > 0)
-		//{
-		//	CommaNL();
-		//	Indent();
-		//	jsonWriter.Write ("\"techniques\": {\n");
-		//	IndentIn();
-		//	foreach (KeyValuePair<string, GlTF_Technique> k in techniques)
-		//	{
-		//		CommaNL();
-		//		k.Value.Write();
-		//	}
-		//	jsonWriter.WriteLine();
-		//	IndentOut();
-		//	Indent();
-		//	jsonWriter.Write ("}");
-		//}
 
 		if (textures.Count > 0)
 		{
@@ -651,7 +591,6 @@ public class GlTF_Writer {
 			contentLength = (uint)(fs.Position - 20);
 		}
 
-
 		ushortBufferView.memoryStream.WriteTo(binFile);
 		floatBufferView.memoryStream.WriteTo(binFile);
 		vec2BufferView.memoryStream.WriteTo (binFile);
@@ -676,121 +615,4 @@ public class GlTF_Writer {
 		}
 	}
 }
-
-//		CommaNL();
-//		string tqs = @"
-//	'techniques': {
-//		'technique1': {
-//			'parameters': {
-//				'ambient': {
-//					'type': 35666
-//				},
-//				'diffuse': {
-//					'type': 35678
-//				},
-//				'emission': {
-//					'type': 35666
-//				},
-//				'light0Color': {
-//					'type': 35665,
-//					'value': [
-//					    1,
-//					    1,
-//					    1
-//					    ]
-//				},
-//				'light0Transform': {
-//					'semantic': 'MODELVIEW',
-//					'source': 'directionalLight1',
-//					'type': 35676
-//				},
-//				'modelViewMatrix': {
-//					'semantic': 'MODELVIEW',
-//					'type': 35676
-//				},
-//				'normal': {
-//					'semantic': 'NORMAL',
-//					'type': 35665
-//				},
-//				'normalMatrix': {
-//					'semantic': 'MODELVIEWINVERSETRANSPOSE',
-//					'type': 35675
-//				},
-//				'position': {
-//					'semantic': 'POSITION',
-//					'type': 35665
-//				},
-//				'projectionMatrix': {
-//					'semantic': 'PROJECTION',
-//					'type': 35676
-//				},
-//				'shininess': {
-//					'type': 5126
-//				},
-//				'specular': {
-//					'type': 35666
-//				},
-//				'texcoord0': {
-//					'semantic': 'TEXCOORD_0',
-//					'type': 35664
-//				}
-//			},
-//			'pass': 'defaultPass',
-//			'passes': {
-//				'defaultPass': {
-//					'details': {
-//						'commonProfile': {
-//							'extras': {
-//								'doubleSided': false
-//							},
-//							'lightingModel': 'Blinn',
-//							'parameters': [
-//							    'ambient',
-//							    'diffuse',
-//							    'emission',
-//							    'light0Color',
-//							    'light0Transform',
-//							    'modelViewMatrix',
-//							    'normalMatrix',
-//							    'projectionMatrix',
-//							    'shininess',
-//							    'specular'
-//							    ],
-//							'texcoordBindings': {
-//								'diffuse': 'TEXCOORD_0'
-//							}
-//						},
-//						'type': 'COLLADA-1.4.1/commonProfile'
-//					},
-//					'instanceProgram': {
-//						'attributes': {
-//							'a_normal': 'normal',
-//							'a_position': 'position',
-//							'a_texcoord0': 'texcoord0'
-//						},
-//						'program': 'program_0',
-//						'uniforms': {
-//							'u_ambient': 'ambient',
-//							'u_diffuse': 'diffuse',
-//							'u_emission': 'emission',
-//							'u_light0Color': 'light0Color',
-//							'u_light0Transform': 'light0Transform',
-//							'u_modelViewMatrix': 'modelViewMatrix',
-//							'u_normalMatrix': 'normalMatrix',
-//							'u_projectionMatrix': 'projectionMatrix',
-//							'u_shininess': 'shininess',
-//							'u_specular': 'specular'
-//						}
-//					},
-//					'states': {
-//						'enable': [
-//						    2884,
-//						    2929
-//						    ]
-//					}
-//				}
-//			}
-//		}
-//	}";
-//		tqs = tqs.Replace ("'", "\"");
-//		jsonWriter.Write (tqs);
+#endif

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
@@ -751,3 +752,4 @@ public class ExporterScript : MonoBehaviour
 		yield return www;
 	}
 }
+#endif

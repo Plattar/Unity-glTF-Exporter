@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 
 public class GlTF_Perspective : GlTF_Camera  {
@@ -35,3 +36,4 @@ public class GlTF_Perspective : GlTF_Camera  {
 		Indent();		jsonWriter.Write ("}");
 	}
 }
+#endif

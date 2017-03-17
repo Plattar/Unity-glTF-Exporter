@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -11,7 +12,7 @@ public class GlTF_Node : GlTF_Writer {
 	public List<string>bufferViewNames = new List<string>();
 	public List<string>indexNames = new List<string>();
 	public List<string>accessorNames = new List<string>();
-	public List<int> meshIndexes = new List<int>();
+	public int meshIndex = -1;
 	public GlTF_Matrix matrix;
 	//	public GlTF_Mesh mesh;
 	public GlTF_Rotation rotation;
@@ -47,20 +48,11 @@ public class GlTF_Node : GlTF_Writer {
 			Indent();
 			jsonWriter.Write ("\"light\": \""+lightName+"\"");
 		}
-		else if (meshIndexes.Count > 0)
+		else if (meshIndex != -1)
 		{
 			CommaNL();
 			Indent();
-			jsonWriter.Write ("\"meshes\": [\n");
-			IndentIn();
-			foreach (int m in meshIndexes)
-			{
-				CommaNL();
-				Indent();	jsonWriter.Write (m);
-			}
-			jsonWriter.WriteLine();
-			IndentOut();
-			Indent();	jsonWriter.Write ("]");
+			jsonWriter.Write ("\"mesh\": " + meshIndex);
 		}
 
 		if (childrenNames != null && childrenNames.Count > 0)
@@ -134,3 +126,4 @@ public class GlTF_Node : GlTF_Writer {
 		Indent();		jsonWriter.Write ("}");
 	}
 }
+#endif

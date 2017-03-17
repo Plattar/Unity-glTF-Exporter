@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 
 public class GlTF_AnimSampler : GlTF_Writer {
@@ -18,3 +19,4 @@ public class GlTF_AnimSampler : GlTF_Writer {
 		Indent();		jsonWriter.Write ("}");
 	}
 }
+#endif
