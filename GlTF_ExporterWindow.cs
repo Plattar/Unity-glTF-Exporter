@@ -11,8 +11,8 @@ public class GlTFExporterWindow : EditorWindow
 	const string KEY_PATH = "GlTFPath";
 	const string KEY_FILE = "GlTFFile";
 	static public string path = "?";
-	static string savedPath = EditorPrefs.GetString(KEY_PATH, "/");
-	static string savedFile = EditorPrefs.GetString(KEY_FILE, "test.gltf");
+	static string savedPath;
+	static string savedFile;
 	static XmlDocument xdoc;
 
 	static Preset preset = new Preset();
