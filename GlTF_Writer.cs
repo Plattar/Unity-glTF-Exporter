@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.IO;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 public class GlTF_Writer {
 	public static FileStream fs;
@@ -58,10 +59,11 @@ public class GlTF_Writer {
 	public static bool hasSpecularMaterials = false;
 	public static bool convertRightHanded = true;
 	public static string exporterVersion = "2.0.5";
-
+	public static Regex rgx = new Regex("[^a-zA-Z0-9 -]");
+	
 	static public string GetNameFromObject(Object o, bool useId = false)
 	{
-		var ret = o.name;
+		var ret = rgx.Replace(o.name, "");
 		ret = ret.Replace(" ", "_");
 		ret = ret.Replace("/", "_");
 		ret = ret.Replace("\\", "_");
