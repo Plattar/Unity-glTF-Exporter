@@ -994,8 +994,11 @@ public class SceneToGlTFWiz : MonoBehaviour
 						if (isBumpTexture)
 						{
 							TextureImporter im = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(t)) as TextureImporter;
-							isBumpMap = im.convertToNormalmap;
-							val.name = isBumpMap ? "bumpTexture" : "normalTexture";
+							if(im)
+							{
+								isBumpMap = im.convertToNormalmap;
+								val.name = isBumpMap ? "bumpTexture" : "normalTexture";
+							}
 						}
 						else
 						{
@@ -1026,6 +1029,11 @@ public class SceneToGlTFWiz : MonoBehaviour
 							}
 
 							var texPath = ExportTexture(t, savedPath, false, format);
+							if(texPath.Length == 0)
+							{
+								Debug.Log("Failed to process texture for property '" + pName + "' in material '" + mat.name + "'");
+								continue;
+							}
 
 							GlTF_Texture texture = new GlTF_Texture();
 							texture.name = texName;
@@ -1088,10 +1096,15 @@ public class SceneToGlTFWiz : MonoBehaviour
 		}
 	}
 
-	private void getPixelsFromTexture(ref Texture2D texture, out Color[] pixels, IMAGETYPE imageFormat)
+	private bool getPixelsFromTexture(ref Texture2D texture, out Color[] pixels, IMAGETYPE imageFormat)
 	{
 		//Make texture readable
 		TextureImporter im = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(texture)) as TextureImporter;
+		if(!im)
+		{
+			pixels = new Color[1];
+			return false;
+		}
 		bool readable = im.isReadable;
 		TextureImporterCompression format = im.textureCompression;
 		TextureImporterType type = im.textureType;
@@ -1117,6 +1130,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 		im.textureCompression = format;
 		im.SaveAndReimport();
+
+		return true;
 	}
 
 	// Flip all images on Y and
@@ -1125,7 +1140,11 @@ public class SceneToGlTFWiz : MonoBehaviour
 		int height = inputTexture.height;
 		int width = inputTexture.width;
 		Color[] textureColors = new Color[inputTexture.height * inputTexture.width];
-		getPixelsFromTexture(ref inputTexture, out textureColors, format);
+		if(!getPixelsFromTexture(ref inputTexture, out textureColors, format))
+		{
+			Debug.Log("Failed to convert texture " + inputTexture.name + " (unsupported type or format)");
+			return "";
+		}
 		Color[] newTextureColors = new Color[inputTexture.height * inputTexture.width];
 
 		for (int i = 0; i < height; ++i)
