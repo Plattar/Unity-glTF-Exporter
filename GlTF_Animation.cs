@@ -13,7 +13,7 @@ public class GlTF_Animation : GlTF_Writer {
 
 	int bakingFramerate = 30; // FPS
 
-	public GlTF_Animation (string n, string target) {
+	public GlTF_Animation (string n) {
 		name = n;
 	}
 
