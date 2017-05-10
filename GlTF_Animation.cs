@@ -7,9 +7,13 @@ using UnityEditor;
 public class GlTF_Animation : GlTF_Writer {
 	public List<GlTF_Channel> channels = new List<GlTF_Channel>();
 	public List<GlTF_AnimSampler> animSamplers = new List<GlTF_AnimSampler>();
-	//bool gotTranslation = false;
-	//bool gotRotation = false;
-	//bool gotScale = false;
+
+	public enum ROTATION_TYPE
+	{
+		UNKNOWN,
+		QUATERNION,
+		EULER
+	};
 
 	int bakingFramerate = 30; // FPS
 
@@ -21,7 +25,11 @@ public class GlTF_Animation : GlTF_Writer {
 	{
 		public AnimationCurve[] translationCurves;
 		public AnimationCurve[] rotationCurves;
+		//Additional curve types
+		public AnimationCurve[] localEulerAnglesRaw;
+		public AnimationCurve[] m_LocalEuler;
 		public AnimationCurve[] scaleCurves;
+		public ROTATION_TYPE rotationType;
 		public void Init()
 		{
 			translationCurves = new AnimationCurve[3];
@@ -153,8 +161,9 @@ public class GlTF_Animation : GlTF_Writer {
 				else if (binding.propertyName.Contains(".z"))
 					current.scaleCurves[2] = curve;
 			}
-			else if (binding.propertyName.Contains("m_LocalRotation"))
+			else if (binding.propertyName.ToLower().Contains("localrotation"))
 			{
+				current.rotationType = ROTATION_TYPE.QUATERNION;
 				if (binding.propertyName.Contains(".x"))
 					current.rotationCurves[0] = curve;
 				else if (binding.propertyName.Contains(".y"))
@@ -164,6 +173,18 @@ public class GlTF_Animation : GlTF_Writer {
 				else if (binding.propertyName.Contains(".w"))
 					current.rotationCurves[3] = curve;
 			}
+			// Takes into account 'localEuler', 'localEulerAnglesBaked' and 'localEulerAnglesRaw'
+			else if (binding.propertyName.ToLower().Contains("localeuler"))
+			{
+				current.rotationType = ROTATION_TYPE.EULER;
+				if (binding.propertyName.Contains(".x"))
+					current.rotationCurves[0] = curve;
+				else if (binding.propertyName.Contains(".y"))
+					current.rotationCurves[1] = curve;
+				else if (binding.propertyName.Contains(".z"))
+					current.rotationCurves[2] = curve;
+			}
+			targetCurves[binding.path] = current;
 		}
 	}
 
@@ -218,7 +239,15 @@ public class GlTF_Animation : GlTF_Writer {
 			times[i] = currentTime;
 			positions[i] = new Vector3(curveSet.translationCurves[0].Evaluate(currentTime), curveSet.translationCurves[1].Evaluate(currentTime), curveSet.translationCurves[2].Evaluate(currentTime));
 			scales[i] = new Vector3(curveSet.scaleCurves[0].Evaluate(currentTime), curveSet.scaleCurves[1].Evaluate(currentTime), curveSet.scaleCurves[2].Evaluate(currentTime));
-			rotations[i] = new Vector4(curveSet.rotationCurves[0].Evaluate(currentTime), curveSet.rotationCurves[1].Evaluate(currentTime), curveSet.rotationCurves[2].Evaluate(currentTime), curveSet.rotationCurves[3].Evaluate(currentTime));
+			if(curveSet.rotationType == ROTATION_TYPE.EULER)
+			{
+				Quaternion eulerToQuat = Quaternion.Euler(curveSet.rotationCurves[0].Evaluate(currentTime), curveSet.rotationCurves[1].Evaluate(currentTime), curveSet.rotationCurves[2].Evaluate(currentTime));
+				rotations[i] = new Vector4(eulerToQuat.x, eulerToQuat.y, eulerToQuat.z, eulerToQuat.w);
+			}
+			else
+			{
+				rotations[i] = new Vector4(curveSet.rotationCurves[0].Evaluate(currentTime), curveSet.rotationCurves[1].Evaluate(currentTime), curveSet.rotationCurves[2].Evaluate(currentTime), curveSet.rotationCurves[3].Evaluate(currentTime));
+			}
 		}
 	}
 
