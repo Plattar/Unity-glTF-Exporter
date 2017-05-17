@@ -922,7 +922,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 					matCol.color.a = 1.0f;
 				}
 
-				if (pName.CompareTo("_EmissionColor") == 0)
+				if (pName.CompareTo("_EmissionColor") == 0 || pName.CompareTo("_SpecColor") == 0)
 				{
 					matCol.isRGB = true;
 				}
