@@ -22,7 +22,11 @@ public enum IMAGETYPE
 	RGB,
 	RGBA,
 	RGBA_OPAQUE,
-	RG, // Metal/Roughness texture
+	R,
+	G,
+	B,
+	A,
+	G_INVERT,
 	NORMAL_MAP,
 	IGNORE
 }
@@ -679,7 +683,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			//Generate lightmap
 			Texture2D convertedLightmap = new Texture2D(lightmapTex.width, lightmapTex.height, TextureFormat.RGB24, false);
 			Color[] lightmapPixels;
-			getPixelsFromTexture(ref lightmapTex, out lightmapPixels, IMAGETYPE.RGB);
+			getPixelsFromTexture(ref lightmapTex, out lightmapPixels);
 
 			convertedLightmap.SetPixels(lightmapPixels);
 			convertedLightmap.Apply();
@@ -819,6 +823,155 @@ public class SceneToGlTFWiz : MonoBehaviour
 		return false;
 	}
 
+	private void addTexturePixels(ref Texture2D texture, ref Color[] colors, IMAGETYPE outputChannel, IMAGETYPE inputChannel = IMAGETYPE.R)
+	{
+		int height = texture.height;
+		int width = texture.width;
+		Color[] inputColors = new Color[texture.width * texture.height];
+		if (!texture || !getPixelsFromTexture(ref texture, out inputColors))
+			return;
+
+		if(height * width != colors.Length)
+		{
+			Debug.Log("Issue with texture dimensions");
+			return;
+		}
+
+		if(inputChannel != IMAGETYPE.R && inputChannel != IMAGETYPE.A)
+		{
+			Debug.Log("Incorrect input channel (only 'R' and 'A' supported)");
+		}
+
+		for (int i = 0; i < height; ++i)
+		{
+			for (int j = 0; j < width; ++j)
+			{
+				int index = i * width + j;
+				int newIndex = (height - i - 1) * width + j;
+				Color c = outputChannel == IMAGETYPE.RGB ? inputColors[newIndex] : colors[index];
+				float inputValue = inputChannel == IMAGETYPE.R ? inputColors[newIndex].r : inputColors[newIndex].a;
+
+				if(outputChannel == IMAGETYPE.R)
+				{
+					c.r = inputValue;
+				}
+				else if(outputChannel == IMAGETYPE.G)
+				{
+					c.g = inputValue;
+				}
+				else if(outputChannel == IMAGETYPE.B)
+				{
+					c.b = inputValue;
+				}
+				else if(outputChannel == IMAGETYPE.G_INVERT)
+				{
+					c.g = 1.0f - inputValue;
+				}
+
+				colors[index] = c;
+			}
+		}
+
+	}
+
+	private int createOcclusionMetallicRoughnessTexture(ref Texture2D occlusion, ref Texture2D metallicRoughness)
+	{
+		string texName = "";
+		int width = -1;
+		int height = -1;
+		string assetPath = "";
+		if(occlusion)
+		{
+			texName = texName + GlTF_Texture.GetNameFromObject(occlusion);
+			assetPath = AssetDatabase.GetAssetPath(occlusion);
+			width = occlusion.width;
+			height = occlusion.height;
+		}
+		else
+		{
+			texName = texName + "_";
+		}
+
+		if (metallicRoughness)
+		{
+			texName = texName + GlTF_Texture.GetNameFromObject(metallicRoughness);
+			assetPath = AssetDatabase.GetAssetPath(metallicRoughness);
+			width = metallicRoughness.width;
+			height = metallicRoughness.height;
+		}
+		else
+		{
+			texName = texName + "_";
+		}
+
+		if (!GlTF_Writer.textureNames.Contains(texName))
+		{
+			// Create texture
+			GlTF_Texture texture = new GlTF_Texture();
+			texture.name = texName;
+
+			// Export image
+			GlTF_Image img = new GlTF_Image();
+			img.name = texName;
+			//img.uri =
+
+			// Let's consider that the three textures have the same resolution
+			Color[] outputColors = new Color[width * height];
+			for (int i = 0; i < outputColors.Length; ++i)
+				outputColors[i] = new Color(1.0f, 1.0f, 1.0f);
+
+			if (occlusion)
+				addTexturePixels(ref occlusion, ref outputColors, IMAGETYPE.R);
+			if (metallicRoughness)
+			{
+				addTexturePixels(ref metallicRoughness, ref outputColors, IMAGETYPE.B);
+				addTexturePixels(ref metallicRoughness, ref outputColors, IMAGETYPE.G_INVERT, IMAGETYPE.A);
+			}
+
+			Texture2D newtex = new Texture2D(width, height);
+			newtex.SetPixels(outputColors);
+			newtex.Apply();
+
+			string pathInArchive = Path.GetDirectoryName(assetPath);
+			string exportDir = Path.Combine(savedPath, pathInArchive);
+
+			if (!Directory.Exists(exportDir))
+				Directory.CreateDirectory(exportDir);
+
+			string outputFilename = Path.GetFileNameWithoutExtension(assetPath) + "_converted_metalRoughness.jpg";
+			string exportPath = exportDir + "/" + outputFilename;  // relative path inside the .zip
+			File.WriteAllBytes(exportPath, newtex.EncodeToJPG(jpgQuality));
+
+			if (!GlTF_Writer.exportedFiles.ContainsKey(exportPath))
+				GlTF_Writer.exportedFiles.Add(exportPath, pathInArchive);
+			else
+				Debug.LogError("Texture '" + newtex.name + "' already exists");
+
+			img.uri = pathInArchive + "/" + outputFilename;
+
+			texture.source = GlTF_Writer.imageNames.Count;
+			GlTF_Writer.imageNames.Add(img.name);
+			GlTF_Writer.images.Add(img);
+
+			// Add sampler
+			GlTF_Sampler sampler;
+			var samplerName = GlTF_Sampler.GetNameFromObject(metallicRoughness);
+			if (!GlTF_Writer.samplerNames.Contains(samplerName))
+			{
+				sampler = new GlTF_Sampler(metallicRoughness);
+				sampler.name = samplerName;
+				GlTF_Writer.samplers.Add(sampler);
+				GlTF_Writer.samplerNames.Add(samplerName);
+			}
+
+			GlTF_Writer.textures.Add(texture);
+			GlTF_Writer.textureNames.Add(texName);
+		}
+
+		return GlTF_Writer.textureNames.IndexOf(texName);
+
+	}
+
 	// Get or create texture object, image and sampler
 	private int processTexture(Texture2D t, IMAGETYPE format)
 	{
@@ -831,6 +984,8 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 		if (!GlTF_Writer.textureNames.Contains(texName))
 		{
+			string assetPath = AssetDatabase.GetAssetPath(t);
+
 			// Create texture
 			GlTF_Texture texture = new GlTF_Texture();
 			texture.name = texName;
@@ -838,7 +993,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			// Export image
 			GlTF_Image img = new GlTF_Image();
 			img.name = GlTF_Image.GetNameFromObject(t);
-			img.uri = ExportTexture(t, savedPath, false, format);
+			img.uri = convertTexture(ref t, assetPath, savedPath, format);
 
 			texture.source = GlTF_Writer.imageNames.Count;
 			GlTF_Writer.imageNames.Add(img.name);
@@ -922,7 +1077,9 @@ public class SceneToGlTFWiz : MonoBehaviour
 				{
 					var textureValue = new GlTF_Material.DictValue();
 					textureValue.name = "metallicRoughnessTexture";
-					int metalRoughTextureIndex = processTexture((Texture2D)mat.GetTexture("_MetallicGlossMap"), IMAGETYPE.RG);
+					Texture2D metallicRoughnessTexture = (Texture2D)mat.GetTexture("_MetallicGlossMap");
+					Texture2D occlusion = (Texture2D)mat.GetTexture("_OcclusionMap");
+					int metalRoughTextureIndex = createOcclusionMetallicRoughnessTexture (ref occlusion, ref metallicRoughnessTexture);
 					textureValue.intValue.Add("index", metalRoughTextureIndex);
 					textureValue.intValue.Add("texCoord", 0);
 					material.pbrValues.Add(textureValue);
@@ -1000,7 +1157,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		emissiveFactor.color = mat.GetColor("_EmissionColor");
 		material.values.Add(emissiveFactor);
 
-		//Occlusion
+		//Occlusion (kept as separated channel for specular workflow, but merged in R channel for metallic workflow)
 		if (mat.HasProperty("_OcclusionMap") && mat.GetTexture("_OcclusionMap") != null)
 		{
 			Texture2D occlusionTexture = mat.GetTexture("_OcclusionMap") as Texture2D;
@@ -1020,7 +1177,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 		doubleSided.value = false;
 		material.values.Add(doubleSided);
 	}
-	private bool getPixelsFromTexture(ref Texture2D texture, out Color[] pixels, IMAGETYPE imageFormat)
+	private bool getPixelsFromTexture(ref Texture2D texture, out Color[] pixels)
 	{
 		//Make texture readable
 		TextureImporter im = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(texture)) as TextureImporter;
@@ -1059,12 +1216,12 @@ public class SceneToGlTFWiz : MonoBehaviour
 	}
 
 	// Flip all images on Y and
-	public string convertTexture(ref Texture2D inputTexture, string assetPath, string outputDir, IMAGETYPE format)
+	public string convertTexture(ref Texture2D inputTexture, string pathInProject, string exportDirectory, IMAGETYPE format)
 	{
 		int height = inputTexture.height;
 		int width = inputTexture.width;
 		Color[] textureColors = new Color[inputTexture.height * inputTexture.width];
-		if(!getPixelsFromTexture(ref inputTexture, out textureColors, format))
+		if(!getPixelsFromTexture(ref inputTexture, out textureColors))
 		{
 			Debug.Log("Failed to convert texture " + inputTexture.name + " (unsupported type or format)");
 			return "";
@@ -1075,16 +1232,9 @@ public class SceneToGlTFWiz : MonoBehaviour
 		{
 			for (int j = 0; j < width; ++j)
 			{
-				if (format == IMAGETYPE.RG)
-				{
-					newTextureColors[i * width + j] = new Color(textureColors[(height - i - 1) * width + j].r, 1.0f - textureColors[(height - i - 1) * width + j].a, 0.0f, 0.0f);
-				}
-				else
-				{
-					newTextureColors[i * width + j] = textureColors[(height - i - 1) * width + j];
-					if (format == IMAGETYPE.RGBA_OPAQUE)
-						newTextureColors[i * width + j].a = 1.0f;
-				}
+				newTextureColors[i * width + j] = textureColors[(height - i - 1) * width + j];
+				if (format == IMAGETYPE.RGBA_OPAQUE)
+					newTextureColors[i * width + j].a = 1.0f;
 			}
 		}
 
@@ -1092,13 +1242,13 @@ public class SceneToGlTFWiz : MonoBehaviour
 		newtex.SetPixels(newTextureColors);
 		newtex.Apply();
 
-		string pathInArchive = Path.GetDirectoryName(assetPath);
-		string exportDir = Path.Combine(outputDir, pathInArchive);
+		string pathInArchive = Path.GetDirectoryName(pathInProject);
+		string exportDir = Path.Combine(exportDirectory, pathInArchive);
 
 		if (!Directory.Exists(exportDir))
 			Directory.CreateDirectory(exportDir);
 
-		string outputFilename = Path.GetFileNameWithoutExtension(assetPath) + (format == IMAGETYPE.RG ? "_converted_metalRoughness" : "") + (format == IMAGETYPE.RGBA ? ".png" : ".jpg");
+		string outputFilename = Path.GetFileNameWithoutExtension(pathInProject) + (format == IMAGETYPE.RGBA ? ".png" : ".jpg");
 		string exportPath = exportDir + "/" + outputFilename;  // relative path inside the .zip
 		string pathInGltfFile = pathInArchive + "/" + outputFilename;
 		File.WriteAllBytes(exportPath, (format == IMAGETYPE.RGBA ? newtex.EncodeToPNG() : newtex.EncodeToJPG( format== IMAGETYPE.NORMAL_MAP ? 95 : jpgQuality)));
@@ -1109,19 +1259,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 			Debug.LogError("Texture '" + inputTexture + "' already exists");
 
 		return pathInGltfFile;
-	}
-
-	private string ExportTexture(Texture texture, string path, bool forceRGBA32=false, IMAGETYPE format=IMAGETYPE.IGNORE)
-	{
-		var assetPath = AssetDatabase.GetAssetPath(texture);
-		var fn = Path.GetFileName(assetPath);
-		var t = texture as Texture2D;
-		if (t != null)
-		{
-			// All the textures need to be converted and flipped in Y
-			return convertTexture(ref t, assetPath, path, format);
-		}
-		return fn;
 	}
 }
 #endif
