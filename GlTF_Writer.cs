@@ -58,16 +58,16 @@ public class GlTF_Writer {
 	public static bool exportPBRMaterials;
 	public static bool hasSpecularMaterials = false;
 	public static bool convertRightHanded = true;
-	public static string exporterVersion = "2.0.5";
-	public static Regex rgx = new Regex("[^a-zA-Z0-9 -]");
+	public static string exporterVersion = "2.0.6";
+	public static Regex rgx = new Regex("[^a-zA-Z0-9 -_.]");
 	
+	static public string cleanNonAlphanumeric(string s)
+	{
+		return rgx.Replace(s, "");
+	}
 	static public string GetNameFromObject(Object o, bool useId = false)
 	{
-		var ret = rgx.Replace(o.name, "");
-		ret = ret.Replace(" ", "_");
-		ret = ret.Replace("/", "_");
-		ret = ret.Replace("\\", "_");
-
+		var ret = cleanNonAlphanumeric(o.name);
 		if (useId)
 		{
 			ret += "_" + o.GetInstanceID();
