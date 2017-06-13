@@ -59,7 +59,7 @@ public class GlTF_Writer {
 	public static bool exportPBRMaterials;
 	public static bool hasSpecularMaterials = false;
 	public static bool convertRightHanded = true;
-	public static string exporterVersion = "2.0.6";
+	public static string exporterVersion = "2.1.0";
 	public static Regex rgx = new Regex("[^a-zA-Z0-9 -_.]");
 	
 	static public string cleanNonAlphanumeric(string s)
