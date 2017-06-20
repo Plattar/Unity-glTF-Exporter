@@ -178,7 +178,7 @@ public class GlTF_Accessor : GlTF_Writer {
 		}
 	}
 
-	public void Populate (Vector4[] v4s, bool noConvert = true)
+	public void Populate (Vector4[] v4s, bool noConvert = true, bool useUInt = false)
 	{
 		if (type != Type.VEC4)
 			throw (new System.Exception());
@@ -194,10 +194,21 @@ public class GlTF_Accessor : GlTF_Writer {
 				if (convertRightHanded && !noConvert)
 					convertVector4LeftToRightHandedness(ref v4s[i]);
 
-				bufferView.Populate (v4s[i].x);
-				bufferView.Populate (v4s[i].y);
-				bufferView.Populate (v4s[i].z);
-				bufferView.Populate (v4s[i].w);
+				if (useUInt)
+				{
+					bufferView.Populate((uint)v4s[i].x);
+					bufferView.Populate((uint)v4s[i].y);
+					bufferView.Populate((uint)v4s[i].z);
+					bufferView.Populate((uint)v4s[i].w);
+				}
+				else
+				{
+					bufferView.Populate(v4s[i].x);
+					bufferView.Populate(v4s[i].y);
+					bufferView.Populate(v4s[i].z);
+					bufferView.Populate(v4s[i].w);
+				}
+
 				minFloat.x = Mathf.Min(v4s[i].x, minFloat.x);
 				minFloat.y = Mathf.Min(v4s[i].y, minFloat.y);
 				minFloat.z = Mathf.Min(v4s[i].z, minFloat.z);
@@ -304,7 +315,7 @@ public class GlTF_Accessor : GlTF_Writer {
 				break;
 			}
 		}
-		else if (componentType == ComponentType.USHORT)
+		else if (componentType == ComponentType.USHORT || componentType == ComponentType.UNSIGNED_INT)
 		{
 			if (type == Type.SCALAR)
 			{
@@ -347,7 +358,7 @@ public class GlTF_Accessor : GlTF_Writer {
 				break;
 			}
 		}
-		else if (componentType == ComponentType.USHORT)
+		else if (componentType == ComponentType.USHORT || componentType == ComponentType.UNSIGNED_INT)
 		{
 			if (type == Type.SCALAR)
 			{

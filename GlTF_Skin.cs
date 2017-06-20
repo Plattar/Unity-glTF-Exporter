@@ -4,25 +4,19 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class GlTF_Skin : GlTF_Writer {
-	public GlTF_Matrix bindShapeMatrix;
 	public Matrix4x4[] invBindMatrices;
 	public int invBindMatricesAccessorIndex;
 	public Transform node;
-	public string[] jointNames;
+	public List<Transform> joints;
+	public List<Transform> jointNames;
 	public Transform mesh;
+	public Transform rootBone;
 
 	public GlTF_Skin() { }
 
 	public static string GetNameFromObject(Object o)
 	{
 		return "skin_" + GlTF_Writer.GetNameFromObject(o, true);
-	}
-
-	public void setBindShapeMatrix(Transform mesh)
-	{
-		Matrix4x4 mat = Matrix4x4.identity;
-		bindShapeMatrix = new GlTF_Matrix(mat);
-		bindShapeMatrix.name = "bindShapeMatrix";
 	}
 
 	public void Populate (Transform m, ref GlTF_Accessor invBindMatricesAccessor, int invBindAccessorIndex)
@@ -36,35 +30,42 @@ public class GlTF_Skin : GlTF_Writer {
 		// In this case we also make this matrix relative to the root
 		// So that we can move the root game object around freely
 		Mesh mesh = skinMesh.sharedMesh;
-		Matrix4x4[] invBindMatrices = new Matrix4x4[skinMesh.sharedMesh.bindposes.Length];
+		joints = new List<Transform>();
+		//Collect all bones from skin object. Order should be kept here since bones are referenced in the mesh
+		foreach(Transform t in skinMesh.bones)
+		{
+			joints.Add(t);
+		}
 
-		for(int i=0;i<invBindMatrices.Length;++i)
+		// glTF expects a single hierarchy of bones, but Unity skips all the nodes that are not used.
+		// Find the common ancestor of all used bones in order to get a valid bone herarchy
+		rootBone = rebuildBoneHierarchy(skinMesh, ref joints);
+
+		Matrix4x4[] invBindMatrices = new Matrix4x4[joints.Count];
+
+		for (int i = 0; i < invBindMatrices.Length; ++i)
 		{
 			// Generates inverseWorldMatrix in right-handed coordinate system
 			// Manually converts world translation and rotation from left to right handed coordinates systems
-			Vector3 pos = skinMesh.bones[i].position;
-			Quaternion rot = skinMesh.bones[i].rotation;
+			Vector3 pos = joints[i].position;
+			Quaternion rot = joints[i].rotation;
 			convertQuatLeftToRightHandedness(ref rot);
 			convertVector3LeftToRightHandedness(ref pos);
 
-			invBindMatrices[i] = Matrix4x4.TRS(pos, rot, skinMesh.bones[i].lossyScale).inverse * sceneRootMatrix.inverse;
+			invBindMatrices[i] = Matrix4x4.TRS(pos, rot, joints[i].lossyScale).inverse * sceneRootMatrix.inverse;
 		}
 
 		invBindMatricesAccessor.Populate(invBindMatrices, m);
 		invBindMatricesAccessorIndex = invBindAccessorIndex;
-
-		// Fill jointNames
-		jointNames = new string[skinMesh.bones.Length];
-		for(int i=0; i< skinMesh.bones.Length; ++i)
-		{
-			jointNames[i] = GlTF_Node.GetNameFromObject(skinMesh.bones[i]);
-		}
 	}
 
-	public static List<string> findRootSkeletons(SkinnedMeshRenderer skin)
+	// Rebuild hierarchy and returns root bone
+	public Transform rebuildBoneHierarchy(SkinnedMeshRenderer skin, ref List<Transform> joints)
 	{
 		List<string> skeletons = new List<string>();
 		List<Transform> tbones = new List<Transform>();
+		List<Transform> traversed = new List<Transform>(); // Will be returned and contain all the nodes that are in the hierarchy but not used as bones (that need to be converted)
+		Transform computedRoot = null;
 		// Get bones
 		foreach (Transform bone in skin.bones)
 		{
@@ -91,10 +92,60 @@ public class GlTF_Skin : GlTF_Writer {
 		{
 			tbones.Remove(b);
 		}
-		foreach (Transform t in tbones)
-			skeletons.Add(GlTF_Node.GetNameFromObject(t));
 
-		return skeletons;
+		// if more than one root, find common ancestor
+		if (tbones.Count > 1)
+		{
+			Transform rootSkeleton = null; //Will get the final root node
+			List<Transform> visited = new List<Transform>(tbones); // internal list to detect parenting
+			List<Transform> evol = new List<Transform>(tbones); // used to increment on each node
+			// Get the parent of each bone
+			while (evol.Count > 1)
+			{
+				for (int i = 0; i < evol.Count; ++i)
+				{
+					evol[i] = evol[i].parent;
+					if (evol[i] != null)
+					{
+						if(!traversed.Contains(evol[i]))
+						{
+							traversed.Add(evol[i]);
+						}
+
+						if (visited.Contains(evol[i]))
+						{
+							rootSkeleton = evol[i];
+							evol[i] = null;
+						}
+						else
+						{
+							visited.Add(evol[i]);
+						}
+					}
+				}
+
+				List<Transform> clean = new List<Transform>();
+				foreach (Transform t in evol)
+				{
+					if (t)
+						clean.Add(t);
+				}
+
+				evol = new List<Transform>(clean);
+			}
+
+			skeletons.Add(GlTF_Node.GetNameFromObject(rootSkeleton));
+			computedRoot = rootSkeleton;
+		}
+		else if (tbones.Count == 1)
+		{
+			skeletons.Add(GlTF_Node.GetNameFromObject(tbones[0]));
+			computedRoot = tbones[0];
+		}
+
+		joints.AddRange(traversed);
+
+		return computedRoot;
 	}
 
 	public override void Write ()
@@ -102,26 +153,21 @@ public class GlTF_Skin : GlTF_Writer {
 		Indent();	jsonWriter.Write ("{\n");
 		IndentIn();
 
-		if (bindShapeMatrix != null)
-		{
-			CommaNL();
-			bindShapeMatrix.Write();
-		}
-
-		Indent(); jsonWriter.Write(",\n");
 		Indent(); jsonWriter.Write("\"inverseBindMatrices\": "+ invBindMatricesAccessorIndex + ",\n");
-		Indent(); jsonWriter.Write ("\"jointNames\": [\n");
+		Indent(); jsonWriter.Write ("\"joints\": [\n");
 
 		IndentIn();
-		foreach (string j in jointNames)
+		foreach (Transform j in joints)
 		{
 			CommaNL();
-			Indent();	jsonWriter.Write ("\""+ j + "\"");
+			Indent();	jsonWriter.Write ("" + GlTF_Writer.nodeNames.IndexOf(GlTF_Node.GetNameFromObject(j)));
 		}
+
 		IndentOut();
 		jsonWriter.WriteLine();
 		Indent(); jsonWriter.Write ("],\n");
-		Indent(); jsonWriter.Write("\"name\": \"" + name + "\"\n");
+		Indent(); jsonWriter.Write("\"name\": \"" + name + "\",\n");
+		Indent(); jsonWriter.Write("\"skeleton\": " + GlTF_Writer.nodeNames.IndexOf(GlTF_Node.GetNameFromObject(rootBone)) + "\n");
 		IndentOut();
 		Indent();	jsonWriter.Write ("}");
 	}
