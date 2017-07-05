@@ -129,7 +129,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 		writer.Init ();
 		done = false;
 		bool debugRightHandedScale = false;
-		bool splitTextures = false;
 		GlTF_Writer.exportedFiles.Clear();
 		if (debugRightHandedScale)
 			GlTF_Writer.convertRightHanded = false;
@@ -467,7 +466,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 					{
 						Vector3[] verts = baked.vertices;
 						Vector3[] norms = baked.normals;
-						Vector4[] tangents = baked.tangents;
 						for (int i = 0; i < verts.Length; ++i)
 						{
 							verts[i] = correction.MultiplyPoint3x4(verts[i]);
@@ -657,7 +655,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 
 		//FIXME what if object has no lightmap ?
 		LightmapData lightmap = LightmapSettings.lightmaps[meshRenderer.lightmapIndex];
-		Texture2D lightmapTex = lightmap.lightmapColor;
+		Texture2D lightmapTex = lightmap.lightmapLight;
 
 		// Handle UV lightmaps
 		MeshFilter meshfilter = tr.GetComponent<MeshFilter>();
@@ -1053,7 +1051,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			material.pbrValues.Add(textureValue);
 		}
 
-		if (mat.HasProperty("_Color") && mat.GetColor("_Color") != null)
+		if (mat.HasProperty("_Color"))
 		{
 			var colorValue = new GlTF_Material.ColorValue();
 			colorValue.name = isMetal ? "baseColorFactor" : "diffuseFactor";
@@ -1182,29 +1180,48 @@ public class SceneToGlTFWiz : MonoBehaviour
 			return false;
 		}
 		bool readable = im.isReadable;
+#if UNITY_5_4
+		TextureImporterFormat format = im.textureFormat;
+#else
 		TextureImporterCompression format = im.textureCompression;
+#endif
 		TextureImporterType type = im.textureType;
 		bool isConvertedBump = im.convertToNormalmap;
 
 		if (!readable)
 			im.isReadable = true;
+#if UNITY_5_4
+		if (type != TextureImporterType.Image)
+			im.textureType = TextureImporterType.Image;
+		im.textureFormat = TextureImporterFormat.ARGB32;
+#else
 		if (type != TextureImporterType.Default)
 			im.textureType = TextureImporterType.Default;
 
 		im.textureCompression = TextureImporterCompression.Uncompressed;
+#endif
 		im.SaveAndReimport();
 
 		pixels = texture.GetPixels();
 
 		if (!readable)
 			im.isReadable = false;
+#if UNITY_5_4
+		if (type != TextureImporterType.Image)
+			im.textureType = type;
+#else
 		if (type != TextureImporterType.Default)
 			im.textureType = type;
-
+#endif
 		if (isConvertedBump)
 			im.convertToNormalmap = true;
 
+#if UNITY_5_4
+		im.textureFormat = format;
+#else
 		im.textureCompression = format;
+#endif
+
 		im.SaveAndReimport();
 
 		return true;

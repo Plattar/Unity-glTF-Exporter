@@ -29,7 +29,6 @@ public class GlTF_Skin : GlTF_Writer {
 		// The bind pose is bone's inverse transformation matrix
 		// In this case we also make this matrix relative to the root
 		// So that we can move the root game object around freely
-		Mesh mesh = skinMesh.sharedMesh;
 		joints = new List<Transform>();
 		//Collect all bones from skin object. Order should be kept here since bones are referenced in the mesh
 		foreach(Transform t in skinMesh.bones)
