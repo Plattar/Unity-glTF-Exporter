@@ -92,7 +92,11 @@ public class GlTF_BufferView : GlTF_Writer  {
 		Indent();		jsonWriter.Write ("\"buffer\": " + bufferIndex +",\n");
 		Indent();		jsonWriter.Write ("\"byteLength\": " + byteLength + ",\n");
 		Indent();		jsonWriter.Write ("\"byteOffset\": " + byteOffset + ",\n");
-		Indent();		jsonWriter.Write ("\"byteStride\": " + byteStride + ",\n");
+		if(byteStride >= 4)
+		{
+			Indent(); jsonWriter.Write("\"byteStride\": " + byteStride + ",\n");
+		}
+
 		Indent();		jsonWriter.Write ("\"target\": " + target + "\n");
 		IndentOut();
 		Indent();		jsonWriter.Write ("}");

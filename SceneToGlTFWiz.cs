@@ -1000,6 +1000,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 				var specularFactor = new GlTF_Material.ColorValue();
 				specularFactor.name = "specularFactor";
 				specularFactor.color = hasPBRMap ? Color.white : mat.GetColor("_SpecColor"); // gloss scale is not supported for now(property _GlossMapScale)
+				specularFactor.isRGB = true;
 				material.pbrValues.Add(specularFactor);
 
 				var glossinessFactor = new GlTF_Material.FloatValue();

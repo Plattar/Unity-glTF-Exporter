@@ -13,12 +13,8 @@ public class GlTF_Texture : GlTF_Writer {
 			"type": 5121
 		},
 */
-	public int format = 6408;
-	public int internalFormat = 6408;
 	public int samplerIndex;
 	public int source;
-	public int target = 3553;
-	public int tType = 5121;
 	public bool flipy = true;
 
 	public static string GetNameFromObject(Object o)
@@ -33,12 +29,8 @@ public class GlTF_Texture : GlTF_Writer {
 
 		writeExtras();
 
-		Indent();	jsonWriter.Write ("\"format\": " + format + ",\n");
-		Indent();	jsonWriter.Write ("\"internalFormat\": " + internalFormat + ",\n");
 		Indent();	jsonWriter.Write ("\"sampler\": " + samplerIndex + ",\n");
-		Indent();	jsonWriter.Write ("\"source\": " + source + ",\n");
-		Indent();	jsonWriter.Write ("\"target\": " + target + ",\n");
-		Indent();	jsonWriter.Write ("\"type\": " + tType + "\n");
+		Indent();	jsonWriter.Write ("\"source\": " + source + "\n");
 		IndentOut();
 		Indent();	jsonWriter.Write ("}");
 	}
