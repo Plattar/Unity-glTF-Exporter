@@ -40,7 +40,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 	int nbSelectedObjects = 0;
 
 	static bool done = true;
-	bool parseLightmaps = false;
 
 	public static void parseUnityCamera(Transform tr)
 	{
@@ -129,7 +128,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 		writer.Init ();
 		done = false;
 		bool debugRightHandedScale = false;
-		bool splitTextures = false;
 		GlTF_Writer.exportedFiles.Clear();
 		if (debugRightHandedScale)
 			GlTF_Writer.convertRightHanded = false;
@@ -150,10 +148,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 		GlTF_Writer.nodes.Add(correctionNode);
 		GlTF_Writer.nodeNames.Add(correctionNode.name);
 		GlTF_Writer.rootNodes.Add(correctionNode);
-
-
-		// Check if scene has lightmap data
-		bool hasLightmap = LightmapSettings.lightmaps.Length != 0;
 
 		//path = toGlTFname(path);
 		savedPath = Path.GetDirectoryName(path);
@@ -427,18 +421,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 							}
 
 							unityToPBRMaterial(mat, ref material);
-
-							// Handle lightmap
-							if(parseLightmaps && hasLightmap)
-							{
-								KeyValuePair<GlTF_Texture,GlTF_Image> lightmapdata = exportLightmap(tr, ref primitive, ref material);
-								if(lightmapdata.Key != null)
-								{
-									GlTF_Writer.textureNames.Add(lightmapdata.Key.name);
-									GlTF_Writer.textures.Add(lightmapdata.Key);
-									GlTF_Writer.images.Add(lightmapdata.Value);
-								}
-							}
 						}
 					}
 					mesh.primitives.Add(primitive);
@@ -467,7 +449,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 					{
 						Vector3[] verts = baked.vertices;
 						Vector3[] norms = baked.normals;
-						Vector4[] tangents = baked.tangents;
 						for (int i = 0; i < verts.Length; ++i)
 						{
 							verts[i] = correction.MultiplyPoint3x4(verts[i]);
@@ -643,93 +624,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 		}
 
 		return true;
-	}
-
-	public KeyValuePair<GlTF_Texture, GlTF_Image> exportLightmap(Transform tr, ref GlTF_Primitive primitive, ref GlTF_Material material)
-	{
-		MeshRenderer meshRenderer = tr.GetComponent<MeshRenderer>();
-		KeyValuePair<GlTF_Texture, GlTF_Image> lightmapKV = new KeyValuePair<GlTF_Texture, GlTF_Image>();
-		if(!meshRenderer || meshRenderer.lightmapIndex == -1)
-		{
-			Debug.Log("[ExportLightmap] No mesh renderer, return");
-			return lightmapKV;
-		}
-
-		//FIXME what if object has no lightmap ?
-		LightmapData lightmap = LightmapSettings.lightmaps[meshRenderer.lightmapIndex];
-		Texture2D lightmapTex = lightmap.lightmapColor;
-
-		// Handle UV lightmaps
-		MeshFilter meshfilter = tr.GetComponent<MeshFilter>();
-		if (meshfilter)
-		{
-			GlTF_Accessor lightmapUVAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(GetMesh(tr), "uv4"), GlTF_Accessor.Type.VEC2, GlTF_Accessor.ComponentType.FLOAT);
-			lightmapUVAccessor.bufferView = GlTF_Writer.vec2BufferView;
-			GlTF_Writer.accessors.Add(lightmapUVAccessor);
-			Vector4 scaleOffset = meshRenderer.lightmapScaleOffset;
-			lightmapUVAccessor.scaleValues = new Vector2(scaleOffset[0], scaleOffset[1]);
-			lightmapUVAccessor.offsetValues = new Vector2(scaleOffset[2], scaleOffset[3]);
-			primitive.attributes.lightmapTexCoordAccessor = lightmapUVAccessor;
-		}
-
-		string lightmapTexName = GlTF_Texture.GetNameFromObject(lightmapTex);
-		if(!GlTF_Writer.textureNames.Contains(lightmapTexName))
-		{
-			//Generate lightmap
-			Texture2D convertedLightmap = new Texture2D(lightmapTex.width, lightmapTex.height, TextureFormat.RGB24, false);
-			Color[] lightmapPixels;
-			getPixelsFromTexture(ref lightmapTex, out lightmapPixels);
-
-			convertedLightmap.SetPixels(lightmapPixels);
-			convertedLightmap.Apply();
-			string filename = Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(lightmapTex)) + ".jpg";
-			string filepath = savedPath + "/" + filename;
-			byte[] lightmapData = convertedLightmap.EncodeToJPG();
-			File.WriteAllBytes(filepath, lightmapData);
-			GlTF_Writer.exportedFiles.Add(filepath, "");
-			GlTF_Image lightmapImg = new GlTF_Image();
-			lightmapImg.name = GlTF_Image.GetNameFromObject(lightmapTex);
-			lightmapImg.uri = filename;
-
-			GlTF_Texture lmTex = new GlTF_Texture();
-			lmTex.name = lightmapTexName;
-
-			var valLightmap = new GlTF_Material.DictValue();
-			valLightmap.name = "aoTexture";
-			valLightmap.intValue.Add("texture", GlTF_Writer.textures.IndexOf(lmTex));
-			valLightmap.stringValue.Add("semantic", "TEXCOORD_4");
-			material.values.Add(valLightmap);
-
-			// Both images use the same sampler
-			GlTF_Sampler sampler;
-			var samplerName = GlTF_Sampler.GetNameFromObject(lightmapTex);
-			if (!GlTF_Writer.samplerNames.Contains(samplerName))
-			{
-				sampler = new GlTF_Sampler(lightmapTex);
-				sampler.name = samplerName;
-				GlTF_Writer.samplers.Add(sampler);
-				GlTF_Writer.samplerNames.Add(samplerName);
-			}
-
-			lmTex.samplerIndex = GlTF_Writer.samplerNames.IndexOf(samplerName);
-			GlTF_Writer.textureNames.Add(lmTex.name);
-			GlTF_Writer.textures.Add(lmTex);
-
-			lmTex.source = GlTF_Writer.imageNames.Count;
-			GlTF_Writer.imageNames.Add(lightmapImg.name);
-			GlTF_Writer.images.Add(lightmapImg);
-
-			return new KeyValuePair<GlTF_Texture, GlTF_Image>(lmTex, lightmapImg);
-		}
-		else
-		{
-			var valLightmap = new GlTF_Material.DictValue();
-			valLightmap.name = "aoTexture";
-			valLightmap.intValue.Add("texture", GlTF_Writer.textureNames.IndexOf(lightmapTexName));
-			valLightmap.stringValue.Add("semantic", "TEXCOORD_4");
-			material.values.Add(valLightmap);
-		}
-		return lightmapKV;
 	}
 
 	private string toGlTFname(string name)
@@ -1053,7 +947,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			material.pbrValues.Add(textureValue);
 		}
 
-		if (mat.HasProperty("_Color") && mat.GetColor("_Color") != null)
+		if (mat.HasProperty("_Color"))
 		{
 			var colorValue = new GlTF_Material.ColorValue();
 			colorValue.name = isMetal ? "baseColorFactor" : "diffuseFactor";
@@ -1106,6 +1000,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 				var specularFactor = new GlTF_Material.ColorValue();
 				specularFactor.name = "specularFactor";
 				specularFactor.color = hasPBRMap ? Color.white : mat.GetColor("_SpecColor"); // gloss scale is not supported for now(property _GlossMapScale)
+				specularFactor.isRGB = true;
 				material.pbrValues.Add(specularFactor);
 
 				var glossinessFactor = new GlTF_Material.FloatValue();
@@ -1182,29 +1077,48 @@ public class SceneToGlTFWiz : MonoBehaviour
 			return false;
 		}
 		bool readable = im.isReadable;
+#if UNITY_5_4
+		TextureImporterFormat format = im.textureFormat;
+#else
 		TextureImporterCompression format = im.textureCompression;
+#endif
 		TextureImporterType type = im.textureType;
 		bool isConvertedBump = im.convertToNormalmap;
 
 		if (!readable)
 			im.isReadable = true;
+#if UNITY_5_4
+		if (type != TextureImporterType.Image)
+			im.textureType = TextureImporterType.Image;
+		im.textureFormat = TextureImporterFormat.ARGB32;
+#else
 		if (type != TextureImporterType.Default)
 			im.textureType = TextureImporterType.Default;
 
 		im.textureCompression = TextureImporterCompression.Uncompressed;
+#endif
 		im.SaveAndReimport();
 
 		pixels = texture.GetPixels();
 
 		if (!readable)
 			im.isReadable = false;
+#if UNITY_5_4
+		if (type != TextureImporterType.Image)
+			im.textureType = type;
+#else
 		if (type != TextureImporterType.Default)
 			im.textureType = type;
-
+#endif
 		if (isConvertedBump)
 			im.convertToNormalmap = true;
 
+#if UNITY_5_4
+		im.textureFormat = format;
+#else
 		im.textureCompression = format;
+#endif
+
 		im.SaveAndReimport();
 
 		return true;
