@@ -40,7 +40,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 	int nbSelectedObjects = 0;
 
 	static bool done = true;
-	bool parseLightmaps = false;
 
 	public static void parseUnityCamera(Transform tr)
 	{
@@ -149,10 +148,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 		GlTF_Writer.nodes.Add(correctionNode);
 		GlTF_Writer.nodeNames.Add(correctionNode.name);
 		GlTF_Writer.rootNodes.Add(correctionNode);
-
-
-		// Check if scene has lightmap data
-		bool hasLightmap = LightmapSettings.lightmaps.Length != 0;
 
 		//path = toGlTFname(path);
 		savedPath = Path.GetDirectoryName(path);
@@ -426,18 +421,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 							}
 
 							unityToPBRMaterial(mat, ref material);
-
-							// Handle lightmap
-							if(parseLightmaps && hasLightmap)
-							{
-								KeyValuePair<GlTF_Texture,GlTF_Image> lightmapdata = exportLightmap(tr, ref primitive, ref material);
-								if(lightmapdata.Key != null)
-								{
-									GlTF_Writer.textureNames.Add(lightmapdata.Key.name);
-									GlTF_Writer.textures.Add(lightmapdata.Key);
-									GlTF_Writer.images.Add(lightmapdata.Value);
-								}
-							}
 						}
 					}
 					mesh.primitives.Add(primitive);
@@ -641,93 +624,6 @@ public class SceneToGlTFWiz : MonoBehaviour
 		}
 
 		return true;
-	}
-
-	public KeyValuePair<GlTF_Texture, GlTF_Image> exportLightmap(Transform tr, ref GlTF_Primitive primitive, ref GlTF_Material material)
-	{
-		MeshRenderer meshRenderer = tr.GetComponent<MeshRenderer>();
-		KeyValuePair<GlTF_Texture, GlTF_Image> lightmapKV = new KeyValuePair<GlTF_Texture, GlTF_Image>();
-		if(!meshRenderer || meshRenderer.lightmapIndex == -1)
-		{
-			Debug.Log("[ExportLightmap] No mesh renderer, return");
-			return lightmapKV;
-		}
-
-		//FIXME what if object has no lightmap ?
-		LightmapData lightmap = LightmapSettings.lightmaps[meshRenderer.lightmapIndex];
-		Texture2D lightmapTex = lightmap.lightmapLight;
-
-		// Handle UV lightmaps
-		MeshFilter meshfilter = tr.GetComponent<MeshFilter>();
-		if (meshfilter)
-		{
-			GlTF_Accessor lightmapUVAccessor = new GlTF_Accessor(GlTF_Accessor.GetNameFromObject(GetMesh(tr), "uv4"), GlTF_Accessor.Type.VEC2, GlTF_Accessor.ComponentType.FLOAT);
-			lightmapUVAccessor.bufferView = GlTF_Writer.vec2BufferView;
-			GlTF_Writer.accessors.Add(lightmapUVAccessor);
-			Vector4 scaleOffset = meshRenderer.lightmapScaleOffset;
-			lightmapUVAccessor.scaleValues = new Vector2(scaleOffset[0], scaleOffset[1]);
-			lightmapUVAccessor.offsetValues = new Vector2(scaleOffset[2], scaleOffset[3]);
-			primitive.attributes.lightmapTexCoordAccessor = lightmapUVAccessor;
-		}
-
-		string lightmapTexName = GlTF_Texture.GetNameFromObject(lightmapTex);
-		if(!GlTF_Writer.textureNames.Contains(lightmapTexName))
-		{
-			//Generate lightmap
-			Texture2D convertedLightmap = new Texture2D(lightmapTex.width, lightmapTex.height, TextureFormat.RGB24, false);
-			Color[] lightmapPixels;
-			getPixelsFromTexture(ref lightmapTex, out lightmapPixels);
-
-			convertedLightmap.SetPixels(lightmapPixels);
-			convertedLightmap.Apply();
-			string filename = Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(lightmapTex)) + ".jpg";
-			string filepath = savedPath + "/" + filename;
-			byte[] lightmapData = convertedLightmap.EncodeToJPG();
-			File.WriteAllBytes(filepath, lightmapData);
-			GlTF_Writer.exportedFiles.Add(filepath, "");
-			GlTF_Image lightmapImg = new GlTF_Image();
-			lightmapImg.name = GlTF_Image.GetNameFromObject(lightmapTex);
-			lightmapImg.uri = filename;
-
-			GlTF_Texture lmTex = new GlTF_Texture();
-			lmTex.name = lightmapTexName;
-
-			var valLightmap = new GlTF_Material.DictValue();
-			valLightmap.name = "aoTexture";
-			valLightmap.intValue.Add("texture", GlTF_Writer.textures.IndexOf(lmTex));
-			valLightmap.stringValue.Add("semantic", "TEXCOORD_4");
-			material.values.Add(valLightmap);
-
-			// Both images use the same sampler
-			GlTF_Sampler sampler;
-			var samplerName = GlTF_Sampler.GetNameFromObject(lightmapTex);
-			if (!GlTF_Writer.samplerNames.Contains(samplerName))
-			{
-				sampler = new GlTF_Sampler(lightmapTex);
-				sampler.name = samplerName;
-				GlTF_Writer.samplers.Add(sampler);
-				GlTF_Writer.samplerNames.Add(samplerName);
-			}
-
-			lmTex.samplerIndex = GlTF_Writer.samplerNames.IndexOf(samplerName);
-			GlTF_Writer.textureNames.Add(lmTex.name);
-			GlTF_Writer.textures.Add(lmTex);
-
-			lmTex.source = GlTF_Writer.imageNames.Count;
-			GlTF_Writer.imageNames.Add(lightmapImg.name);
-			GlTF_Writer.images.Add(lightmapImg);
-
-			return new KeyValuePair<GlTF_Texture, GlTF_Image>(lmTex, lightmapImg);
-		}
-		else
-		{
-			var valLightmap = new GlTF_Material.DictValue();
-			valLightmap.name = "aoTexture";
-			valLightmap.intValue.Add("texture", GlTF_Writer.textureNames.IndexOf(lightmapTexName));
-			valLightmap.stringValue.Add("semantic", "TEXCOORD_4");
-			material.values.Add(valLightmap);
-		}
-		return lightmapKV;
 	}
 
 	private string toGlTFname(string name)
