@@ -1,17 +1,27 @@
 # Unity to Sketchfab exporter
 
-Unity editor wizard that exports Unity objects using **glTF 2.0** format.
+Unity editor wizard that exports Unity object to Sketchfab using **glTF 2.0** format.
 
-Plugin based on Unity-glTF-Exporter from https://github.com/sketchfab/Unity-glTF-Exporter which is in turn based on https://github.com/tparisi/Unity-glTF-Exporter
+Plugin based on Unity-glTF-Exporter from https://github.com/tparisi/Unity-glTF-Exporter
 
 ## How to use it
 
 Once the plugin is imported (from the Unity package provided in [the last release here](https://github.com/sketchfab/Unity-glTF-Exporter/releases), or after having checked out this repo),
-a new item should appear in the *Tools* menu. You can access the exporter by going through **Tools/Export to Plattar**.
+a new item should appear in the *Tools* menu. You can access the exporter by going through **Tools/Publish to Sketchfab** as shown in the following screenshot:
 
+
+![alt tag](https://github.com/sketchfab/Unity-glTF-Exporter/blob/feature/gltf-update-2-0_D3D-2812/Resources/dropdown_menu.JPG)
+
+
+The exporter uses OAuth authentication with *username/password* workflow.
+You need to log in with your Sketchfab account before continuing.
+If you don't have a Sketchfab account, you can click on the helpers to be redirected to the [sign up page](https://sketchfab.com/signup).
+
+When successfuly logged in, you will be able to use the exporter.
 Select the objects you want to export, fill the forms with model info and then click the upload button.
 The exporter will pack up everything and upload it on Sketchfab. You will be redirected to the model page when it's done.
 
+If you have any issue, please use the [Report an issue](https://help.sketchfab.com/hc/en-us/requests/new?type=exporters&subject=Unity+Exporter) link to be redirected to the support form.
 
 Supported Unity objects and features so far:
 - Scene objects such as transforms and meshes
