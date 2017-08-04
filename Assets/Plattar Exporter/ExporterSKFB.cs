@@ -62,8 +62,8 @@ public class ExporterSKFB : EditorWindow {
 	const int PASSWORD_LIMIT = 64;
 	const int SPACE_SIZE = 5;
 
-	private string exporterVersion = GlTF_Writer.exporterVersion;
-	private string latestVersion = "2.1.1a";
+	private string exporterVersion = "2.1.1c"; 
+	private string latestVersion = "2.1.1c"; //will be updated from github
 
 	// Keys used to save credentials in editor prefs
 	const string usernameEditorKey = "UnityExporter_username";
@@ -122,8 +122,9 @@ public class ExporterSKFB : EditorWindow {
 	//private List<String> tagList;
 	void Awake()
 	{
-		zipPath = Application.dataPath + "/Exports/" + "PlattarExport.zip";
-		exportPath = Application.dataPath + "/Exports/" + "PlattarExport.gltf";
+		
+		zipPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop) + Path.DirectorySeparatorChar +  "PlattarExport.zip";
+		exportPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
 
 		exporterGo = new GameObject("Exporter");
 		publisher = exporterGo.AddComponent<ExporterScript>();
@@ -347,10 +348,6 @@ public class ExporterSKFB : EditorWindow {
 		GUILayout.Space(SPACE_SIZE);
 
 
-			// Model settings
-			GUILayout.Label("Model properties", EditorStyles.boldLabel);
-
-
 
 			GUILayout.Label("Options", EditorStyles.boldLabel);
 			GUILayout.BeginHorizontal();
@@ -360,7 +357,7 @@ public class ExporterSKFB : EditorWindow {
 			GUILayout.EndHorizontal();
 			GUILayout.BeginHorizontal();
 			EditorGUIUtility.labelWidth = 310f;
-			opt_exportVariations = EditorGUILayout.Toggle("Include each selected root object as a variation", opt_exportVariations);
+			//opt_exportVariations = EditorGUILayout.Toggle("Include each selected root object as a variation", opt_exportVariations);
 			//GUILayout.FlexibleSpace();
 
 			GUILayout.EndHorizontal();
@@ -391,7 +388,7 @@ public class ExporterSKFB : EditorWindow {
 
 					 zipPath = EditorUtility.SaveFilePanel(
 						"Export object to zip",
-						"",
+						exportPath,
 						param_name + "_" + System.DateTime.Now.ToString("yyyyMMdd") + ".zip",
 						"zip");
 										
