@@ -1,5 +1,5 @@
 ﻿
-// forked from https://github.com/sketchfab/Unity-glTF-Exporter 
+// forked from https://github.com/sketchfab/Unity-glTF-Exporter
 
 #if UNITY_EDITOR
 using UnityEngine;
@@ -62,8 +62,8 @@ public class ExporterSKFB : EditorWindow {
 	const int PASSWORD_LIMIT = 64;
 	const int SPACE_SIZE = 5;
 
-	private string exporterVersion = "2.1.1c"; 
-	private string latestVersion = "2.1.1c"; //will be updated from github
+	private string exporterVersion = "2.1.1d";
+	private string latestVersion = "2.1.1d"; //will be updated from github
 
 	// Keys used to save credentials in editor prefs
 	const string usernameEditorKey = "UnityExporter_username";
@@ -122,7 +122,7 @@ public class ExporterSKFB : EditorWindow {
 	//private List<String> tagList;
 	void Awake()
 	{
-		
+
 		zipPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop) + Path.DirectorySeparatorChar +  "PlattarExport.zip";
 		exportPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
 
@@ -135,19 +135,19 @@ public class ExporterSKFB : EditorWindow {
 		resizeWindow(fullSize);
 		publisher.checkVersion();
 
-		
+
 	}
 
 	void OnEnable()
 	{
-		
+
 		// Try to load header image
 		if(!header)
 			header = (Texture2D)Resources.Load(Application.dataPath + "Plattar Exporter/plattar.png", typeof(Texture2D));
 
 
 		//resizeWindow(fullSize);
-	
+
 	}
 
 	int convertToSeconds(DateTime time)
@@ -214,7 +214,7 @@ public class ExporterSKFB : EditorWindow {
 					publisher.setIdle();
 					break;
 
-				
+
 				case ExporterState.PUBLISH_MODEL:
 
 					if (www.responseHeaders["STATUS"].Contains("201") == true)
@@ -233,7 +233,7 @@ public class ExporterSKFB : EditorWindow {
 			}
 		}
 	}
-		
+
 
 	public float progress()
 	{
@@ -248,7 +248,7 @@ public class ExporterSKFB : EditorWindow {
 		status = "";
 
 
-			
+
 
 
 		int nbSelectedObjects = Selection.GetTransforms(SelectionMode.Deep).Length;
@@ -391,9 +391,9 @@ public class ExporterSKFB : EditorWindow {
 						exportPath,
 						param_name + "_" + System.DateTime.Now.ToString("yyyyMMdd") + ".zip",
 						"zip");
-										
+
 						exportPath = zipPath.Replace(".zip", ".gltf");
-					
+
 						if (System.IO.File.Exists(zipPath))
 						{
 							System.IO.File.Delete(zipPath);
@@ -401,7 +401,7 @@ public class ExporterSKFB : EditorWindow {
 
 						exporter.ExportCoroutine(exportPath, null, true, true, opt_exportAnimation, true);
 
-						
+
 					}
 				}
 				GUILayout.FlexibleSpace();
@@ -409,12 +409,12 @@ public class ExporterSKFB : EditorWindow {
 
 
 	}
-		
+
 
 	void OnDestroy()
 	{
-		if (System.IO.File.Exists(zipPath))
-			System.IO.File.Delete(zipPath);
+		// if (System.IO.File.Exists(zipPath))
+			// System.IO.File.Delete(zipPath);
 
 		if (exporterGo)
 		{
@@ -452,7 +452,7 @@ public class ExporterScript : MonoBehaviour
 	{
 		StartCoroutine(checkVersionCoroutine());
 	}
-		
+
 
 	public void setState(ExporterState newState)
 	{
