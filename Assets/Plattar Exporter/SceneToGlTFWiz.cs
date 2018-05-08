@@ -478,20 +478,32 @@ public class SceneToGlTFWiz : MonoBehaviour
 						//FIXME It seems not good to generate one animation per animator.
 						GlTF_Animation anim = new GlTF_Animation(GlTF_Writer.cleanNonAlphanumeric(a.name));
 						anim.Populate(clips[i], tr, GlTF_Writer.bakeAnimation);
-						if(anim.channels.Count > 0)
+						if(anim.channels.Count > 0){
 							GlTF_Writer.animations.Add(anim);
+						}
 					}
 				}
 
 				Animation animation = tr.GetComponent<Animation>();
 				if (animation != null)
 				{
-					AnimationClip clip = animation.clip;
+					foreach (AnimationState state in animation) {
+						AnimationClip clip = state.clip;
+
+						//FIXME It seems not good to generate one animation per animator.
+            GlTF_Animation anim = new GlTF_Animation(GlTF_Writer.cleanNonAlphanumeric(state.name));
+						anim.Populate(clip, tr, GlTF_Writer.bakeAnimation);
+						if (anim.channels.Count > 0)
+							GlTF_Writer.animations.Add(anim);
+        	}
+
 					//FIXME It seems not good to generate one animation per animator.
-					GlTF_Animation anim = new GlTF_Animation(GlTF_Writer.cleanNonAlphanumeric(animation.name));
-					anim.Populate(clip, tr, GlTF_Writer.bakeAnimation);
-					if (anim.channels.Count > 0)
-						GlTF_Writer.animations.Add(anim);
+					// AnimationClip clip = animation.clip;
+					// GlTF_Animation anim = new GlTF_Animation(GlTF_Writer.cleanNonAlphanumeric(animation.name));
+					// anim.Populate(clip, tr, GlTF_Writer.bakeAnimation);
+					// if (anim.channels.Count > 0){
+					// 	GlTF_Writer.animations.Add(anim);
+					// }
 				}
 			}
 
@@ -588,7 +600,7 @@ public class SceneToGlTFWiz : MonoBehaviour
 			{
 				zip.AddFile(originFilePath, GlTF_Writer.exportedFiles[originFilePath]);
 			}
-			
+
 			zip.Save(savedPath + "/" + zipName);
 
 			// Remove all files

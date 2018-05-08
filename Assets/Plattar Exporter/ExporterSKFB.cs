@@ -62,8 +62,8 @@ public class ExporterSKFB : EditorWindow {
 	const int PASSWORD_LIMIT = 64;
 	const int SPACE_SIZE = 5;
 
-	private string exporterVersion = "2.1.1d";
-	private string latestVersion = "2.1.1d"; //will be updated from github
+	private string exporterVersion = "2.1.1e";
+	private string latestVersion = "2.1.1e"; //will be updated from github
 
 	// Keys used to save credentials in editor prefs
 	const string usernameEditorKey = "UnityExporter_username";
