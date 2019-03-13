@@ -1,3 +1,13 @@
+<hr />
+  <h3 align="center">
+    The following repository is no longer maintained
+  </h3>
+  <h3 align="center">
+    Refer to the new repository at <a href="https://github.com/Plattar/gltf-exporter">GLTF Exporter</a>
+  </h3>
+<hr />
+
+
 # Unity to Plattar GLTF exporter
 
 Unity editor wizard that exports Unity object to zip using **glTF 2.0** format.
